@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Error de Alquiler - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        body {
+            min-height: 80vh;
+        }
+        .result-box {
+            background-color: #ffe6e6;
+            border: 2px solid var(--error-color);
+            padding: 30px;
+        }
+        h1 {
+            color: var(--error-color);
+        }
+        .error-message {
+            font-weight: bold;
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box">
+        <h1>❌ Error al Procesar Alquiler</h1>
+        <p>No se pudo completar la solicitud de alquiler:</p>
+        <div class="error-message" th:text="${mensaje}">Detalle del error de validación o BD.</div>
+        
+        <a href="/alquilarEmbarcacion" class="btn">Intentar de Nuevo</a>
+        <a href="/" class="btn">Ir a Menú Principal</a>
+    </div>
+</body>
+</html>

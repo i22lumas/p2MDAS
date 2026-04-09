@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Inscripciones - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 1000px;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        .id-col { width: 5%; }
+        .cuota-col { width: 15%; font-weight: bold; }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Listado Detallado de Inscripciones</h1>
+
+        <table>
+            <thead>
+                <tr>
+                    <th class="id-col">ID Insc.</th>
+                    <th>DNI Titular</th>
+                    <th>Nombre Titular</th>
+                    <th>Tipo</th>
+                    <th>Familiares Vinculados</th>
+                    <th class="cuota-col">Cuota Anual</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${detallesInscripcion.empty}">
+                    <td colspan="6" class="no-data">No se encontraron inscripciones.</td>
+                </tr>
+                <tr th:each="detalle : ${detallesInscripcion}">
+                    <td th:text="${detalle.id_inscripcion}"></td>
+                    <td th:text="${detalle.dni_titular}"></td>
+                    <td th:text="${detalle.nombre_titular}"></td>
+                    <td th:text="${detalle.tipo_inscripcion}"></td>
+                    <td th:text="${detalle.numero_familiares}"></td>
+                    <td th:text="${#numbers.formatCurrency(detalle.cuota_anual)}"></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <a href="/" class="btn" style="margin-top: 20px;">Volver al Menú Principal</a>
+    </div>
+</body>
+</html>

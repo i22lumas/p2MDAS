@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservar Embarcación para Actividad - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 600px;
+        }
+        label {
+            color: var(--primary-color);
+        }
+        input, select, textarea {
+            border: 2px solid #ddd;
+            padding: 0.75rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary-color);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .info-card {
+            background-color: #e8f4fd;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .info-card h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .info-card p {
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Reservar Embarcación para Actividad</h1>
+
+        <form th:action="@{/reservarEmbarcacion}" method="post" th:object="${nuevaReserva}">
+            
+            <div class="form-group">
+                <label for="propositoActividad">Propósito de la actividad:</label>
+                <textarea th:field="*{propositoActividad}" id="propositoActividad" 
+                         rows="3" placeholder="Describa brevemente el propósito de la actividad (ej: visita a isla, comida en alta mar...)" 
+                         required maxlength="200"></textarea>
+                <div class="form-text">Máximo 200 caracteres</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="idSocioSolicitante">Socio solicitante:</label>
+                <select th:field="*{idSocioSolicitante}" id="idSocioSolicitante" required>
+                    <option value="">Seleccione un socio</option>
+                    <option th:each="socio : ${socios}" 
+                            th:value="${socio.id}" 
+                            th:text="${socio.nombre + ' ' + socio.apellidos + ' (DNI: ' + socio.dni + ')'}">
+                    </option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="fechaActividad">Fecha de la actividad:</label>
+                <input type="date" th:field="*{fechaActividad}" id="fechaActividad" 
+                       th:min="${fechaHoy}" required>
+                <div class="form-text">Seleccione la fecha para la actividad (solo días completos)</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="matriculaEmbarcacion">Embarcación:</label>
+                <select th:field="*{matriculaEmbarcacion}" id="matriculaEmbarcacion" required>
+                    <option value="">Seleccione una embarcación</option>
+                    <option th:each="embarcacion : ${embarcaciones}" 
+                            th:value="${embarcacion.matricula}" 
+                            th:text="${embarcacion.nombre + ' (' + embarcacion.matricula + ') - ' + (embarcacion.plaza - 1) + ' plazas disponibles'}">
+                    </option>
+                </select>
+                <div class="form-text">Solo se muestran embarcaciones con patrón asignado. Capacidad mostrada excluye al patrón.</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="plazasSolicitadas">Número de plazas solicitadas (socios):</label>
+                <input type="number" th:field="*{plazasSolicitadas}" id="plazasSolicitadas" 
+                       min="1" max="50" required>
+                <div class="form-text">Precio: 40€ por persona (incluye al patrón)</div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Reservar Embarcación</button>
+            <a href="/" class="btn btn-secondary">Volver al Inicio</a>
+        </form>
+
+        <div class="info-card">
+            <h3>Información de Precios y Capacidad</h3>
+            <p><strong>Precio por persona:</strong> 40€ (incluye al patrón)</p>
+            <p><strong>Ejemplo:</strong> 4 socios + 1 patrón = 5 personas × 40€ = 200€</p>
+            <p><strong>Nota:</strong> La capacidad mostrada excluye al patrón que conduce la embarcación.</p>
+        </div>
+    </div>
+</body>
+</html>

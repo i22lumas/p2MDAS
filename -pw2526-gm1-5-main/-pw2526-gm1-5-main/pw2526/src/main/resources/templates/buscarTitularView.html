@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Titular - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+</head>
+<body>
+    <div class="form-container main-container">
+        <h1>Ampliación a Inscripción Familiar</h1>
+        <p class="info-text" style="text-align: center; color: #666; margin-bottom: 1.5rem;">Paso 1: Introduce el DNI del socio titular de la inscripción individual.</p>
+        <form th:action="@{/ampliarInscripcion/buscar}" method="post">
+            <label for="dniTitular">DNI del Socio Titular:</label>
+            <input id="dniTitular" type="text" name="dniTitular" required>
+            <input type="submit" value="Buscar Inscripción">
+        </form>
+        <a href="/" class="back-link">Volver al inicio</a>
+    </div>
+</body>
+</html>

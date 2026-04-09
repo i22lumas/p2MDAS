@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Reservas - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        body {
+            align-items: flex-start;
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            box-shadow: none;
+            padding: 0;
+            margin-top: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h1 {
+            margin: 0;
+            text-align: left;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: #004aad;
+            color: white;
+            padding: 1rem 1.5rem;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .alert {
+            background-color: #e7f3ff;
+            color: #004aad;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #b8daff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tbody tr:hover {
+            background-color: #e6f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>Listado de Reservas de Actividades</h1>
+            <div class="actions">
+                <a href="/reservarEmbarcacion" class="btn header-success">Nueva Reserva</a>
+                <a href="/" class="btn">Volver al Inicio</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Reservas Registradas</h2>
+            </div>
+            <div class="card-body">
+                <div th:if="${reservas.empty}" class="alert">
+                    No hay reservas registradas.
+                </div>
+                
+                <div th:unless="${reservas.empty}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Propósito</th>
+                                <th>Fecha</th>
+                                <th>Embarcación</th>
+                                <th>Plazas</th>
+                                <th>Precio Total</th>
+                                <th>Socio ID</th>
+                                <th>Patrón ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="reserva : ${reservas}">
+                                <td th:text="${reserva.idReserva}"></td>
+                                <td th:text="${reserva.propositoActividad}"></td>
+                                <td th:text="${reserva.fechaActividad}"></td>
+                                <td th:text="${reserva.matriculaEmbarcacion}"></td>
+                                <td th:text="${reserva.plazasSolicitadas}"></td>
+                                <td th:text="${reserva.precioTotal} + '€'"></td>
+                                <td th:text="${reserva.idSocioSolicitante}"></td>
+                                <td th:text="${reserva.idPatron}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

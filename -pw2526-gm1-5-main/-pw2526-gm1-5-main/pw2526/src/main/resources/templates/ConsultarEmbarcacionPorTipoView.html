@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Consultar Embarcaciones por Tipo - Club Náutico</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+
+    <style>
+        /* ---------- OVERRIDES para quitar la franja azul del "Volver" ---------- */
+        /* Específico para el enlace de volver: evita que herede width:100% o background */
+        a.back-link {
+            /* Anula fondo / anchura completa que venga de style.css */
+            background: transparent !important;
+            width: auto !important;
+            display: inline-block !important;
+            box-shadow: none !important;
+            text-decoration: none !important;
+
+            /* Estilo visual limpio */
+            padding: 10px 18px !important;
+            border-radius: 6px !important;
+            border: 2px solid var(--primary-color, #0b4ea2) !important;
+            color: var(--primary-color, #0b4ea2) !important;
+            font-weight: 700 !important;
+            margin: 1.5rem auto !important;
+            cursor: pointer !important;
+            text-align: center !important;
+        }
+
+        /* Hover para el botón volver */
+        a.back-link:hover {
+            background-color: var(--primary-color, #0b4ea2) !important;
+            color: #fff !important;
+        }
+
+        /* Centrar el enlace manteniendo el flujo */
+        .back-link-wrapper {
+            text-align: center;
+            /* evita que un padding/negativo de otro estilo lo pegue al borde */
+            padding: 0.5rem 0;
+        }
+        /* ---------------------------------------------------------------------- */
+
+        /* Resto de estilos locales (no cambian tu style.css externo) */
+        .main-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            box-shadow: none;
+        }
+
+        .form-container {
+            width: 400px;
+            margin: 1rem auto;
+        }
+
+        .resultado-titulo {
+            background-color: #e7f3ff;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
+            border-left: 4px solid var(--primary-color, #0b4ea2);
+        }
+
+        .no-resultados {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ffeeba;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        table {
+            font-size: 0.9rem;
+            max-width: 100%;
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e6e6e6;
+            text-align: left;
+        }
+
+        .fechas-asignacion { font-size: 0.85rem; color: #666; font-style: italic; }
+
+        .estado-activo { color: var(--success-color, #155724); background-color: #d4edda; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .estado-programada { color: #856404; background-color: #fff3cd; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .estado-finalizada { color: #721c24; background-color: #f8d7da; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .estado-sin-asignacion { color: var(--secondary-color, #4b5563); background-color: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1 style="text-align:center; color: var(--primary-color, #0b4ea2); font-size:2rem;">Consultar Embarcaciones por Tipo</h1>
+
+        <div class="form-container">
+            <form th:action="@{/consultarEmbarcacionPorTipo}" method="post">
+                <div class="form-group">
+                    <label for="tipo">Seleccione el tipo de embarcación:</label>
+                    <select id="tipo" name="tipo" required style="width:100%; padding:8px; margin-top:8px;">
+                        <option value="">-- Seleccione un tipo --</option>
+                        <option th:each="tipo : ${tiposBarcos}" 
+                                th:value="${tipo}" 
+                                th:text="${tipo}"
+                                th:selected="${tipo == tipoSeleccionado}">
+                        </option>
+                    </select>
+                </div>
+
+                <div style="text-align:center; margin-top:16px;">
+                    <button type="submit" class="btn">Buscar Embarcaciones</button>
+                </div>
+            </form>
+        </div>
+
+        <div th:if="${tipoSeleccionado != null}">
+            <div class="resultado-titulo">
+                <h2>Embarcaciones de tipo: <span th:text="${tipoSeleccionado}"></span></h2>
+                <p th:text="'Total encontradas: ' + ${#lists.size(embarcaciones)}"></p>
+            </div>
+
+            <div th:if="${#lists.isEmpty(embarcaciones)}" class="no-resultados">
+                No se encontraron embarcaciones del tipo <strong th:text="${tipoSeleccionado}"></strong>.
+            </div>
+
+            <table th:if="${!#lists.isEmpty(embarcaciones)}">
+                <thead>
+                    <tr>
+                        <th>Matrícula</th>
+                        <th>Nombre</th>
+                        <th>Tipo</th>
+                        <th>Plazas</th>
+                        <th>Dimensiones</th>
+                        <th>¿Tiene Patrón?</th>
+                        <th>Detalles del Patrón</th>
+                        <th>Fechas de Asignación</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="embarcacion : ${embarcaciones}">
+                        <td th:text="${embarcacion.Matricula}"></td>
+                        <td th:text="${embarcacion.Nombre}"></td>
+                        <td th:text="${embarcacion.tipo}"></td>
+                        <td th:text="${embarcacion.Plaza}"></td>
+                        <td th:text="${embarcacion.dimensiones} + 'm'"></td>
+                        <td>
+                            <span th:if="${patronesAsignados != null and patronesAsignados.get(embarcacion.Matricula) == 'SÍ'}" class="con-patron" th:text="'SÍ'">SÍ</span>
+                            <span th:if="${patronesAsignados != null and patronesAsignados.get(embarcacion.Matricula) == 'NO'}" class="sin-patron" th:text="'NO'">NO</span>
+                        </td>
+                        <td>
+                            <div th:if="${detallesPatron != null and #lists.size(detallesPatron.get(embarcacion.Matricula)) > 1}" class="multiple-asignaciones">
+                                <div th:each="detalle, iter : ${detallesPatron.get(embarcacion.Matricula)}" class="asignacion-item">
+                                    <strong>Asignación <span th:text="${iter.index + 1}"></span>:</strong><br>
+                                    <span th:text="${detalle}">Marcos Jimenez (ID: 5)</span>
+                                </div>
+                            </div>
+                            <div th:if="${detallesPatron != null and #lists.size(detallesPatron.get(embarcacion.Matricula)) == 1}">
+                                <span th:text="${detallesPatron.get(embarcacion.Matricula)[0]}">Marcos Jimenez (ID: 5)</span>
+                            </div>
+                            <div th:if="${detallesPatron == null or #lists.isEmpty(detallesPatron.get(embarcacion.Matricula))}">
+                                <span class="sin-patron">Sin información</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div th:if="${fechasAsignacion != null and #lists.size(fechasAsignacion.get(embarcacion.Matricula)) > 1}" class="multiple-asignaciones">
+                                <div th:each="fecha, iter : ${fechasAsignacion.get(embarcacion.Matricula)}" class="asignacion-item">
+                                    <span class="fechas-asignacion" th:text="${fecha}">2026-01-05 hasta 2026-01-24</span>
+                                </div>
+                            </div>
+                            <div th:if="${fechasAsignacion != null and #lists.size(fechasAsignacion.get(embarcacion.Matricula)) == 1}">
+                                <span class="fechas-asignacion" th:text="${fechasAsignacion.get(embarcacion.Matricula)[0]}">2026-01-05 hasta 2026-01-24</span>
+                            </div>
+                            <div th:if="${fechasAsignacion == null or #lists.isEmpty(fechasAsignacion.get(embarcacion.Matricula))}">
+                                <span class="fechas-asignacion">-</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div th:if="${estadosAsignacion != null and #lists.size(estadosAsignacion.get(embarcacion.Matricula)) > 1}" class="multiple-asignaciones">
+                                <div th:each="estado, iter : ${estadosAsignacion.get(embarcacion.Matricula)}" class="asignacion-item">
+                                    <span th:if="${estado == 'ACTIVA'}" class="estado-activo" th:text="'ACTIVA'">ACTIVA</span>
+                                    <span th:if="${estado == 'PROGRAMADA'}" class="estado-programada" th:text="'PROGRAMADA'">PROGRAMADA</span>
+                                    <span th:if="${estado == 'FINALIZADA'}" class="estado-finalizada" th:text="'FINALIZADA'">FINALIZADA</span>
+                                    <span th:if="${estado == '-'}" class="estado-sin-asignacion" th:text="'SIN ASIGNACIÓN'">SIN ASIGNACIÓN</span>
+                                </div>
+                            </div>
+                            <div th:if="${estadosAsignacion != null and #lists.size(estadosAsignacion.get(embarcacion.Matricula)) == 1}">
+                                <span th:if="${estadosAsignacion.get(embarcacion.Matricula)[0] == 'ACTIVA'}" class="estado-activo" th:text="'ACTIVA'">ACTIVA</span>
+                                <span th:if="${estadosAsignacion.get(embarcacion.Matricula)[0] == 'PROGRAMADA'}" class="estado-programada" th:text="'PROGRAMADA'">PROGRAMADA</span>
+                                <span th:if="${estadosAsignacion.get(embarcacion.Matricula)[0] == 'FINALIZADA'}" class="estado-finalizada" th:text="'FINALIZADA'">FINALIZADA</span>
+                                <span th:if="${estadosAsignacion.get(embarcacion.Matricula)[0] == '-'}" class="estado-sin-asignacion" th:text="'SIN ASIGNACIÓN'">SIN ASIGNACIÓN</span>
+                            </div>
+                            <div th:if="${estadosAsignacion == null or #lists.isEmpty(estadosAsignacion.get(embarcacion.Matricula))}">
+                                <span class="estado-sin-asignacion">SIN ASIGNACIÓN</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Contenedor centrado para el enlace de volver -->
+        <div class="back-link-wrapper">
+            <a href="/" class="back-link">Volver al Menú Principal</a>
+        </div>
+    </div>
+</body>
+</html>

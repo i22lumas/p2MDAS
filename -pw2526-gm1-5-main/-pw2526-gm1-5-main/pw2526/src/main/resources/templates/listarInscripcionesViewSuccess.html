@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operación Exitosa - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .actions {
+            flex-wrap: wrap;
+        }
+        .summary {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box main-container">
+        <h1 class="header-success">Consulta Exitosa</h1>
+        <div class="success-message">
+            <p>El listado de inscripciones ha sido recuperado correctamente desde la base de datos.</p>
+            <p th:if="${mensaje}"><strong th:text="${mensaje}"></strong></p>
+        </div>
+        <div class="actions">
+            <a href="/listarInscripciones" class="btn">Ver Listado (Tabla)</a>
+            <a href="/" class="btn">Volver al Menú Principal</a>
+        </div>
+    </div>
+</body>
+</html>

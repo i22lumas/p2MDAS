@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Socios - Club Náutico</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 1200px;
+            padding: 0;
+            box-shadow: none;
+        }
+        .no-data {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px 20px;
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Listado de Socios del Club Náutico</h1>
+
+        <div th:if="${#lists.isEmpty(socios)}" class="no-data">
+            No hay Socios registrados.
+        </div>
+
+        <table th:if="${!#lists.isEmpty(socios)}">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>DNI</th>
+                    <th>Nombre</th>
+                    <th>Apellidos</th>
+                    <th>Fecha Nacimiento</th>
+                    <th>Dirección</th>
+                    <th>Fecha Inscripción</th>
+                    <th class="center-text">¿Titular?</th>
+                    <th class="center-text">¿Patrón?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="socio : ${socios}">
+                    <td th:text="${socio.id}"></td>
+                    <td th:text="${socio.dni}"></td>
+                    <td th:text="${socio.nombre}"></td>
+                    <td th:text="${socio.apellidos}"></td>
+                    <td th:text="${#temporals.format(socio.fechaNacimiento, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${socio.direccion}"></td>
+                    <td th:text="${#temporals.format(socio.fechaInscripcion, 'dd/MM/yyyy')}"></td>
+                    
+                    <td class="center-text" th:text="${socio.esTitular} ? 'Sí' : 'No'"></td> 
+                    
+                    <td class="center-text" th:text="${socio.esPatron} ? 'Sí' : 'No'"></td>
+                </tr>
+            </tbody>
+        </table>
+
+    <a href="/" class="btn">Volver al Menú Principal</a>    
+</div>
+</body>
+</html>

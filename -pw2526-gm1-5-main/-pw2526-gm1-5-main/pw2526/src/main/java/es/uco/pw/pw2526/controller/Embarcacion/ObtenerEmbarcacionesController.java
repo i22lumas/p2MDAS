@@ -1,0 +1,39 @@
+package es.uco.pw.pw2526.controller.Embarcacion;
+
+import java.util.List;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import es.uco.pw.pw2526.model.domain.embarcacion.embarcacion;
+import es.uco.pw.pw2526.model.Repository.EmbarcacionRepository;
+
+@Controller
+public class ObtenerEmbarcacionesController {
+
+    private EmbarcacionRepository embarcacionRepository;
+
+    /**
+     * Constructor del controlador para obtener embarcaciones
+     * 
+     * @param embarcacionRepository Repositorio de embarcaciones
+     */
+    public ObtenerEmbarcacionesController(EmbarcacionRepository embarcacionRepository) {
+        this.embarcacionRepository = embarcacionRepository;
+        this.embarcacionRepository.setSQLQueriesFileName("./src/main/resources/db/sql.properties");
+    }
+
+    /**
+     * Obtiene y muestra la lista de todas las embarcaciones
+     * 
+     * @return ModelAndView con la lista de embarcaciones
+     */
+    @GetMapping("/verEmbarcaciones")
+    public ModelAndView obtenerEmbarcaciones() {
+        List<embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
+        ModelAndView model = new ModelAndView("obtenerEmbarcacionesView.html");
+        model.addObject("Embarcaciones", embarcaciones);
+        return model;
+    }
+}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Embarcaciones - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 1200px;
+            padding: 0;
+            box-shadow: none;
+        }
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Listado de Embarcaciones</h1>
+
+        <div th:if="${#lists.isEmpty(Embarcaciones)}" class="no-data">
+            No hay embarcaciones registradas.
+        </div>
+
+        <table th:if="${!#lists.isEmpty(Embarcaciones)}">
+            <thead>
+                <tr>
+                    <th>Matrícula</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Plazas</th>
+                    <th>Dimensiones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="e : ${Embarcaciones}">
+                    <td th:text="${e.Matricula}"></td>
+                    <td th:text="${e.Nombre}"></td>
+                    <td th:text="${e.tipo}"></td>
+                    <td th:text="${e.Plaza}"></td>
+                    <td th:text="${e.dimensiones}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a href="/" class="back-link">Volver al Menú Principal</a>
+    </div>
+</body>
+</html>

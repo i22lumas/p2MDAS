@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error de Inscripción - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .socio-data {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ccc;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box main-container">
+        <h1 class="header-error">Inscripción de Socio: Error</h1>
+        
+        <div th:if="${error != null}" class="error-message">
+            <p th:text="${error}">Error genérico en la inscripción.</p>
+        </div>
+        
+        <div th:if="${Socio != null}" class="socio-data">
+            <p>DNI intentado: <strong th:text="${Socio.dni}"></strong></p>
+        </div>
+        
+        <div class="actions">
+            <a href="/addSocio" class="btn">Volver al formulario de inscripción</a>
+            <a href="/" class="btn">Volver al Menú Principal</a>
+        </div>
+    </div>
+</body>
+</html>

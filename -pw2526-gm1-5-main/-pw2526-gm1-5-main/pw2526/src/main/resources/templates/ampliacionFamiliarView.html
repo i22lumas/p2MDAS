@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ampliación a Inscripción Familiar - Club Náutico</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+   <style>
+        .main-container {
+            max-width: 650px;
+        }
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-top: 2rem;
+        }
+        .info-box {
+            background: #e6f0ff;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid var(--primary-color);
+            margin-bottom: 15px;
+        }
+        .hijo-bloque {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 5px;
+        }
+        .hijo-bloque h3 {
+            color: #003070;
+            margin-top: 0;
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container main-container">
+        <h1>Ampliación a Inscripción Familiar</h1>
+
+        <div class="info-box">
+            <p>Titular: <strong th:text="${titular.nombre + ' ' + titular.apellidos}"></strong> (ID: <span th:text="${titular.id}"></span>)</p>
+            <p>Cuota Inicial: <strong th:text="${#numbers.formatDecimal(inscripcion.cuotaAnual, 0, 'COMMA', 2, 'POINT')} + '€'"></strong></p>
+            <p>Costos Adicionales: Cónyuge: [[${T(es.uco.pw.pw2526.controller.Socios.AmpliacionFamiliarController).CUOTA_SEGUNDO_ADULTO}]]€ | Cada Hijo: [[${T(es.uco.pw.pw2526.controller.Socios.AmpliacionFamiliarController).CUOTA_HIJO}]]€.</p>
+        </div>
+
+        <form th:action="@{/ampliarInscripcion/procesar}" method="post" th:object="${nuevoAdulto}">
+            
+            <input type="hidden" name="inscripcionId" th:value="${inscripcion.id}">
+            <input type="hidden" name="titularId" th:value="${titular.id}">
+            
+                        <input type="hidden" th:field="*{direccion}" th:value="${titular.direccion}" /> 
+
+            <h2>1. Datos del Cónyuge (Segundo Adulto) - OPCIONAL</h2>
+            <p class="info-text">Si el DNI o Nombre se dejan vacíos, no se registrará al cónyuge. Se requiere que el adulto sea mayor de edad.</p>
+
+            <label for="dni">DNI:</label>
+            <input id="dni" type="text" name="dniNuevoAdulto"> 
+
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" type="text" th:field="*{nombre}">
+
+            <label for="apellidos">Apellidos:</label>
+            <input id="apellidos" type="text" th:field="*{apellidos}">
+
+            <label for="fechaNacimiento">Fecha de Nacimiento (Mayor de Edad):</label>
+            <input id="fechaNacimiento" type="date" th:field="*{fechaNacimiento}">
+
+            <label for="esPatron">¿Tiene Título de Patrón?</label>
+            <input id="esPatron" type="checkbox" th:field="*{tieneTituloPatron}">
+            
+            <h2>2. Datos de los Hijos - OPCIONAL</h2>
+            <p class="info-text" style="color: #666;">Para añadir un hijo, rellene todos sus datos personales a continuación. Para añadir más, confirme y vuelva a rellenar el formulario (este formulario simplificado solo procesa UN hijo a la vez).</p>
+
+            <div class="hijo-bloque">
+                <h3>Hijo(a) 1</h3>
+                
+                <label for="h1_dni">DNI:</label>
+                <input id="h1_dni" type="text" name="hijos[0].dni">
+                
+                <label for="h1_nombre">Nombre:</label>
+                <input id="h1_nombre" type="text" name="hijos[0].nombre">
+                
+                <label for="h1_apellidos">Apellidos:</label>
+                <input id="h1_apellidos" type="text" name="hijos[0].apellidos">
+                
+                <label for="h1_fecha">Fecha Nacimiento:</label>
+                <input id="h1_fecha" type="date" name="hijos[0].fechaNacimiento">
+            </div>
+
+            <input type="hidden" name="numHijos" value="0"> 
+            
+            <input type="submit" value="Confirmar y Ampliar a Familiar">
+        </form>
+        <a href="/" class="back-link">Volver al inicio</a>
+    </div>
+</body>
+</html>

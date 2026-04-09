@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Alquileres Futuros - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 1200px;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        table {
+            max-width: 100%;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Listado de Alquileres Futuros</h1>
+
+        <div th:if="${#lists.isEmpty(alquileres)}" class="no-data">
+            No hay alquileres futuros registrados.
+        </div>
+
+        <table th:if="${!#lists.isEmpty(alquileres)}">
+            <thead>
+                <tr>
+                    <th>DNI Socio Titular</th>
+                    <th>Matrícula Embarcación</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Fin</th>
+                    <th>Plazas Solicitadas</th>
+                    <th>Precio Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="a : ${alquileres}">
+                    <td th:text="${a.dniSocioTitular}"></td>
+                    <td th:text="${a.matriculaEmbarcacion}"></td>
+                    <td th:text="${a.fechaInicio}"></td>
+                    <td th:text="${a.fechaFin}"></td>
+                    <td th:text="${a.plazasSolicitadas}"></td>
+                    <td th:text="${a.precioTotal} + ' €'"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a href="/" class="back-link btn">Volver al Menú Principal</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Titular para Ampliación</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 800px;
+            padding: 0;
+            box-shadow: none;
+        }
+        
+        table { 
+            width: 800px; 
+            border-collapse: collapse; 
+            background-color: white; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
+            border-radius: 8px; 
+            overflow: hidden; 
+        }
+        
+        .action-button { 
+            padding: 8px 12px; 
+            background-color: var(--success-color); 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: inline-block; 
+        }
+        .action-button:hover { 
+            background-color: #1e7e34; 
+        }
+        .no-data { 
+            text-align: center; 
+            padding: 20px; 
+            font-style: italic; 
+            color: #666;
+            background-color: #f8f9fa;
+        }
+        .disabled-button {
+            background-color: #ccc;
+            cursor: not-allowed;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Seleccionar Socio Titular para Ampliación</h1>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>DNI</th>
+                    <th>Nombre Completo</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${socios.empty}">
+                    <td colspan="4" class="no-data">No hay socios registrados.</td>
+                </tr>
+                <tr th:each="socio : ${socios}">
+                    <td th:text="${socio.id}"></td>
+                    <td th:text="${socio.dni}"></td>
+                    <td th:text="${socio.nombre + ' ' + socio.apellidos}"></td>
+                    <td>
+                        <form th:action="@{/ampliarInscripcion/buscar}" method="post">
+                            <input type="hidden" name="titularId" th:value="${socio.id}" />
+                            
+                            <button type="submit" 
+                                    class="action-button"
+                                    th:classappend="${!socio.esTitular ? 'disabled-button' : ''}"
+                                    th:disabled="${!socio.esTitular}">
+                                Ampliar
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <a href="/" class="back-link">Volver al Menú Principal</a>
+    </div>
+</body>
+</html>

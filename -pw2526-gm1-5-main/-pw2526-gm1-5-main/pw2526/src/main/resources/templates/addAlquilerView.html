@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Nuevo Alquiler - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+<style>
+        /* Estilos específicos que no se pudieron extraer */
+        .main-container {
+            width: 600px;
+        }
+        .tripulantes-section {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #004aad;
+        }
+
+        .tripulante-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .tripulante-input input {
+            flex: 1;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .info-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Registrar Nuevo Alquiler</h1>
+        
+        <form th:action="@{/alquilarEmbarcacion}" th:object="${nuevoAlquiler}" method="post">
+            
+            <div class="form-group">
+                <label for="dniSocioTitular">DNI del socio titular:</label>
+                <input id="dniSocioTitular" type="text" th:field="*{dniSocioTitular}" required />
+                <div class="info-text">El socio titular ocupará una plaza</div>
+            </div>
+
+            <div class="form-group">
+                <label for="matriculaEmbarcacion">Matrícula de la embarcación:</label>
+                <select id="matriculaEmbarcacion" th:field="*{matriculaEmbarcacion}" required>
+                    <option value="">-- Seleccione Matrícula --</option>
+                    <option th:each="e : ${embarcaciones}" 
+                            th:value="${e.matricula}" 
+                            th:text="${e.nombre + ' (' + e.matricula + ') - ' + e.plaza + ' plazas'}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="fechaInicio">Fecha de inicio:</label>
+                <input id="fechaInicio" type="date" th:field="*{fechaInicio}" required />
+            </div>
+
+            <div class="form-group">
+                <label for="fechaFin">Fecha de fin:</label>
+                <input id="fechaFin" type="date" th:field="*{fechaFin}" required />
+            </div>
+
+            <div class="form-group">
+                <label for="plazasSolicitadas">Número de plazas solicitadas:</label>
+                <input id="plazasSolicitadas" type="number" th:field="*{plazasSolicitadas}" min="1" required />
+                <div class="info-text">Incluye al socio titular + acompañantes</div>
+            </div>
+
+            <div class="tripulantes-section">
+                <h3 style="margin-top: 0; color: #004aad;">Tripulantes Acompañantes</h3>
+                <div class="info-text">
+                    Especifique los DNI de los acompañantes. El socio titular ya está incluido.
+                    Ejemplo: Si solicita 3 plazas, añada 2 DNI de acompañantes.
+                </div>
+                
+                <div id="tripulantes-container">
+                    </div>
+                
+                <button type="button" id="add-tripulante" class="btn btn-small" style="background-color: #28a745;">
+                    + Añadir Acompañante
+                </button>
+            </div>
+
+            <button type="submit" class="btn">Guardar Alquiler</button>
+            <a href="/" class="btn btn-secondary">Cancelar</a>
+        </form>
+
+        <a href="/" class="back-link">Volver al inicio</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('tripulantes-container');
+            const addButton = document.getElementById('add-tripulante');
+            let tripulanteCount = 0;
+
+            function addTripulanteInput() {
+                tripulanteCount++;
+                const div = document.createElement('div');
+                div.className = 'tripulante-input';
+                div.innerHTML = `
+                    <input type="text" 
+                           name="dnisTripulantes" 
+                           placeholder="DNI del acompañante ${tripulanteCount}" 
+                           maxlength="9"
+                           style="flex: 1;">
+                    <button type="button" class="btn btn-small" style="background-color: #dc3545;" onclick="this.parentElement.remove()">
+                        ✕
+                    </button>
+                `;
+                container.appendChild(div);
+            }
+
+            addButton.addEventListener('click', addTripulanteInput);
+
+
+            addTripulanteInput();
+        });
+    </script>
+</body>
+</html>
