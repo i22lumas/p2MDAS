@@ -36,12 +36,12 @@ public class InscripcionRestController {
     }
 
     /**
-     * [cite_start]1. Obtener la lista de inscripciones individuales (GET /api/inscripciones/individual) [cite: 151]
-     * [cite_start]2. Obtener la lista de inscripciones familiares (GET /api/inscripciones/familiar) [cite: 152]
+     * 1. Obtener la lista de inscripciones individuales (GET /api/inscripciones/individual)
+     * 2. Obtener la lista de inscripciones familiares (GET /api/inscripciones/familiar)
      * Implementado con @RequestParam "tipo"
      */
     @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> getInscripciones(@RequestParam(required = false) String tipo) {
+    public ResponseEntity<List<Map<String, Object>>> obtenerInscripciones(@RequestParam(required = false) String tipo) {
         
         List<Map<String, Object>> inscripciones;
         
@@ -58,12 +58,12 @@ public class InscripcionRestController {
     }
     
     /**
-     * [cite_start]3. Obtener la información de una inscripción dado el DNI del socio titular (GET /api/inscripciones/{dniTitular}) [cite: 153]
+     * 3. Obtener la información de una inscripción dado el DNI del socio titular (GET /api/inscripciones/{dniTitular})
      */
     @GetMapping("/{dniTitular}")
-    public ResponseEntity<Inscripcion> getInscripcionByTitularDni(@PathVariable String dniTitular){
+    public ResponseEntity<Inscripcion> obtenerInscripcionPorDniTitular(@PathVariable String dniTitular){
         Socio titular = socioRepository.obtenerSocioPorDni(dniTitular);
-        if (titular == null || !titular.isEsTitular()) {
+        if (titular == null || !titular.esTitular()) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
         
@@ -78,10 +78,10 @@ public class InscripcionRestController {
     }
 
     /**
-     * [cite_start]4. Crear una inscripción para un socio titular (POST /api/inscripciones) [cite: 154]
+     * 4. Crear una inscripción para un socio titular (POST /api/inscripciones)
      */
     @PostMapping
-    public ResponseEntity<Inscripcion> createInscripcion(@RequestBody Inscripcion nuevaInscripcion) {
+    public ResponseEntity<Inscripcion> crearInscripcion(@RequestBody Inscripcion nuevaInscripcion) {
         Socio titular = socioRepository.obtenerSocioPorId(nuevaInscripcion.getIdSocioTitular());
         
         if (titular == null || titular.getInscripcionId() != -1) { 
@@ -90,7 +90,7 @@ public class InscripcionRestController {
         
         nuevaInscripcion.setFechaCreacion(LocalDate.now());
 
-        int idGenerado = inscripcionRepository.addInscripcion(nuevaInscripcion);
+        int idGenerado = inscripcionRepository.insertarInscripcion(nuevaInscripcion);
 
         if(idGenerado > 0){
             nuevaInscripcion.setId(idGenerado);
@@ -102,36 +102,36 @@ public class InscripcionRestController {
     }
 
     /**
-     * [cite_start]2. Actualizar una inscripción individual para convertirla en una familiar (PUT /api/inscripciones/{dniTitular}/tipo) [cite: 188]
+     * 2. Actualizar una inscripción individual para convertirla en una familiar (PUT /api/inscripciones/{dniTitular}/tipo)
      */
     @PutMapping("/{dniTitular}/tipo")
-    public ResponseEntity<Inscripcion> putInscripcionToFamiliar(@PathVariable String dniTitular) {
+    public ResponseEntity<Inscripcion> convertirInscripcionAFamiliar(@PathVariable String dniTitular) {
         Socio titular = socioRepository.obtenerSocioPorDni(dniTitular);
-        if (titular == null || !titular.isEsTitular()) {
+        if (titular == null || !titular.esTitular()) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
 
-        Inscripcion currentInscripcion = inscripcionRepository.obtenerInscripcionPorId(titular.getInscripcionId());
+        Inscripcion inscripcionActual = inscripcionRepository.obtenerInscripcionPorId(titular.getInscripcionId());
         
-        if (currentInscripcion == null || currentInscripcion.getTipoInscripcion() != TipoInscripcion.INDIVIDUAL) {
+        if (inscripcionActual == null || inscripcionActual.getTipoInscripcion() != TipoInscripcion.INDIVIDUAL) {
             return new ResponseEntity<>(null, HttpStatus.UNPROCESSABLE_ENTITY); // No existe o no es individual
         }
         
         // Lógica de negocio (actualizar cuota y tipo)
-        currentInscripcion.setTipoInscripcion(TipoInscripcion.FAMILIAR);
+        inscripcionActual.setTipoInscripcion(TipoInscripcion.FAMILIAR);
         // La cuota debería actualizarse aquí, pero la omitimos por simplicidad del ejemplo.
         
-        boolean resultOk = inscripcionRepository.actualizarInscripcion(currentInscripcion);
+        boolean actualizadoConExito = inscripcionRepository.actualizarInscripcion(inscripcionActual);
         
-        if(resultOk){
-            return new ResponseEntity<>(currentInscripcion, HttpStatus.OK);
+        if(actualizadoConExito){
+            return new ResponseEntity<>(inscripcionActual, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     
     /**
-     * [cite_start]3. Vincular a un nuevo miembro en una inscripción familiar (PATCH /api/inscripciones/{dniTitular}/miembros) [cite: 189, 190]
+     * 3. Vincular a un nuevo miembro en una inscripción familiar (PATCH /api/inscripciones/{dniTitular}/miembros)
      */
     @PatchMapping("/{dniTitular}/miembros")
     public ResponseEntity<Socio> vincularMiembro(@PathVariable String dniTitular, @RequestBody Socio miembroVinculado) {
@@ -152,30 +152,30 @@ public class InscripcionRestController {
             return new ResponseEntity<>(null, HttpStatus.CONFLICT);
         }
         
-        boolean resultOk = socioRepository.vincularSocioAInscripcion(
+        boolean vinculadoConExito = socioRepository.vincularSocioAInscripcion(
             socioMiembro.getId(), 
             inscripcion.getId(), 
             titular.getId(), 
             miembroVinculado.getTipoMiembro()
         );
         
-        if (resultOk) {
-            Socio updatedSocio = socioRepository.obtenerSocioPorDni(miembroVinculado.getDni());
-            return new ResponseEntity<>(updatedSocio, HttpStatus.OK);
+        if (vinculadoConExito) {
+            Socio socioActualizado = socioRepository.obtenerSocioPorDni(miembroVinculado.getDni());
+            return new ResponseEntity<>(socioActualizado, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * [cite_start]4. Desvincular a un miembro de una inscripción familiar (PATCH /api/inscripciones/{dniTitular}/miembros/{dniMiembro}) [cite: 191]
+     * 4. Desvincular a un miembro de una inscripción familiar (PATCH /api/inscripciones/{dniTitular}/miembros/{dniMiembro})
      */
-    @PatchMapping("/{dniTitular}/miembros/{dniMiembro}") // Cambiado de @DeleteMapping a @PatchMapping
+    @PatchMapping("/{dniTitular}/miembros/{dniMiembro}")
     public ResponseEntity<Void> desvincularMiembro(@PathVariable String dniTitular, @PathVariable String dniMiembro) {
         Socio titular = socioRepository.obtenerSocioPorDni(dniTitular);
         Socio socioMiembro = socioRepository.obtenerSocioPorDni(dniMiembro);
         
-        if (titular == null || socioMiembro == null || !titular.isEsTitular()) {
+        if (titular == null || socioMiembro == null || !titular.esTitular()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
@@ -185,13 +185,13 @@ public class InscripcionRestController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         // El miembro debe pertenecer a esta inscripción y no debe ser el titular
-        if (socioMiembro.getInscripcionId() != inscripcion.getId() || socioMiembro.isEsTitular()) {
+        if (socioMiembro.getInscripcionId() != inscripcion.getId() || socioMiembro.esTitular()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         
-        boolean resultOk = socioRepository.desvincularSocioDeInscripcion(socioMiembro.getId()); 
+        boolean desvinculadoConExito = socioRepository.desvincularSocioDeInscripcion(socioMiembro.getId()); 
         
-        if (resultOk) {
+        if (desvinculadoConExito) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT); 
         } else {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -199,13 +199,13 @@ public class InscripcionRestController {
     }
     
     /**
-     * [cite_start]5. Cancelar una inscripción (DELETE /api/inscripciones/{dniTitular}) [cite: 191]
+     * 5. Cancelar una inscripción (DELETE /api/inscripciones/{dniTitular})
      */
     @DeleteMapping("/{dniTitular}")
     public ResponseEntity<Void> cancelarInscripcion(@PathVariable String dniTitular) {
         Socio titular = socioRepository.obtenerSocioPorDni(dniTitular);
         
-        if (titular == null || !titular.isEsTitular()) {
+        if (titular == null || !titular.esTitular()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         
@@ -215,9 +215,9 @@ public class InscripcionRestController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         
-        boolean inscripcionCancelada = inscripcionRepository.cancelarInscripcion(inscripcion.getId());
+        boolean canceladaConExito = inscripcionRepository.cancelarInscripcion(inscripcion.getId());
         
-        if (inscripcionCancelada) {
+        if (canceladaConExito) {
             // Desvincular a todos los socios de la inscripción antes de devolver 204
             socioRepository.desvincularTodosSociosDeInscripcion(inscripcion.getId());
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);

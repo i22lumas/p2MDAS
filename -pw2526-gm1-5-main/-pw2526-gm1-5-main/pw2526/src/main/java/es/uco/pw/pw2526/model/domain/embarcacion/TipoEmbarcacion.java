@@ -1,6 +1,6 @@
 package es.uco.pw.pw2526.model.domain.embarcacion;
 
-public enum TiposBarcos {
+public enum TipoEmbarcacion {
     YATE,
     VELERO,
     MOTO,

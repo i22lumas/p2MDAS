@@ -72,13 +72,13 @@ public class SocioRepository extends AbstractRepository {
                 : "SELECT * FROM Socios ORDER BY fecha_inscripcion DESC";
             
             return jdbcTemplate.query(query, (rs, rowNum) -> mapSocio(rs));
-        } catch (DataAccessException e) {
-            System.err.println("Error obteniendo todos los socios. " + e.getMessage());
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error obteniendo todos los socios. " + excepcion.getMessage());
             return List.of();
         }
     }
     
-    public int addSocioAndReturnId(Socio socio, int inscripcionId) { 
+    public int insertarSocioYRetornarId(Socio socio, int inscripcionId) { 
         try {
             if (this.sqlQueries == null) this.sqlQueries = cargarSqlProperties();
 
@@ -113,9 +113,9 @@ public class SocioRepository extends AbstractRepository {
 
             return keyHolder.getKey() != null ? keyHolder.getKey().intValue() : -1;
 
-        } catch (DataAccessException e) {
-            System.err.println("Error añadiendo socio: " + e.getMessage());
-            e.printStackTrace();
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error añadiendo socio: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return -1;
         }
     }
@@ -132,10 +132,10 @@ public class SocioRepository extends AbstractRepository {
                     new Object[] { dni }, 
                     (rs, rowNum) -> mapSocio(rs));
 
-        } catch (EmptyResultDataAccessException e) {
+        } catch (EmptyResultDataAccessException excepcion) {
             return null;
-        } catch (DataAccessException e) {
-            System.err.println("Error obteniendo socio por DNI: " + dni + ". " + e.getMessage());
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error obteniendo socio por DNI: " + dni + ". " + excepcion.getMessage());
             return null;
         }
     }
@@ -148,10 +148,10 @@ public class SocioRepository extends AbstractRepository {
                     new Object[] { id }, 
                     (rs, rowNum) -> mapSocio(rs));
 
-        } catch (EmptyResultDataAccessException e) {
+        } catch (EmptyResultDataAccessException excepcion) {
             return null;
-        } catch (DataAccessException e) {
-            System.err.println("Error obteniendo socio por ID: " + id + ". " + e.getMessage());
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error obteniendo socio por ID: " + id + ". " + excepcion.getMessage());
             return null;
         }
     }
@@ -161,24 +161,24 @@ public class SocioRepository extends AbstractRepository {
             String query = "SELECT count(*) FROM Socios WHERE dni = ?";
             Integer count = jdbcTemplate.queryForObject(query, new Object[] { dni }, Integer.class);
             return count != null && count > 0;
-        } catch (DataAccessException e) {
-            System.err.println("Error verificando existencia de DNI: " + dni + ". " + e.getMessage());
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error verificando existencia de DNI: " + dni + ". " + excepcion.getMessage());
             return false;
         }
     }
     
-    public boolean actualizarSocioPersonalData(Socio socio) {
+    public boolean actualizarDatosPersonalesSocio(Socio socio) {
         try {
             final String query = "UPDATE Socios SET nombre=?, apellidos=?, direccion=?, fecha_nacimiento=?, tiene_titulo_patron=? WHERE dni=?";
-            int result = jdbcTemplate.update(query, 
+            int filasAfectadas = jdbcTemplate.update(query, 
                 socio.getNombre(), 
                 socio.getApellidos(), 
                 socio.getDireccion(), 
                 socio.getFechaNacimiento(), 
                 socio.getTieneTituloPatron(), 
                 socio.getDni());
-            return result > 0;
-        } catch (DataAccessException e) {
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
             System.err.println("Error actualizando datos personales del socio DNI: " + socio.getDni());
             return false;
         }
@@ -187,9 +187,9 @@ public class SocioRepository extends AbstractRepository {
     public boolean actualizarInscripcionIdSocio(int idSocio, int idInscripcion) {
         try {
             final String query = "UPDATE Socios SET inscripcion_id = ? WHERE id_socio = ?";
-            int result = jdbcTemplate.update(query, idInscripcion, idSocio);
-            return result > 0;
-        } catch (DataAccessException e) {
+            int filasAfectadas = jdbcTemplate.update(query, idInscripcion, idSocio);
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
             System.err.println("Error al actualizar inscripcion_id para Socio ID: " + idSocio);
             return false;
         }
@@ -198,10 +198,10 @@ public class SocioRepository extends AbstractRepository {
     public boolean actualizarIdSocioTitular(int idSocio, int idSocioTitularFk) {
         try {
             String query = "UPDATE Socios SET id_socio_titular_fk = ? WHERE id_socio = ?";
-            int rowsAffected = jdbcTemplate.update(query, idSocioTitularFk, idSocio);
-            return rowsAffected > 0;
-        } catch (DataAccessException e) {
-            System.err.println("Error actualizando id_socio_titular_fk para Socio ID: " + idSocio + ". " + e.getMessage());
+            int filasAfectadas = jdbcTemplate.update(query, idSocioTitularFk, idSocio);
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error actualizando id_socio_titular_fk para Socio ID: " + idSocio + ". " + excepcion.getMessage());
             return false;
         }
     }
@@ -209,13 +209,13 @@ public class SocioRepository extends AbstractRepository {
     public boolean vincularSocioAInscripcion(int idSocio, int idInscripcion, int idSocioTitularFk, TipoMiembro tipoMiembro) {
          try {
             final String query = "UPDATE Socios SET inscripcion_id=?, id_socio_titular_fk=?, tipo_miembro=? WHERE id_socio=?";
-            int result = jdbcTemplate.update(query, 
+            int filasAfectadas = jdbcTemplate.update(query, 
                 idInscripcion, 
                 idSocioTitularFk, 
                 tipoMiembro.toString(),
                 idSocio);
-            return result > 0;
-        } catch (DataAccessException e) {
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
             System.err.println("Error al vincular socio ID " + idSocio + " a inscripción " + idInscripcion);
             return false;
         }
@@ -224,9 +224,9 @@ public class SocioRepository extends AbstractRepository {
     public boolean desvincularSocioDeInscripcion(int idSocio) {
         try {
             final String query = "UPDATE Socios SET inscripcion_id=NULL, id_socio_titular_fk=NULL, tipo_miembro='TITULAR' WHERE id_socio=?";
-            int result = jdbcTemplate.update(query, idSocio);
-            return result > 0;
-        } catch (DataAccessException e) {
+            int filasAfectadas = jdbcTemplate.update(query, idSocio);
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
             System.err.println("Error al desvincular socio ID " + idSocio);
             return false;
         }
@@ -235,20 +235,20 @@ public class SocioRepository extends AbstractRepository {
     public boolean desvincularTodosSociosDeInscripcion(int idInscripcion) {
         try {
             final String query = "UPDATE Socios SET inscripcion_id=NULL, id_socio_titular_fk=NULL, tipo_miembro='TITULAR' WHERE inscripcion_id=?";
-            int result = jdbcTemplate.update(query, idInscripcion);
-            return result > 0;
-        } catch (DataAccessException e) {
+            int filasAfectadas = jdbcTemplate.update(query, idInscripcion);
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
             System.err.println("Error al desvincular todos los socios de la inscripción ID " + idInscripcion);
             return false;
         }
     }
     
-    public boolean deleteSocio(int idSocio) {
+    public boolean eliminarSocio(int idSocio) {
         try {
             final String query = "DELETE FROM Socios WHERE id_socio = ?";
-            int result = jdbcTemplate.update(query, idSocio);
-            return result > 0;
-        } catch (DataAccessException e) {
+            int filasAfectadas = jdbcTemplate.update(query, idSocio);
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
             System.err.println("Error eliminando socio ID: " + idSocio);
             return false;
         }
@@ -258,9 +258,9 @@ public class SocioRepository extends AbstractRepository {
         try {
             String query = "SELECT * FROM Socios WHERE tipo_miembro = 'TITULAR' AND inscripcion_id IS NOT NULL ORDER BY apellidos, nombre";
             return jdbcTemplate.query(query, (rs, rowNum) -> mapSocio(rs));
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo solo los socios titulares.");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -271,9 +271,9 @@ public class SocioRepository extends AbstractRepository {
             
             String query = "SELECT * FROM Socios WHERE tiene_titulo_patron = FALSE AND tipo_miembro IN ('TITULAR', 'CONYUGE') ORDER BY tipo_miembro, apellidos";
             return jdbcTemplate.query(query, (rs, rowNum) -> mapSocio(rs));
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo miembros sin título de patrón.");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -281,10 +281,10 @@ public class SocioRepository extends AbstractRepository {
     public boolean actualizarTituloPatron(String dni, boolean tieneTitulo) {
         try {
             String query = "UPDATE Socios SET tiene_titulo_patron = ? WHERE dni = ?";
-            int rowsAffected = jdbcTemplate.update(query, tieneTitulo, dni);
-            return rowsAffected > 0;
-        } catch (DataAccessException e) {
-            System.err.println("Error actualizando título de patrón para DNI: " + dni + ". " + e.getMessage());
+            int filasAfectadas = jdbcTemplate.update(query, tieneTitulo, dni);
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error actualizando título de patrón para DNI: " + dni + ". " + excepcion.getMessage());
             return false;
         }
     }

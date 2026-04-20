@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import es.uco.pw.pw2526.model.domain.reserva.reserva;
+import es.uco.pw.pw2526.model.domain.reserva.Reserva;
 import es.uco.pw.pw2526.model.Repository.ReservaRepository;
 import es.uco.pw.pw2526.model.Repository.EmbarcacionRepository;
 import es.uco.pw.pw2526.model.Repository.SocioRepository;
-import es.uco.pw.pw2526.model.domain.embarcacion.embarcacion;
+import es.uco.pw.pw2526.model.domain.embarcacion.Embarcacion;
 import es.uco.pw.pw2526.model.domain.Socio.Socio;
 
 @Controller
@@ -46,9 +46,9 @@ public class ReservaController {
     @GetMapping("/reservarEmbarcacion")
     public ModelAndView mostrarFormularioReserva() {
         ModelAndView model = new ModelAndView("reservaView.html");
-        model.addObject("nuevaReserva", new reserva());
+        model.addObject("nuevaReserva", new Reserva());
 
-        List<embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
+        List<Embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
         List<Socio> socios = socioRepository.obtenerTodosSocios();
 
         model.addObject("embarcaciones", embarcaciones);
@@ -61,11 +61,11 @@ public class ReservaController {
     /**
      * Procesa la solicitud de reserva de una embarcación
      * 
-     * @param nuevaReserva Objeto reserva con los datos de la nueva reserva
+     * @param nuevaReserva Objeto Reserva con los datos de la nueva reserva
      * @return ModelAndView con el resultado de la operación (éxito o error)
      */
     @PostMapping("/reservarEmbarcacion")
-    public ModelAndView procesarReserva(@ModelAttribute reserva nuevaReserva) {
+    public ModelAndView procesarReserva(@ModelAttribute Reserva nuevaReserva) {
         ModelAndView model = new ModelAndView();
 
         System.out.println("=== INICIO PROCESAR RESERVA ===");
@@ -150,17 +150,17 @@ public class ReservaController {
 
         System.out.println("Precio calculado: " + precioTotal + "€ (" + totalPersonas + " personas × 40€)");
 
-        boolean exito = reservaRepository.insertarReserva(nuevaReserva);
+        boolean insertadoConExito = reservaRepository.insertarReserva(nuevaReserva);
 
-        System.out.println("Inserción exitosa: " + exito);
+        System.out.println("Inserción exitosa: " + insertadoConExito);
         System.out.println("=== FIN PROCESAR RESERVA ===");
 
-        if (exito) {
+        if (insertadoConExito) {
             model.setViewName("reservaViewSuccess.html");
             model.addObject("mensaje", "Reserva realizada con éxito.");
             model.addObject("reserva", nuevaReserva);
             model.addObject("precioPorPersona", 40.0);
-            model.addObject("totalPersonas", totalPersonas); // Para mostrar en la vista
+            model.addObject("totalPersonas", totalPersonas);
         } else {
             model.setViewName("reservaViewFail.html");
             model.addObject("mensaje", "Error al realizar la reserva. Por favor, inténtelo de nuevo.");
@@ -176,7 +176,7 @@ public class ReservaController {
      */
     @GetMapping("/verReservas")
     public ModelAndView mostrarReservas() {
-        List<reserva> reservas = reservaRepository.obtenerTodasLasReservas();
+        List<Reserva> reservas = reservaRepository.obtenerTodasLasReservas();
         ModelAndView model = new ModelAndView("verReservasView.html");
         model.addObject("reservas", reservas);
         return model;

@@ -1,61 +1,61 @@
 
 package es.uco.pw.pw2526.model.domain.embarcacion;
 
-public class embarcacion {
-    private String Matricula;
-    private TiposBarcos tipo;
-    private String Nombre;
-    private int Plaza;
-    private float dimensiones;
+public class Embarcacion {
+    private String matricula;
+    private TipoEmbarcacion tipo;
+    private String nombre;
+    private int numeroPlazas;
+    private float esloraEnMetros;
     private Integer idPatronAsignado;
 
-    public embarcacion() {
-        this.Matricula = "";
-        this.tipo = TiposBarcos.NONE;
-        this.Nombre = "";
-        this.Plaza = -1;
-        this.dimensiones = -1;
+    public Embarcacion() {
+        this.matricula = "";
+        this.tipo = TipoEmbarcacion.NONE;
+        this.nombre = "";
+        this.numeroPlazas = -1;
+        this.esloraEnMetros = -1;
         this.idPatronAsignado = null;
     }
 
     public String getMatricula() {
-        return Matricula;
+        return matricula;
     }
 
     public void setMatricula(String matricula) {
-        Matricula = matricula;
+        this.matricula = matricula;
     }
 
-    public TiposBarcos getTipo() {
+    public TipoEmbarcacion getTipo() {
         return tipo;
     }
 
-    public void setTipo(TiposBarcos tipo) {
+    public void setTipo(TipoEmbarcacion tipo) {
         this.tipo = tipo;
     }
 
     public String getNombre() {
-        return Nombre;
+        return nombre;
     }
 
     public void setNombre(String nombre) {
-        Nombre = nombre;
+        this.nombre = nombre;
     }
 
-    public int getPlaza() {
-        return Plaza;
+    public int getNumeroPlazas() {
+        return numeroPlazas;
     }
 
-    public void setPlaza(int plaza) {
-        Plaza = plaza;
+    public void setNumeroPlazas(int numeroPlazas) {
+        this.numeroPlazas = numeroPlazas;
     }
 
-    public float getDimensiones() {
-        return dimensiones;
+    public float getEsloraEnMetros() {
+        return esloraEnMetros;
     }
 
-    public void setDimensiones(float dimensiones) {
-        this.dimensiones = dimensiones;
+    public void setEsloraEnMetros(float esloraEnMetros) {
+        this.esloraEnMetros = esloraEnMetros;
     }
 
     public Integer getIdPatronAsignado() {

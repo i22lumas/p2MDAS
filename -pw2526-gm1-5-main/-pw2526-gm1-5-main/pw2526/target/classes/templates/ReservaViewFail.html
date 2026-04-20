@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error en Reserva - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 500px;
+        }
+        .error-message {
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box main-container">
+        <h1 class="header-error">Error en la Reserva</h1>
+        <div class="error-message">
+            <h3>No se pudo completar la reserva</h3>
+            <p th:text="${mensaje}">Ha ocurrido un error al procesar la reserva.</p>
+            <p>Por favor, verifique los datos e inténtelo de nuevo.</p>
+        </div>
+        
+        <div class="actions">
+            <a href="/reservarEmbarcacion" class="btn">Intentar de nuevo</a>
+            <a href="/" class="btn">Volver al Inicio</a>
+        </div>
+    </div>
+</body>
+</html>

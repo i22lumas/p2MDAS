@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error de Consulta - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+</head>
+<body>
+    <div class="result-box main-container">
+        <h1 class="header-error">Error al Listar Inscripciones</h1>
+        <div class="error-message">
+            <p>No se pudo obtener la información de las inscripciones desde la base de datos.</p>
+            <p><strong th:text="${error}">Detalle del error desconocido.</strong></p>
+        </div>
+        <a href="/" class="btn">Volver al Menú Principal</a>
+    </div>
+</body>
+</html>

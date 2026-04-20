@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alta Embarcación - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container form-container">
+        <h1>Nueva Embarcación</h1>
+        <form th:action="@{/addEmbarcacion}" th:object="${newEmbarcacion}" method="post">
+            <label for="Matricula">Matrícula:</label>
+            <input id="Matricula" type="text" th:field="*{Matricula}" required>
+
+            <label for="Nombre">Nombre:</label>
+            <input id="Nombre" type="text" th:field="*{Nombre}" required>
+
+            <label for="tipo">Tipo de barco:</label>
+            <select id="tipo" th:field="*{tipo}">
+                <option th:each="t : ${T(es.uco.pw.pw2526.model.domain.embarcacion.TiposBarcos).values()}"
+                        th:value="${t}" th:text="${t}">
+                </option>
+            </select>
+
+            <label for="Plaza">Número de plazas:</label>
+            <input id="Plaza" type="number" th:field="*{Plaza}" required>
+
+            <label for="dimensiones">Dimensiones (m):</label>
+            <input id="dimensiones" type="number" step="0.1" th:field="*{dimensiones}" required>
+
+            <input type="submit" value="Guardar">
+        </form>
+        <a href="/" class="back-link">Volver al inicio</a>
+    </div>
+</body>
+</html>

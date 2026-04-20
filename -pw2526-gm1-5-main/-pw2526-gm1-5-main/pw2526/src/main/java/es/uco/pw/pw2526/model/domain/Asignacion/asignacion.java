@@ -2,7 +2,7 @@ package es.uco.pw.pw2526.model.domain.Asignacion;
 
 import java.time.LocalDate;
 
-public class asignacion {
+public class Asignacion {
 
     private int idAsignacion;
     private String matriculaEmbarcacion;
@@ -10,10 +10,10 @@ public class asignacion {
     private LocalDate fechaAsignacion;
     private LocalDate fechaFin;
 
-    public asignacion() {
+    public Asignacion() {
     }
 
-    public asignacion(int idAsignacion, String matriculaEmbarcacion, int idEmpleado, LocalDate fechaAsignacion,
+    public Asignacion(int idAsignacion, String matriculaEmbarcacion, int idEmpleado, LocalDate fechaAsignacion,
             LocalDate fechaFin) {
         this.idAsignacion = idAsignacion;
         this.matriculaEmbarcacion = matriculaEmbarcacion;

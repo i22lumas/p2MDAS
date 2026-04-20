@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import es.uco.pw.pw2526.model.Repository.EmbarcacionRepository;
-import es.uco.pw.pw2526.model.Repository.EmpleadosRepository;
-import es.uco.pw.pw2526.model.domain.embarcacion.TiposBarcos;
-import es.uco.pw.pw2526.model.domain.embarcacion.embarcacion;
-import es.uco.pw.pw2526.model.domain.Empleados.Empleados;
+import es.uco.pw.pw2526.model.Repository.PatronRepository;
+import es.uco.pw.pw2526.model.domain.embarcacion.TipoEmbarcacion;
+import es.uco.pw.pw2526.model.domain.embarcacion.Embarcacion;
+import es.uco.pw.pw2526.model.domain.Empleados.Patron;
 
 import java.util.List;
 import java.util.HashMap;
@@ -26,8 +26,8 @@ public class ConsultarEmbarcacionPorTipoController {
     @Autowired
     private EmbarcacionRepository embarcacionRepository;
 
-    @Autowired // INYECTAR EMPLEADOS REPOSITORY
-    private EmpleadosRepository empleadosRepository;
+    @Autowired
+    private PatronRepository patronRepository;
 
     /**
      * Muestra el formulario para consultar embarcaciones por tipo
@@ -37,7 +37,7 @@ public class ConsultarEmbarcacionPorTipoController {
      */
     @GetMapping
     public String mostrarFormulario(Model model) {
-        model.addAttribute("tiposBarcos", TiposBarcos.values());
+        model.addAttribute("tiposEmbarcacion", TipoEmbarcacion.values());
         return "ConsultarEmbarcacionPorTipoView";
     }
 
@@ -45,15 +45,15 @@ public class ConsultarEmbarcacionPorTipoController {
      * Consulta las embarcaciones por tipo y muestra los resultados con información
      * de patrones asignados
      * 
-     * @param tipo  Tipo de barco a consultar
+     * @param tipo  Tipo de embarcación a consultar
      * @param model Modelo para pasar datos a la vista
      * @return String con el nombre de la vista de resultados
      */
     @PostMapping
-    public String consultarPorTipo(@RequestParam TiposBarcos tipo, Model model) {
+    public String consultarPorTipo(@RequestParam TipoEmbarcacion tipo, Model model) {
         System.out.println("🔍 INICIANDO CONSULTA POR TIPO: " + tipo);
 
-        List<embarcacion> embarcaciones = embarcacionRepository.buscarPorTipo(tipo);
+        List<Embarcacion> embarcaciones = embarcacionRepository.buscarPorTipo(tipo);
         System.out.println("✅ EMBARCACIONES ENCONTRADAS: " + embarcaciones.size());
 
         Map<String, String> patronesAsignados = new HashMap<>();
@@ -61,18 +61,18 @@ public class ConsultarEmbarcacionPorTipoController {
         Map<String, List<String>> fechasAsignacion = new HashMap<>();
         Map<String, List<String>> estadosAsignacion = new HashMap<>();
 
-        for (embarcacion emb : embarcaciones) {
-            String matricula = emb.getMatricula();
-            System.out.println("🔍 Procesando embarcación: " + matricula + " - " + emb.getNombre());
+        for (Embarcacion embarcacion : embarcaciones) {
+            String matricula = embarcacion.getMatricula();
+            System.out.println("🔍 Procesando embarcación: " + matricula + " - " + embarcacion.getNombre());
 
             detallesPatron.put(matricula, new ArrayList<>());
             fechasAsignacion.put(matricula, new ArrayList<>());
             estadosAsignacion.put(matricula, new ArrayList<>());
 
-            Integer idPatron = emb.getIdPatronAsignado();
+            Integer idPatron = embarcacion.getIdPatronAsignado();
 
             if (idPatron != null) {
-                Empleados patronActual = empleadosRepository.obtenerEmpleadoPorId(idPatron);
+                Patron patronActual = patronRepository.obtenerPatronPorId(idPatron);
 
                 if (patronActual != null) {
                     patronesAsignados.put(matricula, "SÍ");
@@ -85,7 +85,7 @@ public class ConsultarEmbarcacionPorTipoController {
                 } else {
 
                     patronesAsignados.put(matricula, "NO");
-                    detallesPatron.get(matricula).add("ERROR: Empleado ID " + idPatron + " no encontrado.");
+                    detallesPatron.get(matricula).add("ERROR: Patrón ID " + idPatron + " no encontrado.");
                     fechasAsignacion.get(matricula).add("-");
                     estadosAsignacion.get(matricula).add("INACTIVA/ERROR");
                     System.out.println("❌ Patrón asignado con ID inválido.");
@@ -105,7 +105,7 @@ public class ConsultarEmbarcacionPorTipoController {
         model.addAttribute("fechasAsignacion", fechasAsignacion);
         model.addAttribute("estadosAsignacion", estadosAsignacion);
         model.addAttribute("tipoSeleccionado", tipo);
-        model.addAttribute("tiposBarcos", TiposBarcos.values());
+        model.addAttribute("tiposEmbarcacion", TipoEmbarcacion.values());
 
         System.out.println("🏁 FINALIZANDO CONSULTA - Enviando " + embarcaciones.size() + " embarcaciones a la vista");
         return "ConsultarEmbarcacionPorTipoView";

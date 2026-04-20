@@ -18,13 +18,13 @@ public abstract class AbstractRepository {
         sqlQueries = new Properties();
         try {
             BufferedReader reader;
-            File f = new File(fileName);
-            reader = new BufferedReader(new FileReader(f));
+            File archivoSql = new File(fileName);
+            reader = new BufferedReader(new FileReader(archivoSql));
             sqlQueries.load(reader);
             System.out.println("✅ Archivo " + fileName + " cargado correctamente.");
-        } catch (IOException e) {
-            System.err.println("❌ Error creando objeto Properties para SQL queries: " + e.getMessage());
-            e.printStackTrace();
+        } catch (IOException excepcion) {
+            System.err.println("❌ Error creando objeto Properties para SQL queries: " + excepcion.getMessage());
+            excepcion.printStackTrace();
         }
     }
 

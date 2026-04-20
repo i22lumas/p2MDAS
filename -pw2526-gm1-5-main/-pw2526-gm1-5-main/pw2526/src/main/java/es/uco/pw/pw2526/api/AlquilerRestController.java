@@ -4,8 +4,8 @@ import es.uco.pw.pw2526.model.Repository.AlquilerRepository;
 import es.uco.pw.pw2526.model.Repository.EmbarcacionRepository;
 import es.uco.pw.pw2526.model.Repository.ReservaRepository;
 import es.uco.pw.pw2526.model.Repository.SocioRepository;
-import es.uco.pw.pw2526.model.domain.alquiler.alquiler;
-import es.uco.pw.pw2526.model.domain.embarcacion.embarcacion;
+import es.uco.pw.pw2526.model.domain.alquiler.Alquiler;
+import es.uco.pw.pw2526.model.domain.embarcacion.Embarcacion;
 import es.uco.pw.pw2526.model.domain.Socio.Socio;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,11 +44,11 @@ public class AlquilerRestController {
     // ==================== GET ====================
     // C.1: Obtener la lista completa de alquileres
     @GetMapping
-    public ResponseEntity<List<alquiler>> obtenerTodosAlquileres() {
+    public ResponseEntity<List<Alquiler>> obtenerTodosAlquileres() {
         try {
-            List<alquiler> alquileres = alquilerRepository.obtenerTodosAlquileres();
+            List<Alquiler> alquileres = alquilerRepository.obtenerTodosAlquileres();
             return ResponseEntity.ok(alquileres);
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -57,21 +57,21 @@ public class AlquilerRestController {
     @GetMapping("/futuros")
     public ResponseEntity<?> obtenerAlquileresFuturos(@RequestParam(required = false) String fecha) {
         try {
-            List<alquiler> alquileres = alquilerRepository.obtenerAlquileresFuturos();
+            List<Alquiler> alquileres = alquilerRepository.obtenerAlquileresFuturos();
             
             if (fecha != null && !fecha.isEmpty()) {
                 try {
                     LocalDate fechaFiltro = LocalDate.parse(fecha);
                     alquileres = alquileres.stream()
-                            .filter(a -> !a.getFechaInicio().isBefore(fechaFiltro))
+                            .filter(alquiler -> !alquiler.getFechaInicio().isBefore(fechaFiltro))
                             .toList();
-                } catch (Exception e) {
+                } catch (Exception excepcion) {
                     return ResponseEntity.badRequest()
                             .body(Map.of("error", "Formato de fecha inválido. Use YYYY-MM-DD"));
                 }
             }
             return ResponseEntity.ok(alquileres);
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error al obtener alquileres futuros"));
         }
@@ -81,19 +81,19 @@ public class AlquilerRestController {
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerAlquilerPorId(@PathVariable int id) {
         try {
-            List<alquiler> todos = alquilerRepository.obtenerTodosAlquileres();
-            alquiler alquiler = todos.stream()
-                    .filter(a -> a.getIdAlquiler() == id)
+            List<Alquiler> todos = alquilerRepository.obtenerTodosAlquileres();
+            Alquiler alquilerEncontrado = todos.stream()
+                    .filter(alquiler -> alquiler.getIdAlquiler() == id)
                     .findFirst()
                     .orElse(null);
                     
-            if (alquiler == null) {
+            if (alquilerEncontrado == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Alquiler con ID " + id + " no encontrado"));
             }
             
-            return ResponseEntity.ok(alquiler);
-        } catch (Exception e) {
+            return ResponseEntity.ok(alquilerEncontrado);
+        } catch (Exception excepcion) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error al obtener el alquiler"));
         }
@@ -106,11 +106,12 @@ public class AlquilerRestController {
             @RequestParam String fechaFin) {
         try {
             // Validar formato de fechas
-            LocalDate inicio, fin;
+            LocalDate inicio;
+            LocalDate fin;
             try {
                 inicio = LocalDate.parse(fechaInicio);
                 fin = LocalDate.parse(fechaFin);
-            } catch (Exception e) {
+            } catch (Exception excepcion) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Formato de fecha inválido. Use YYYY-MM-DD"));
             }
@@ -133,19 +134,19 @@ public class AlquilerRestController {
                 return ResponseEntity.badRequest().body(Map.of("error", errorDuracion));
             }
             
-            List<embarcacion> todas = embarcacionRepository.obtenerEmbarcaciones();
-            List<embarcacion> disponibles = new ArrayList<>();
+            List<Embarcacion> todas = embarcacionRepository.obtenerEmbarcaciones();
+            List<Embarcacion> disponibles = new ArrayList<>();
             
-            for (embarcacion e : todas) {
-                boolean libreAlquiler = alquilerRepository.estaDisponible(e.getMatricula(), inicio, fin);
-                boolean libreReserva = reservaRepository.estaDisponible(e.getMatricula(), inicio, fin);
+            for (Embarcacion embarcacion : todas) {
+                boolean libreAlquiler = alquilerRepository.estaDisponible(embarcacion.getMatricula(), inicio, fin);
+                boolean libreReserva = reservaRepository.estaDisponible(embarcacion.getMatricula(), inicio, fin);
                 if (libreAlquiler && libreReserva) {
-                    disponibles.add(e);
+                    disponibles.add(embarcacion);
                 }
             }
             
             return ResponseEntity.ok(disponibles);
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error al obtener embarcaciones disponibles"));
         }
@@ -155,7 +156,7 @@ public class AlquilerRestController {
     // C.5: Crear un alquiler para una embarcación disponible, sin incluir la vinculación 
     //      de los socios que participan en ella
     @PostMapping
-    public ResponseEntity<?> crearAlquiler(@RequestBody alquiler nuevoAlquiler) {
+    public ResponseEntity<?> crearAlquiler(@RequestBody Alquiler nuevoAlquiler) {
         try {
             // Validaciones básicas
             if (nuevoAlquiler.getDniSocioTitular() == null || nuevoAlquiler.getDniSocioTitular().trim().isEmpty()) {
@@ -181,7 +182,7 @@ public class AlquilerRestController {
             }
             
             // Validar que el socio es patrón (según guion: solo patrones pueden alquilar)
-            if (!titular.isEsPatron()) {
+            if (!titular.esPatron()) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El socio titular no tiene título de patrón de embarcación"));
             }
@@ -189,8 +190,8 @@ public class AlquilerRestController {
             nuevoAlquiler.setIdSocioTitular(titular.getId());
             
             // Validar embarcación
-            embarcacion embarcacionSeleccionada = embarcacionRepository.obtenerEmbarcaciones().stream()
-                    .filter(e -> e.getMatricula().equals(nuevoAlquiler.getMatriculaEmbarcacion()))
+            Embarcacion embarcacionSeleccionada = embarcacionRepository.obtenerEmbarcaciones().stream()
+                    .filter(embarcacion -> embarcacion.getMatricula().equals(nuevoAlquiler.getMatriculaEmbarcacion()))
                     .findFirst()
                     .orElse(null);
                     
@@ -222,11 +223,11 @@ public class AlquilerRestController {
                         .body(Map.of("error", "El número de plazas solicitadas debe ser mayor a 0"));
             }
             
-            if (nuevoAlquiler.getPlazasSolicitadas() > embarcacionSeleccionada.getPlaza()) {
+            if (nuevoAlquiler.getPlazasSolicitadas() > embarcacionSeleccionada.getNumeroPlazas()) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", 
                                 "Plazas solicitadas (" + nuevoAlquiler.getPlazasSolicitadas() + 
-                                ") exceden la capacidad de la embarcación (" + embarcacionSeleccionada.getPlaza() + ")"));
+                                ") exceden la capacidad de la embarcación (" + embarcacionSeleccionada.getNumeroPlazas() + ")"));
             }
             
             // Validar disponibilidad
@@ -252,21 +253,21 @@ public class AlquilerRestController {
             nuevoAlquiler.setPrecioTotal(precio);
             
             // Crear alquiler (sin tripulantes - según especificación C.5)
-            int id = alquilerRepository.insertarAlquilerYRetornarId(nuevoAlquiler);
-            if (id > 0) {
-                nuevoAlquiler.setIdAlquiler(id);
-                Map<String, Object> response = new HashMap<>();
-                response.put("mensaje", "Alquiler creado exitosamente");
-                response.put("idAlquiler", id);
-                response.put("alquiler", nuevoAlquiler);
-                return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            int idAlquiler = alquilerRepository.insertarAlquilerYRetornarId(nuevoAlquiler);
+            if (idAlquiler > 0) {
+                nuevoAlquiler.setIdAlquiler(idAlquiler);
+                Map<String, Object> respuesta = new HashMap<>();
+                respuesta.put("mensaje", "Alquiler creado exitosamente");
+                respuesta.put("idAlquiler", idAlquiler);
+                respuesta.put("alquiler", nuevoAlquiler);
+                return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Error al crear el alquiler en la base de datos"));
             }
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error interno: " + e.getMessage()));
+                    .body(Map.of("error", "Error interno: " + excepcion.getMessage()));
         }
     }
 
@@ -282,13 +283,13 @@ public class AlquilerRestController {
             }
             
             // Verificar que el alquiler existe y es futuro
-            alquiler alq = encontrarAlquilerPorId(id);
-            if (alq == null) {
+            Alquiler alquilerExistente = encontrarAlquilerPorId(id);
+            if (alquilerExistente == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Alquiler con ID " + id + " no encontrado"));
             }
             
-            if (alq.getFechaInicio().isBefore(LocalDate.now())) {
+            if (alquilerExistente.getFechaInicio().isBefore(LocalDate.now())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "No se puede modificar un alquiler pasado"));
             }
@@ -301,48 +302,45 @@ public class AlquilerRestController {
             }
             
             // Verificar que no es el titular
-            if (dniSocio.equals(alq.getDniSocioTitular())) {
+            if (dniSocio.equals(alquilerExistente.getDniSocioTitular())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El socio titular ya está incluido en el alquiler"));
             }
             
             // Verificar que no está ya en la lista de tripulantes
-            if (alq.getDnisTripulantes() != null && alq.getDnisTripulantes().contains(dniSocio)) {
+            if (alquilerExistente.getDnisTripulantes() != null && alquilerExistente.getDnisTripulantes().contains(dniSocio)) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El socio ya está en la lista de tripulantes"));
             }
             
             // Verificar capacidad
-            int totalTripulantes = 1 + (alq.getDnisTripulantes() != null ? alq.getDnisTripulantes().size() : 0);
-            if (totalTripulantes >= alq.getPlazasSolicitadas()) {
+            int totalTripulantes = 1 + (alquilerExistente.getDnisTripulantes() != null ? alquilerExistente.getDnisTripulantes().size() : 0);
+            if (totalTripulantes >= alquilerExistente.getPlazasSolicitadas()) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "No hay plazas disponibles en este alquiler"));
             }
             
             // Agregar socio
-            boolean actualizado = alquilerRepository.agregarSocioNoTitular(id, dniSocio);
-            if (actualizado) {
+            boolean agregadoConExito = alquilerRepository.agregarSocioNoTitular(id, dniSocio);
+            if (agregadoConExito) {
                 // Actualizar precio (una plaza más)
-                long dias = ChronoUnit.DAYS.between(alq.getFechaInicio(), alq.getFechaFin()) + 1;
+                long dias = ChronoUnit.DAYS.between(alquilerExistente.getFechaInicio(), alquilerExistente.getFechaFin()) + 1;
                 double nuevoPrecio = 20.0 * (totalTripulantes + 1) * dias;
                 
-                // Aquí deberías actualizar el precio en la base de datos
-                // Por simplicidad, asumimos que el repositorio lo hace
-                
-                Map<String, Object> response = new HashMap<>();
-                response.put("mensaje", "Socio agregado correctamente al alquiler");
-                response.put("idAlquiler", id);
-                response.put("dniSocio", dniSocio);
-                response.put("nuevoPrecio", nuevoPrecio);
-                response.put("plazasOcupadas", totalTripulantes + 1);
-                return ResponseEntity.ok(response);
+                Map<String, Object> respuesta = new HashMap<>();
+                respuesta.put("mensaje", "Socio agregado correctamente al alquiler");
+                respuesta.put("idAlquiler", id);
+                respuesta.put("dniSocio", dniSocio);
+                respuesta.put("nuevoPrecio", nuevoPrecio);
+                respuesta.put("plazasOcupadas", totalTripulantes + 1);
+                return ResponseEntity.ok(respuesta);
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Error al agregar el socio al alquiler"));
             }
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error interno: " + e.getMessage()));
+                    .body(Map.of("error", "Error interno: " + excepcion.getMessage()));
         }
     }
 
@@ -357,51 +355,51 @@ public class AlquilerRestController {
             }
             
             // Verificar que el alquiler existe y es futuro
-            alquiler alq = encontrarAlquilerPorId(id);
-            if (alq == null) {
+            Alquiler alquilerExistente = encontrarAlquilerPorId(id);
+            if (alquilerExistente == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Alquiler con ID " + id + " no encontrado"));
             }
             
-            if (alq.getFechaInicio().isBefore(LocalDate.now())) {
+            if (alquilerExistente.getFechaInicio().isBefore(LocalDate.now())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "No se puede modificar un alquiler pasado"));
             }
             
             // Verificar que no es el titular
-            if (dniSocio.equals(alq.getDniSocioTitular())) {
+            if (dniSocio.equals(alquilerExistente.getDniSocioTitular())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "No se puede quitar al socio titular del alquiler"));
             }
             
             // Verificar que está en la lista de tripulantes
-            if (alq.getDnisTripulantes() == null || !alq.getDnisTripulantes().contains(dniSocio)) {
+            if (alquilerExistente.getDnisTripulantes() == null || !alquilerExistente.getDnisTripulantes().contains(dniSocio)) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El socio no está en la lista de tripulantes de este alquiler"));
             }
             
             // Quitar socio
-            boolean actualizado = alquilerRepository.quitarSocioNoTitular(id, dniSocio);
-            if (actualizado) {
+            boolean quitadoConExito = alquilerRepository.quitarSocioNoTitular(id, dniSocio);
+            if (quitadoConExito) {
                 // Actualizar precio (una plaza menos)
-                long dias = ChronoUnit.DAYS.between(alq.getFechaInicio(), alq.getFechaFin()) + 1;
-                int totalTripulantes = 1 + (alq.getDnisTripulantes() != null ? alq.getDnisTripulantes().size() : 0);
+                long dias = ChronoUnit.DAYS.between(alquilerExistente.getFechaInicio(), alquilerExistente.getFechaFin()) + 1;
+                int totalTripulantes = 1 + (alquilerExistente.getDnisTripulantes() != null ? alquilerExistente.getDnisTripulantes().size() : 0);
                 double nuevoPrecio = 20.0 * (totalTripulantes - 1) * dias;
                 
-                Map<String, Object> response = new HashMap<>();
-                response.put("mensaje", "Socio eliminado correctamente del alquiler");
-                response.put("idAlquiler", id);
-                response.put("dniSocio", dniSocio);
-                response.put("nuevoPrecio", nuevoPrecio);
-                response.put("plazasOcupadas", totalTripulantes - 1);
-                return ResponseEntity.ok(response);
+                Map<String, Object> respuesta = new HashMap<>();
+                respuesta.put("mensaje", "Socio eliminado correctamente del alquiler");
+                respuesta.put("idAlquiler", id);
+                respuesta.put("dniSocio", dniSocio);
+                respuesta.put("nuevoPrecio", nuevoPrecio);
+                respuesta.put("plazasOcupadas", totalTripulantes - 1);
+                return ResponseEntity.ok(respuesta);
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Error al eliminar el socio del alquiler"));
             }
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error interno: " + e.getMessage()));
+                    .body(Map.of("error", "Error interno: " + excepcion.getMessage()));
         }
     }
 
@@ -411,40 +409,40 @@ public class AlquilerRestController {
     public ResponseEntity<?> cancelarAlquiler(@PathVariable int id) {
         try {
             // Verificar que el alquiler existe
-            alquiler alq = encontrarAlquilerPorId(id);
-            if (alq == null) {
+            Alquiler alquilerExistente = encontrarAlquilerPorId(id);
+            if (alquilerExistente == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Alquiler con ID " + id + " no encontrado"));
             }
             
             // Verificar que es futuro (según guion: "que aún no se haya realizado")
-            if (alq.getFechaInicio().isBefore(LocalDate.now())) {
+            if (alquilerExistente.getFechaInicio().isBefore(LocalDate.now())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "No se puede cancelar un alquiler pasado"));
             }
             
-            boolean eliminado = alquilerRepository.cancelarAlquiler(id);
-            if (eliminado) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("mensaje", "Alquiler cancelado correctamente");
-                response.put("idAlquiler", id);
-                return ResponseEntity.ok(response);
+            boolean canceladoConExito = alquilerRepository.cancelarAlquiler(id);
+            if (canceladoConExito) {
+                Map<String, Object> respuesta = new HashMap<>();
+                respuesta.put("mensaje", "Alquiler cancelado correctamente");
+                respuesta.put("idAlquiler", id);
+                return ResponseEntity.ok(respuesta);
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "Error al cancelar el alquiler"));
             }
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error interno: " + e.getMessage()));
+                    .body(Map.of("error", "Error interno: " + excepcion.getMessage()));
         }
     }
 
     // ==================== MÉTODOS PRIVADOS AUXILIARES ====================
     
-    private alquiler encontrarAlquilerPorId(int id) {
-        List<alquiler> todos = alquilerRepository.obtenerTodosAlquileres();
+    private Alquiler encontrarAlquilerPorId(int id) {
+        List<Alquiler> todos = alquilerRepository.obtenerTodosAlquileres();
         return todos.stream()
-                .filter(a -> a.getIdAlquiler() == id)
+                .filter(alquiler -> alquiler.getIdAlquiler() == id)
                 .findFirst()
                 .orElse(null);
     }

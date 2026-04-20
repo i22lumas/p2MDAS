@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Embarcaciones Disponibles - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 800px;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Buscar Embarcaciones Disponibles</h1>
+        
+        <form th:action="@{/buscarEmbarcacionesDisponibles}" method="post">
+            <div class="form-group">
+                <label for="fechaInicio">Fecha de inicio:</label>
+                <input type="date" id="fechaInicio" name="fechaInicio" th:value="${fechaInicio}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="fechaFin">Fecha de fin:</label>
+                <input type="date" id="fechaFin" name="fechaFin" th:value="${fechaFin}" required>
+            </div>
+            
+            <button type="submit" class="btn">Buscar Disponibilidad</button>
+            <a href="/" class="btn btn-secondary">Volver al Inicio</a>
+        </form>
+
+        <div th:if="${error}" class="error">
+            <p th:text="${error}"></p>
+        </div>
+
+        <div th:if="${mensaje}" class="success">
+            <p th:text="${mensaje}"></p>
+        </div>
+
+        <div th:if="${fechaInicio != null and fechaFin != null and #lists.isEmpty(embarcacionesDisponibles)}" class="no-data">
+            No hay embarcaciones disponibles en las fechas seleccionadas.
+        </div>
+
+        <table th:if="${!#lists.isEmpty(embarcacionesDisponibles)}">
+            <thead>
+                <tr>
+                    <th>Matrícula</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Plazas</th>
+                    <th>Dimensiones</th>
+                    <th>Patrón Asignado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="embarcacion : ${embarcacionesDisponibles}">
+                    <td th:text="${embarcacion.matricula}"></td>
+                    <td th:text="${embarcacion.nombre}"></td>
+                    <td th:text="${embarcacion.tipo}"></td>
+                    <td th:text="${embarcacion.plaza}"></td>
+                    <td th:text="${embarcacion.dimensiones} + ' m'"></td>
+                    <td th:text="${embarcacion.idPatronAsignado != null ? 'SÍ' : 'NO'}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

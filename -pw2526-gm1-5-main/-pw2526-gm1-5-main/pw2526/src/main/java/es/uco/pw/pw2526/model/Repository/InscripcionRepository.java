@@ -44,7 +44,7 @@ public class InscripcionRepository extends AbstractRepository {
         return inscripcion;
     }
 
-    public int addInscripcion(Inscripcion inscripcion) {
+    public int insertarInscripcion(Inscripcion inscripcion) {
         try {
             if (this.sqlQueries == null)
                 this.sqlQueries = cargarSqlProperties();
@@ -66,9 +66,9 @@ public class InscripcionRepository extends AbstractRepository {
 
             return keyHolder.getKey() != null ? keyHolder.getKey().intValue() : -1;
 
-        } catch (DataAccessException e) {
-            System.err.println("Error añadiendo inscripción: " + e.getMessage());
-            e.printStackTrace();
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error añadiendo inscripción: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return -1;
         }
     }
@@ -80,12 +80,12 @@ public class InscripcionRepository extends AbstractRepository {
                 
             final String query = "UPDATE Inscripciones SET id_socio_titular = ? WHERE id_inscripcion = ?";
 
-            int result = jdbcTemplate.update(query, idSocioTitular, inscripcionId);
+            int filasAfectadas = jdbcTemplate.update(query, idSocioTitular, inscripcionId);
 
-            return result > 0;
-        } catch (DataAccessException e) {
-            System.err.println("Error al actualizar el socio titular de la inscripción: " + e.getMessage());
-            e.printStackTrace();
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error al actualizar el socio titular de la inscripción: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -98,16 +98,16 @@ public class InscripcionRepository extends AbstractRepository {
             
             final String query = "UPDATE Inscripciones SET cuota_anual = ?, tipo_inscripcion = ? WHERE id_inscripcion = ?";
 
-            int result = jdbcTemplate.update(query,
+            int filasAfectadas = jdbcTemplate.update(query,
                     inscripcion.getCuotaAnual(),
                     inscripcion.getTipoInscripcion().toString(),
                     inscripcion.getId());
 
-            return result > 0;
+            return filasAfectadas > 0;
 
-        } catch (DataAccessException e) {
-            System.err.println("Error actualizando inscripción: " + e.getMessage());
-            e.printStackTrace();
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error actualizando inscripción: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -125,9 +125,9 @@ public class InscripcionRepository extends AbstractRepository {
                     new Object[] { idInscripcion },
                     this::mapInscripcion);
 
-        } catch (EmptyResultDataAccessException e) {
+        } catch (EmptyResultDataAccessException excepcion) {
             return null;
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo inscripción por ID: " + idInscripcion);
             return null;
         }
@@ -160,9 +160,9 @@ public class InscripcionRepository extends AbstractRepository {
                 return detalle;
             });
 
-        } catch (DataAccessException e) {
-            System.err.println("Error obteniendo el listado detallado de inscripciones por tipo: " + e.getMessage());
-            e.printStackTrace();
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error obteniendo el listado detallado de inscripciones por tipo: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -195,9 +195,9 @@ public class InscripcionRepository extends AbstractRepository {
                 return detalle;
             });
 
-        } catch (DataAccessException e) {
-            System.err.println("Error obteniendo el listado detallado de inscripciones: " + e.getMessage());
-            e.printStackTrace();
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error obteniendo el listado detallado de inscripciones: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -205,12 +205,12 @@ public class InscripcionRepository extends AbstractRepository {
     public Inscripcion obtenerInscripcionPorDniTitular(String dniTitular) {
         try {
             Socio socio = socioRepository.obtenerSocioPorDni(dniTitular); 
-            if (socio == null || !socio.isEsTitular() || socio.getInscripcionId() == -1) {
+            if (socio == null || !socio.esTitular() || socio.getInscripcionId() == -1) {
                 return null;
             }
             return obtenerInscripcionPorId(socio.getInscripcionId());
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo inscripción por DNI del titular: " + dniTitular);
             return null;
         }
@@ -219,9 +219,9 @@ public class InscripcionRepository extends AbstractRepository {
     public boolean cancelarInscripcion(int idInscripcion) {
         try {
             final String query = "DELETE FROM Inscripciones WHERE id_inscripcion = ?";
-            int result = jdbcTemplate.update(query, idInscripcion);
-            return result > 0;
-        } catch (DataAccessException e) {
+            int filasAfectadas = jdbcTemplate.update(query, idInscripcion);
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
             System.err.println("Error cancelando/eliminando inscripción ID: " + idInscripcion);
             return false;
         }

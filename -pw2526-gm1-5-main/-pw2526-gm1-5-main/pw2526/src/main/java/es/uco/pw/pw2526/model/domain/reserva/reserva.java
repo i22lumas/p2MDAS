@@ -2,7 +2,7 @@ package es.uco.pw.pw2526.model.domain.reserva;
 
 import java.time.LocalDate;
 
-public class reserva {
+public class Reserva {
     private Integer idReserva;
     private String propositoActividad;
     private Integer idSocioSolicitante;
@@ -12,7 +12,7 @@ public class reserva {
     private String matriculaEmbarcacion;
     private Integer idPatron;
 
-    public reserva() {
+    public Reserva() {
         this.idReserva = null;
         this.propositoActividad = "";
         this.idSocioSolicitante = null;
@@ -23,7 +23,7 @@ public class reserva {
         this.idPatron = null;
     }
 
-    public reserva(Integer idReserva, String propositoActividad, Integer idSocioSolicitante,
+    public Reserva(Integer idReserva, String propositoActividad, Integer idSocioSolicitante,
             LocalDate fechaActividad, Integer plazasSolicitadas, Double precioTotal,
             String matriculaEmbarcacion, Integer idPatron) {
         this.idReserva = idReserva;

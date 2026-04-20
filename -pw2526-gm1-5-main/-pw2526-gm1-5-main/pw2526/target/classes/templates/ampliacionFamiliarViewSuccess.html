@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ampliación Exitosa - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 500px;
+        }
+        .summary {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .summary p {
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box main-container">
+        <h1 class="header-success">Ampliación Exitosa</h1>
+        <div class="success-message">
+            <p th:text="${mensaje}">La inscripción familiar se ha completado.</p>
+        </div>
+        
+        <div class="summary">
+            <p><span class="data-label">Titular:</span> <span th:text="${titularNombre}"></span></p>
+            <p><span class="data-label">Miembros Añadidos:</span> <span th:text="${miembrosAnadidos}"></span></p>
+            <hr/>
+            <p><span class="data-label">Cuota Anterior:</span> <span th:text="${#numbers.formatDecimal(cuotaAnterior, 0, 'COMMA', 2, 'POINT')} + '€'"></span></p>
+            <p><span class="data-label">Cuota Nueva:</span> <strong th:text="${#numbers.formatDecimal(cuotaNueva, 0, 'COMMA', 2, 'POINT')} + '€'" style="color: var(--success-color);"></strong></p>
+        </div>
+        
+        <div class="actions">
+            <a href="/ampliarInscripcion" class="btn">Realizar otra ampliación</a>
+            <a href="/" class="btn">Volver al Menú Principal</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operación Exitosa - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .socio-info {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--success-color);
+            text-align: left;
+        }
+        .socio-info p {
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box main-container">
+        <h1 class="header-success">Título Registrado</h1>
+        <div class="success-message">
+            <p th:text="${mensaje}">Mensaje de éxito.</p>
+        </div>
+        <div class="socio-info">
+            <p><strong class="data-label">Socio:</strong> <span th:text="${socio.nombre + ' ' + socio.apellidos}"></span></p>
+            <p><strong class="data-label">Estado:</strong> <span style="color: green; font-weight: bold;">PATRÓN REGISTRADO</span></p>
+        </div>
+        <div class="actions">
+            <a href="/registrarTituloPatron" class="btn">Volver a Socios Pendientes</a>
+            <a href="/" class="btn">Volver al Menú Principal</a>
+        </div>
+    </div>
+</body>
+</html>

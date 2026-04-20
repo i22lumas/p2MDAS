@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Empleados - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 1200px;
+            padding: 0;
+            box-shadow: none;
+        }
+        .no-data {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px 20px;
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Listado de Empleados</h1>
+
+        <div th:if="${#lists.isEmpty(Empleados)}" class="no-data">
+            No hay Empleados registrados.
+        </div>
+
+        <table th:if="${!#lists.isEmpty(Empleados)}">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>DNI</th>
+                    <th>Nombre</th>
+                    <th>Apellidos</th>
+                    <th>Fecha Nacimiento</th>
+                    <th>Fecha Expedición Título</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="empleado : ${Empleados}">
+                    <td th:text="${empleado.id}"></td>
+                    <td th:text="${empleado.dni}"></td>
+                    <td th:text="${empleado.nombre}"></td>
+                    <td th:text="${empleado.apellidos}"></td>
+                    <td th:text="${#temporals.format(empleado.fech_nacimiento, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${#temporals.format(empleado.fech_expedicion_titulo, 'dd/MM/yyyy')}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a href="/" class="back-link">Volver al Menú Principal</a>
+    </div>
+</body>
+</html>

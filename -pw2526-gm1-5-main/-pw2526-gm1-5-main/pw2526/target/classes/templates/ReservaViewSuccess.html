@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva Exitosa - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 600px;
+        }
+        .details-card {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .details-card h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .details-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .details-column {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .details-column p {
+            margin: 0.5rem 0;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box main-container">
+        <h1 class="header-success">Reserva Realizada con Éxito</h1>
+
+        <div class="success-message">
+            <h3>¡Reserva confirmada!</h3>
+            <p th:text="${mensaje}">La reserva se ha realizado correctamente.</p>
+        </div>
+        
+        <div class="details-card">
+            <h3>Detalles de la Reserva</h3>
+            <div class="details-row">
+                <div class="details-column">
+                    <p><strong>Propósito:</strong> <span th:text="${reserva.propositoActividad}"></span></p>
+                    <p><strong>Fecha de actividad:</strong> <span th:text="${reserva.fechaActividad}"></span></p>
+                    <p><strong>Plazas de socios:</strong> <span th:text="${reserva.plazasSolicitadas}"></span></p>
+                </div>
+                <div class="details-column">
+                    <p><strong>Total personas:</strong> <span th:text="${totalPersonas}"></span> (socios + patrón)</p>
+                    <p><strong>Precio por persona:</strong> <span th:text="${precioPorPersona} + '€'">40€</span></p>
+                    <p><strong>Precio total:</strong> <span th:text="${reserva.precioTotal} + '€'"></span></p>
+                    <p><strong>Embarcación:</strong> <span th:text="${reserva.matriculaEmbarcacion}"></span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <a href="/reservarEmbarcacion" class="btn">Hacer otra reserva</a>
+            <a href="/verReservas" class="btn btn-info">Ver todas las reservas</a>
+            <a href="/" class="btn">Volver al Inicio</a>
+        </div>
+    </div>
+</body>
+</html>

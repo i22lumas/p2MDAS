@@ -32,9 +32,8 @@ public class AmpliacionFamiliarController {
     }
 
     @GetMapping("/ampliarInscripcion")
-    public ModelAndView getBuscarTitularView() {
+    public ModelAndView mostrarSeleccionTitular() {
         ModelAndView modelAndView = new ModelAndView("listarTitularView.html");
-        // CAMBIO CLAVE: Obtener solo socios titulares.
         List<Socio> socios = socioRepository.obtenerSociosTitulares();
         modelAndView.addObject("socios", socios);
         return modelAndView;
@@ -45,8 +44,6 @@ public class AmpliacionFamiliarController {
         Socio titular = socioRepository.obtenerSocioPorId(titularId);
         ModelAndView modelAndView = new ModelAndView();
 
-        // La validación en el controlador sigue siendo necesaria por si el ID se manipula, 
-        // pero la lista ya solo mostrará titulares.
         if (titular == null || titular.getTipoMiembro() != TipoMiembro.TITULAR) {
             modelAndView.setViewName("ampliacionFamiliarViewFail.html");
             modelAndView.addObject("error", "Socio no encontrado o no es titular de una inscripción.");
@@ -119,7 +116,7 @@ public class AmpliacionFamiliarController {
             nuevoAdulto.setTieneTituloPatron(false); 
             nuevoAdulto.setDireccion(titular.getDireccion()); 
 
-            if (socioRepository.addSocioAndReturnId(nuevoAdulto, inscripcionId) > 0) {
+            if (socioRepository.insertarSocioYRetornarId(nuevoAdulto, inscripcionId) > 0) {
                 adultosAnadidos = 1;
                 if (inscripcion.getTipoInscripcion() == TipoInscripcion.INDIVIDUAL) {
                    nuevaCuota += CUOTA_SEGUNDO_ADULTO;
@@ -158,7 +155,7 @@ public class AmpliacionFamiliarController {
             
             try {
                 hijo.setFechaNacimiento(LocalDate.parse(hijosFechaNacimientoList.get(0)));
-            } catch (Exception e) {
+            } catch (Exception excepcion) {
                 modelAndView.setViewName("ampliacionFamiliarViewFail.html");
                 modelAndView.addObject("error", "Error: La Fecha de Nacimiento del hijo no es válida.");
                 return modelAndView;
@@ -171,7 +168,7 @@ public class AmpliacionFamiliarController {
             hijo.setTieneTituloPatron(false); 
             hijo.setDireccion(titular.getDireccion());
 
-            if (socioRepository.addSocioAndReturnId(hijo, inscripcionId) > 0) {
+            if (socioRepository.insertarSocioYRetornarId(hijo, inscripcionId) > 0) {
                 totalHijosAnadidos = 1;
                 nuevaCuota += CUOTA_HIJO;
             } else {
@@ -195,9 +192,9 @@ public class AmpliacionFamiliarController {
             return modelAndView;
         }
 
-        boolean success = inscripcionRepository.actualizarInscripcion(inscripcion);
+        boolean actualizadoConExito = inscripcionRepository.actualizarInscripcion(inscripcion);
 
-        if (success) {
+        if (actualizadoConExito) {
             int totalMiembrosNuevos = adultosAnadidos + totalHijosAnadidos;
 
             modelAndView.addObject("titularNombre", titular.getNombre() + " " + titular.getApellidos());

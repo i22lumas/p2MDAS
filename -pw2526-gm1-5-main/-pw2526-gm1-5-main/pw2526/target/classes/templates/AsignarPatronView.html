@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignar Patrón - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 500px;
+        }
+        select, button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #003080;
+        }
+
+        .patron-actual {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container form-container">
+        <h1>Asignar Patrón a una Embarcación</h1>
+
+        <form th:action="@{/asignarPatron}" method="post">
+            <div>
+                <label for="matricula">Selecciona embarcación:</label>
+                <select id="matricula" name="matricula" required>
+                    <option value="">-- Selecciona una embarcación --</option>
+                    <option th:each="e : ${embarcaciones}"
+                            th:value="${e.matricula}"
+                            th:text="${e.nombre + ' (' + e.matricula + ')' + (e.idPatronAsignado != null ? ' - Con patrón' : ' - Sin patrón')}"></option>
+                </select>
+            </div>
+
+            <div>
+                <label for="idEmpleado">Selecciona patrón disponible:</label>
+                <select id="idEmpleado" name="idEmpleado" required>
+                    <option value="">-- Selecciona un patrón --</option>
+                    <option th:each="p : ${empleados}"
+                            th:value="${p.id}"
+                            th:text="${p.nombre + ' ' + p.apellidos + ' - ' + p.dni}"></option>
+                </select>
+                <div class="info-text">Solo se muestran patrones sin asignación actual</div>
+            </div>
+
+            <button type="submit">Asignar Patrón</button>
+        </form>
+        <a href="/" class="back-link">Volver al inicio</a>
+    </div>
+</body>
+</html>

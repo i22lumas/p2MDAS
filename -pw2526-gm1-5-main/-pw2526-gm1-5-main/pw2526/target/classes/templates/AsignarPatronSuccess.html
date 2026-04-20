@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignación Exitosa - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+</head>
+<body>
+    <div class="result-box main-container">
+        <h1 class="header-success">Asignación Exitosa</h1>
+        <div class="success-message">
+            <p th:text="${mensaje}">Patrón asignado correctamente.</p>
+        </div>
+        <div class="actions">
+            <a th:href="@{/asignarPatron}" class="btn">Volver</a>
+            <a href="/" class="btn">Volver al inicio</a>
+        </div>
+    </div>
+</body>
+</html>

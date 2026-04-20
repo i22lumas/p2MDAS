@@ -42,7 +42,7 @@ public class SocioRestController {
      * 1. Obtener la lista completa de socios, sean titulares o no. (GET /api/socios) [cite: 39]
      */
     @GetMapping
-    public ResponseEntity<List<Socio>> getAllSocios(){
+    public ResponseEntity<List<Socio>> obtenerTodosSocios(){
         List<Socio> socios = socioRepository.obtenerTodosSocios();
         return new ResponseEntity<>(socios, HttpStatus.OK);
     }
@@ -51,7 +51,7 @@ public class SocioRestController {
      * 2. Obtener la información de un socio, sea titular o no, dado su DNI (GET /api/socios/{dni})
      */
     @GetMapping("/{dni}")
-    public ResponseEntity<Socio> getSocioByDni(@PathVariable String dni){
+    public ResponseEntity<Socio> obtenerSocioPorDni(@PathVariable String dni){
         Socio socio = socioRepository.obtenerSocioPorDni(dni);            
         if(socio != null){
             return new ResponseEntity<>(socio, HttpStatus.OK);
@@ -66,7 +66,7 @@ public class SocioRestController {
      * Se asume que este socio se crea con TipoMiembro.TITULAR pero sin inscripcionId.
      */
     @PostMapping
-    public ResponseEntity<Socio> createSocioSinInscripcion(@RequestBody Socio nuevoSocio) {
+    public ResponseEntity<Socio> crearSocioSinInscripcion(@RequestBody Socio nuevoSocio) {
         if (socioRepository.existeSocioPorDni(nuevoSocio.getDni())) {
              // El DNI ya existe
              return new ResponseEntity<>(null, HttpStatus.CONFLICT); 
@@ -79,7 +79,7 @@ public class SocioRestController {
         nuevoSocio.setFechaInscripcion(LocalDate.now());
 
         // Se necesita un método para añadir un socio sin inscripción, simulado usando -1 como id.
-        int idGenerado = socioRepository.addSocioAndReturnId(nuevoSocio, -1); 
+        int idGenerado = socioRepository.insertarSocioYRetornarId(nuevoSocio, -1); 
         
         if (idGenerado > 0) {
             nuevoSocio.setId(idGenerado);
@@ -94,7 +94,7 @@ public class SocioRestController {
      * El cuerpo de la petición (Socio) debe indicar si es CONYUGE o HIJO.
      */
     @PostMapping(params = "inscripcionId")
-    public ResponseEntity<Socio> createSocioAndLinkToFamilyInscription(@RequestBody Socio nuevoSocio, 
+    public ResponseEntity<Socio> crearSocioYVincularAInscripcionFamiliar(@RequestBody Socio nuevoSocio, 
                                                                        @RequestParam int inscripcionId) {
         if (socioRepository.existeSocioPorDni(nuevoSocio.getDni())) {
              return new ResponseEntity<>(null, HttpStatus.CONFLICT);
@@ -119,7 +119,7 @@ public class SocioRestController {
              return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
 
-        int idGenerado = socioRepository.addSocioAndReturnId(nuevoSocio, inscripcionId);
+        int idGenerado = socioRepository.insertarSocioYRetornarId(nuevoSocio, inscripcionId);
         
         if (idGenerado > 0) {
             nuevoSocio.setId(idGenerado);
@@ -137,27 +137,27 @@ public class SocioRestController {
      * 1. Actualizar los campos de información de un socio, excepto el DNI (PATCH /api/socios/{dni}) [cite: 79]
      */
     @PatchMapping("/{dni}")
-    public ResponseEntity<Socio> patchSocio(@PathVariable String dni, @RequestBody Socio socioUpdates) {
-        Socio currentSocio = socioRepository.obtenerSocioPorDni(dni);
-        if (currentSocio == null) {
+    public ResponseEntity<Socio> actualizarDatosSocio(@PathVariable String dni, @RequestBody Socio socioActualizaciones) {
+        Socio socioActual = socioRepository.obtenerSocioPorDni(dni);
+        if (socioActual == null) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
         
         // El DNI, ID, y los campos de vinculación (inscripcionId, idSocioTitularFk, tipoMiembro) no deben actualizarse aquí.
         // Aplicar solo los campos de información personal
-        if (socioUpdates.getNombre() != null) currentSocio.setNombre(socioUpdates.getNombre());
-        if (socioUpdates.getApellidos() != null) currentSocio.setApellidos(socioUpdates.getApellidos());
-        if (socioUpdates.getDireccion() != null) currentSocio.setDireccion(socioUpdates.getDireccion());
-        if (socioUpdates.getFechaNacimiento() != null) currentSocio.setFechaNacimiento(socioUpdates.getFechaNacimiento());
+        if (socioActualizaciones.getNombre() != null) socioActual.setNombre(socioActualizaciones.getNombre());
+        if (socioActualizaciones.getApellidos() != null) socioActual.setApellidos(socioActualizaciones.getApellidos());
+        if (socioActualizaciones.getDireccion() != null) socioActual.setDireccion(socioActualizaciones.getDireccion());
+        if (socioActualizaciones.getFechaNacimiento() != null) socioActual.setFechaNacimiento(socioActualizaciones.getFechaNacimiento());
         
         // Nota: Asumo que tieneTituloPatron se puede actualizar con un método PATCH específico, pero si viene en el cuerpo lo actualizamos.
-        currentSocio.setTieneTituloPatron(socioUpdates.getTieneTituloPatron());
+        socioActual.setTieneTituloPatron(socioActualizaciones.getTieneTituloPatron());
         
         // Utilizamos un método en el repositorio que actualice los campos personalizables
-        boolean resultOk = socioRepository.actualizarSocioPersonalData(currentSocio);
+        boolean actualizadoConExito = socioRepository.actualizarDatosPersonalesSocio(socioActual);
         
-        if(resultOk){
-            return new ResponseEntity<>(currentSocio, HttpStatus.OK);
+        if(actualizadoConExito){
+            return new ResponseEntity<>(socioActual, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -167,7 +167,7 @@ public class SocioRestController {
      * 6. Eliminar a un socio si no está vinculado a ninguna inscripción (DELETE /api/socios/{dni}) [cite: 84]
      */
     @DeleteMapping("/{dni}")
-    public ResponseEntity<Void> deleteSocio(@PathVariable String dni) {
+    public ResponseEntity<Void> eliminarSocio(@PathVariable String dni) {
         Socio socio = socioRepository.obtenerSocioPorDni(dni);
         
         if (socio == null) {
@@ -176,9 +176,9 @@ public class SocioRestController {
         
         // Comprobar la restricción: si no está vinculado a ninguna inscripción
         // La condición es que el 'inscripcion_id' sea -1 (o null si se permite) Y que el 'tipo_miembro' sea TITULAR
-        if (socio.getInscripcionId() == -1 && socio.isEsTitular()) {
-            boolean resultOk = socioRepository.deleteSocio(socio.getId()); // Se asume método deleteSocio(id) en Repository
-            if (resultOk) {
+        if (socio.getInscripcionId() == -1 && socio.esTitular()) {
+            boolean eliminadoConExito = socioRepository.eliminarSocio(socio.getId());
+            if (eliminadoConExito) {
                  return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             } else {
                  return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);

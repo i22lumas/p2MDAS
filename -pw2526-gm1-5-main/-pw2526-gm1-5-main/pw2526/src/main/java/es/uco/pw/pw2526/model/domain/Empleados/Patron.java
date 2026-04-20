@@ -2,26 +2,26 @@ package es.uco.pw.pw2526.model.domain.Empleados;
 
 import java.time.LocalDate;
 
-public class Empleados {
+public class Patron {
 
     private int id;
     private String nombre;
     private String apellidos;
     private String dni;
-    private LocalDate fech_nacimiento;
-    private LocalDate fech_expedicion_titulo;
+    private LocalDate fechaNacimiento;
+    private LocalDate fechaExpedicionTitulo;
 
-    public Empleados() {
+    public Patron() {
         this.id = -1;
         this.nombre = "";
         this.apellidos = "";
         this.dni = "";
-        this.fech_nacimiento = LocalDate.of(1899, 11, 19);
-        this.fech_expedicion_titulo = LocalDate.of(1899, 11, 19);
+        this.fechaNacimiento = LocalDate.of(1899, 11, 19);
+        this.fechaExpedicionTitulo = LocalDate.of(1899, 11, 19);
 
     }
 
-    public Empleados(int id, String nombre) {
+    public Patron(int id, String nombre) {
         this.id = id;
         this.nombre = nombre;
     }
@@ -34,12 +34,12 @@ public class Empleados {
         return dni;
     }
 
-    public LocalDate getFech_nacimiento() {
-        return fech_nacimiento;
+    public LocalDate getFechaNacimiento() {
+        return fechaNacimiento;
     }
 
-    public LocalDate getFech_expedicion_titulo() {
-        return fech_expedicion_titulo;
+    public LocalDate getFechaExpedicionTitulo() {
+        return fechaExpedicionTitulo;
     }
 
     public int getId() {
@@ -60,7 +60,7 @@ public class Empleados {
 
     @Override
     public String toString() {
-        return "Empleados [id=" + id + ", nombre=" + nombre + "]";
+        return "Patron [id=" + id + ", nombre=" + nombre + "]";
     }
 
     public void setApellidos(String apellidos) {
@@ -71,12 +71,12 @@ public class Empleados {
         this.dni = dni;
     }
 
-    public void setFech_nacimiento(LocalDate fech_nacimiento) {
-        this.fech_nacimiento = fech_nacimiento;
+    public void setFechaNacimiento(LocalDate fechaNacimiento) {
+        this.fechaNacimiento = fechaNacimiento;
     }
 
-    public void setFech_expedicion_titulo(LocalDate fech_expedicion_titulo) {
-        this.fech_expedicion_titulo = fech_expedicion_titulo;
+    public void setFechaExpedicionTitulo(LocalDate fechaExpedicionTitulo) {
+        this.fechaExpedicionTitulo = fechaExpedicionTitulo;
     }
 
 }

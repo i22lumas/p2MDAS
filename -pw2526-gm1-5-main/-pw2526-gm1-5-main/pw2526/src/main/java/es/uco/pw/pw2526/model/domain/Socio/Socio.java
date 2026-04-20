@@ -59,15 +59,15 @@ public class Socio {
         return years >= 18;
     }
 
-    public boolean isEsTitular() {
+    public boolean esTitular() {
         return this.tipoMiembro == TipoMiembro.TITULAR;
     }
     
-    public boolean isEsPatron() {
+    public boolean esPatron() {
         return tieneTituloPatron;
     }
     
-    public boolean isLinkedToInscripcion() {
+    public boolean estaVinculadoAInscripcion() {
         return this.inscripcionId != -1;
     }
 

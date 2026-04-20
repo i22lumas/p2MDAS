@@ -1,0 +1,271 @@
+/* ---- Base Configuration ---- */
+:root {
+    --primary-color: #004aad; /* Azul Marino */
+    --secondary-color: #6c757d; /* Gris */
+    --success-color: #28a745; /* Verde */
+    --error-color: #d9534f; /* Rojo */
+    --background-light: #f7f9fb;
+    --white: white;
+}
+
+/* ---- General Typography and Layout ---- */
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--background-light);
+    color: #333;
+    margin: 0;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center; 
+}
+
+/* Base style for main content containers */
+.main-container {
+    background-color: var(--white);
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px; /* Default max-width for forms/results */
+}
+
+/* Specific styling for narrow forms */
+.form-container {
+    max-width: 400px;
+}
+
+/* Styling for generic result boxes */
+.result-box {
+    max-width: 500px;
+    text-align: center;
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+h1.header-error {
+    color: var(--error-color);
+}
+
+h1.header-success {
+    color: var(--success-color);
+}
+
+/* Subheadings within forms/sections */
+h2 {
+    color: #003070;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+    margin-top: 2rem;
+}
+
+
+/* ---- Form Elements ---- */
+label {
+    display: block;
+    margin-top: 1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.info-text {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Checkbox group layout */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.checkbox-group label {
+    margin-top: 0;
+    margin-left: 10px;
+    font-weight: normal;
+}
+
+/* ---- Buttons and Links ---- */
+.btn,
+input[type="submit"] {
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 1rem;
+    margin-top: 1.5rem;
+    font-weight: bold;
+}
+
+input[type="submit"] {
+    width: 100%;
+}
+
+.btn:hover,
+input[type="submit"]:hover {
+    background-color: #003080;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+}
+
+.btn-success:hover {
+    background-color: #1e7e34;
+}
+
+.btn-small {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    margin-top: 0;
+}
+
+/* ---- Status Messages and Info Boxes ---- */
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.no-data {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 10px 20px;
+    border: 1px solid #ffeeba;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* Info box specific to Ampliacion Familiar / Reserva */
+.info-box {
+    background: #e6f0ff;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid var(--primary-color);
+    margin-bottom: 15px;
+}
+
+/* Tripulantes/Asignaciones sections */
+.tripulantes-section {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+/* ---- Utility and Layout ---- */
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.actions .btn {
+    margin-top: 0;
+}
+
+.data-label {
+    font-weight: bold;
+}
+
+.center-text {
+    text-align: center;
+}
+
+/* ---- Table Styles (Listings) ---- */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    background-color: var(--white);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+thead {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+tbody tr:hover {
+    background-color: #e6f0ff;
+}

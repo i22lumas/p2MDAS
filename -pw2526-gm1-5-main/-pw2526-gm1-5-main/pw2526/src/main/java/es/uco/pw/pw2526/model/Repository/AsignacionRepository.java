@@ -16,7 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import es.uco.pw.pw2526.model.domain.Empleados.Empleados;
+import es.uco.pw.pw2526.model.domain.Empleados.Patron;
 
 @Repository
 public class AsignacionRepository extends AbstractRepository {
@@ -45,9 +45,9 @@ public class AsignacionRepository extends AbstractRepository {
             }
             props.load(input);
             System.out.println("✅ Archivo sql.properties cargado correctamente.");
-        } catch (IOException e) {
+        } catch (IOException excepcion) {
             System.err.println("❌ Error cargando sql.properties:");
-            e.printStackTrace();
+            excepcion.printStackTrace();
         }
         return props;
     }
@@ -81,9 +81,9 @@ public class AsignacionRepository extends AbstractRepository {
 
             return historialExitoso && (estadoActualizado > 0);
 
-        } catch (DataAccessException e) {
-            System.err.println("Error durante la asignación simple de patrón: " + e.getMessage());
-            e.printStackTrace();
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error durante la asignación simple de patrón: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -123,9 +123,9 @@ public class AsignacionRepository extends AbstractRepository {
             System.out.println("🔍 Solapamiento encontrado para " + matricula + ": " + haySolapamiento);
             return haySolapamiento;
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error verificando solapamiento de fechas");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -136,9 +136,9 @@ public class AsignacionRepository extends AbstractRepository {
      * @param matricula   Matrícula de la embarcación
      * @param fechaInicio Fecha de inicio del período
      * @param fechaFin    Fecha de fin del período
-     * @return Lista de empleados con asignaciones solapadas
+     * @return Lista de patrones con asignaciones solapadas
      */
-    public List<Empleados> obtenerPatronesSolapados(String matricula, LocalDate fechaInicio, LocalDate fechaFin) {
+    public List<Patron> obtenerPatronesSolapados(String matricula, LocalDate fechaInicio, LocalDate fechaFin) {
         try {
             String query = "SELECT DISTINCT e.* FROM Empleado e JOIN Asignacion a ON e.id_empleado = a.id_empleado " +
                     "WHERE a.matricula_embarcacion = ? AND " +
@@ -148,7 +148,7 @@ public class AsignacionRepository extends AbstractRepository {
                     "(a.fecha_fin_asignacion BETWEEN ? AND ?) OR " +
                     "(? BETWEEN a.fecha_asignacion AND a.fecha_fin_asignacion))";
 
-            List<Empleados> empleados = jdbcTemplate.query(query,
+            List<Patron> patrones = jdbcTemplate.query(query,
                     new Object[] {
                             matricula,
                             fechaInicio, fechaFin,
@@ -157,14 +157,14 @@ public class AsignacionRepository extends AbstractRepository {
                             fechaInicio, fechaFin,
                             fechaInicio
                     },
-                    (rs, rowNum) -> mapEmpleado(rs));
+                    (rs, rowNum) -> mapPatron(rs));
 
-            System.out.println("🔍 Encontrados " + empleados.size() + " patrones solapados");
-            return empleados;
+            System.out.println("🔍 Encontrados " + patrones.size() + " patrones solapados");
+            return patrones;
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo patrones solapados");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -217,7 +217,7 @@ public class AsignacionRepository extends AbstractRepository {
 
             return "SIN_SOLAPAMIENTO";
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error verificando tipo de solapamiento");
             return "ERROR";
         }
@@ -251,9 +251,9 @@ public class AsignacionRepository extends AbstractRepository {
             System.out.println("🔍 Resultado de obtenerPatronAsignado para " + matricula + ": " + resultado);
             return resultado;
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error al obtener patrón asignado para: " + matricula);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return null;
         }
     }
@@ -313,13 +313,13 @@ public class AsignacionRepository extends AbstractRepository {
             System.out.println("📊 Total de asignaciones encontradas para " + matricula + ": " + resultados.size());
             return resultados;
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("❌ Error al obtener información del patrón asignado para: " + matricula);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return new ArrayList<>();
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             System.err.println("❌ Error inesperado al obtener asignaciones para: " + matricula);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return new ArrayList<>();
         }
     }
@@ -370,9 +370,9 @@ public class AsignacionRepository extends AbstractRepository {
 
             return resultados.isEmpty() ? null : resultados.get(0);
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("❌ Error al obtener asignación activa para: " + matricula);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return null;
         }
     }
@@ -395,9 +395,9 @@ public class AsignacionRepository extends AbstractRepository {
             System.out.println("🔍 Embarcación " + matricula + " tiene patrón asignado: " + tienePatron);
             return tienePatron;
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error verificando si la embarcación tiene patrón asignado: " + matricula);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -419,9 +419,9 @@ public class AsignacionRepository extends AbstractRepository {
             Integer count = jdbcTemplate.queryForObject(query, new Object[] { idEmpleado }, Integer.class);
             return count != null && count > 0;
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error verificando si el patrón ya está asignado");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -455,9 +455,9 @@ public class AsignacionRepository extends AbstractRepository {
                     Integer.class);
             return count != null && count > 0;
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error verificando solapamiento del patrón");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -465,9 +465,9 @@ public class AsignacionRepository extends AbstractRepository {
     /**
      * Obtiene todos los patrones disponibles
      * 
-     * @return Lista de empleados disponibles como patrones
+     * @return Lista de patrones disponibles
      */
-    public List<Empleados> obtenerPatronesDisponibles() {
+    public List<Patron> obtenerPatronesDisponibles() {
         try {
             String query = sqlQueries.getProperty("empleados.obtener.todos");
             if (query == null) {
@@ -475,17 +475,17 @@ public class AsignacionRepository extends AbstractRepository {
             }
 
             System.out.println("🔍 Ejecutando consulta para patrones disponibles: " + query);
-            List<Empleados> empleados = jdbcTemplate.query(query, (rs, rowNum) -> mapEmpleado(rs));
+            List<Patron> patrones = jdbcTemplate.query(query, (rs, rowNum) -> mapPatron(rs));
 
-            System.out.println("✅ Patrones disponibles encontrados: " + empleados.size());
-            return empleados;
+            System.out.println("✅ Patrones disponibles encontrados: " + patrones.size());
+            return patrones;
 
-        } catch (DataAccessException e) {
-            System.err.println("❌ Error obteniendo patrones disponibles: " + e.getMessage());
+        } catch (DataAccessException excepcion) {
+            System.err.println("❌ Error obteniendo patrones disponibles: " + excepcion.getMessage());
             try {
                 String fallbackQuery = "SELECT * FROM Empleado";
-                return jdbcTemplate.query(fallbackQuery, (rs, rowNum) -> mapEmpleado(rs));
-            } catch (DataAccessException e2) {
+                return jdbcTemplate.query(fallbackQuery, (rs, rowNum) -> mapPatron(rs));
+            } catch (DataAccessException excepcion2) {
                 System.err.println("❌ Error incluso con consulta fallback");
                 return List.of();
             }
@@ -509,13 +509,13 @@ public class AsignacionRepository extends AbstractRepository {
                 return false;
             }
 
-            int result = jdbcTemplate.update(query, matricula, idEmpleado, fechaInicio, fechaFin);
-            System.out.println("✅ Asignación creada: " + result + " fila(s) afectada(s)");
-            return result > 0;
+            int filasAfectadas = jdbcTemplate.update(query, matricula, idEmpleado, fechaInicio, fechaFin);
+            System.out.println("✅ Asignación creada: " + filasAfectadas + " fila(s) afectada(s)");
+            return filasAfectadas > 0;
 
-        } catch (DataAccessException e) {
-            System.err.println("Error asignando patrón a embarcación: " + e.getMessage());
-            e.printStackTrace();
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error asignando patrón a embarcación: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -537,44 +537,44 @@ public class AsignacionRepository extends AbstractRepository {
                     "(fecha_fin_asignacion BETWEEN ? AND ?) OR " +
                     "(? BETWEEN fecha_asignacion AND fecha_fin_asignacion))";
 
-            int result = jdbcTemplate.update(query, matricula,
+            int filasAfectadas = jdbcTemplate.update(query, matricula,
                     fechaInicio, fechaFin,
                     fechaInicio, fechaFin,
                     fechaInicio, fechaFin,
                     fechaInicio, fechaFin,
                     fechaInicio);
 
-            System.out.println("🗑️ Eliminadas " + result + " asignaciones solapadas para " + matricula);
-            return result >= 0;
+            System.out.println("🗑️ Eliminadas " + filasAfectadas + " asignaciones solapadas para " + matricula);
+            return filasAfectadas >= 0;
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error eliminando asignaciones solapadas");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
 
     /**
-     * Mapea un ResultSet a un objeto Empleados
+     * Mapea un ResultSet a un objeto Patron
      * 
      * @param rs ResultSet con los datos de la base de datos
-     * @return Objeto Empleados mapeado
+     * @return Objeto Patron mapeado
      * @throws SQLException Si ocurre un error al acceder a los datos
      */
-    private Empleados mapEmpleado(ResultSet rs) throws SQLException {
-        Empleados emp = new Empleados();
-        emp.setId(rs.getInt("id_empleado"));
-        emp.setDni(rs.getString("dni"));
-        emp.setNombre(rs.getString("nombre"));
-        emp.setApellidos(rs.getString("apellidos"));
+    private Patron mapPatron(ResultSet rs) throws SQLException {
+        Patron patron = new Patron();
+        patron.setId(rs.getInt("id_empleado"));
+        patron.setDni(rs.getString("dni"));
+        patron.setNombre(rs.getString("nombre"));
+        patron.setApellidos(rs.getString("apellidos"));
 
         if (rs.getDate("fecha_nacimiento") != null) {
-            emp.setFech_nacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
+            patron.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
         }
         if (rs.getDate("fecha_expedicion_titulo") != null) {
-            emp.setFech_expedicion_titulo(rs.getDate("fecha_expedicion_titulo").toLocalDate());
+            patron.setFechaExpedicionTitulo(rs.getDate("fecha_expedicion_titulo").toLocalDate());
         }
 
-        return emp;
+        return patron;
     }
 }

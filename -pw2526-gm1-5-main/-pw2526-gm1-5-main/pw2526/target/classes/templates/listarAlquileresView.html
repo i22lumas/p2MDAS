@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listar Alquileres Futuros - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 1200px;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        table {
+            max-width: 100%;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Estilos específicos de celdas de alquiler */
+        .tripulantes-cell {
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+
+        .tripulantes-info {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .tripulantes-list {
+            background-color: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .message {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Alquileres Futuros</h1>
+        
+        <div class="actions" style="justify-content: flex-start; margin-bottom: 1rem;">
+            <a href="/" class="btn btn-secondary">Volver al Inicio</a>
+            <a href="/alquilarEmbarcacion" class="btn">Nuevo Alquiler</a>
+        </div>
+
+        <div th:if="${mensaje}" class="message info" th:text="${mensaje}">
+            Mensaje de información
+        </div>
+
+        <div th:if="${!#lists.isEmpty(alquileres)}">
+            <table>
+                <thead>
+                    <tr>
+                        <th>DNI Socio Titular</th>
+                        <th>Matrícula Embarcación</th>
+                        <th>Fecha Inicio</th>
+                        <th>Fecha Fin</th>
+                        <th>Plazas</th>
+                        <th>Precio Total</th>
+                        <th>Tripulantes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="alquiler : ${alquileres}">
+                        <td th:text="${alquiler.dniSocioTitular}"></td>
+                        <td th:text="${alquiler.matriculaEmbarcacion}"></td>
+                        <td th:text="${#temporals.format(alquiler.fechaInicio, 'dd/MM/yyyy')}"></td>
+                        <td th:text="${#temporals.format(alquiler.fechaFin, 'dd/MM/yyyy')}"></td>
+                        <td th:text="${alquiler.plazasSolicitadas}"></td>
+                        <td th:text="${alquiler.precioTotal} + ' €'"></td>
+                        <td class="tripulantes-cell">
+                            <div class="tripulantes-list" th:text="${alquiler.tripulantesComoString}">
+                                </div>
+                            <div class="tripulantes-info" th:if="${alquiler.dnisTripulantes != null && !alquiler.dnisTripulantes.isEmpty()}">
+                                (Titular + <span th:text="${alquiler.dnisTripulantes.size()}"></span> acompañante(s))
+                            </div>
+                            <div class="tripulantes-info" th:if="${alquiler.dnisTripulantes == null || alquiler.dnisTripulantes.isEmpty()}">
+                                (Solo titular)
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${#lists.isEmpty(alquileres)}" class="no-data">
+            No hay alquileres futuros registrados.
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Alquiler Exitoso - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            background-color: #e9fbe9;
+            border: 2px solid #28a745;
+            padding: 30px;
+            width: 500px;
+        }
+        .alquiler-details {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        .data-label {
+            font-weight: bold;
+        }
+        .tripulantes-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            border-left: 4px solid #004aad;
+        }
+        .tripulantes-list {
+            margin-top: 10px;
+        }
+        .tripulante-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box main-container">
+        <h1 class="header-success">✅ Alquiler Confirmado</h1>
+        <p th:text="${mensaje}">El alquiler se ha registrado correctamente.</p>
+        
+        <div th:if="${alquiler != null}" class="alquiler-details">
+            <p><span class="data-label">DNI Socio Titular:</span> <span th:text="${alquiler.dniSocioTitular}"></span></p>
+            <p><span class="data-label">Matrícula Embarcación:</span> <span th:text="${alquiler.matriculaEmbarcacion}"></span></p>
+            <p><span class="data-label">Fecha Inicio:</span> <span th:text="${#temporals.format(alquiler.fechaInicio, 'dd/MM/yyyy')}"></span></p>
+            <p><span class="data-label">Fecha Fin:</span> <span th:text="${#temporals.format(alquiler.fechaFin, 'dd/MM/yyyy')}"></span></p>
+            <p><span class="data-label">Plazas Solicitadas:</span> <span th:text="${alquiler.plazasSolicitadas}"></span></p>
+            <p><span class="data-label">Precio Total:</span> <strong th:text="${alquiler.precioTotal} + ' €'"></strong></p>
+            
+            <div th:if="${alquiler.dnisTripulantes != null && !alquiler.dnisTripulantes.isEmpty()}" class="tripulantes-section">
+                <h4 style="margin-top: 0; color: #004aad;">Tripulantes Registrados:</h4>
+                <div class="tripulantes-list">
+                    <div class="tripulante-item">
+                        <strong>Titular:</strong> <span th:text="${alquiler.dniSocioTitular}"></span>
+                    </div>
+                    <div th:each="tripulante : ${alquiler.dnisTripulantes}" class="tripulante-item">
+                        <strong>Acompañante:</strong> <span th:text="${tripulante}"></span>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                    Total tripulantes: <strong th:text="${1 + alquiler.dnisTripulantes.size()}"></strong>
+                </p>
+            </div>
+            
+            <div th:if="${alquiler.dnisTripulantes == null || alquiler.dnisTripulantes.isEmpty()}" class="tripulantes-section">
+                <h4 style="margin-top: 0; color: #004aad;">Tripulantes:</h4>
+                <p style="color: #666;">Solo el socio titular: <strong th:text="${alquiler.dniSocioTitular}"></strong></p>
+            </div>
+        </div>
+        
+        <a href="/alquilarEmbarcacion" class="btn">Registrar Otro Alquiler</a>
+        <a href="/" class="btn">Ir a Menú Principal</a>
+    </div>
+</body>
+</html>

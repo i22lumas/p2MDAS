@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Empleado - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+</head>
+<body>
+    <div class="form-container main-container">
+        <h1>Nuevo Empleado</h1>
+        <form th:action="@{/addEmpleados}" th:object="${newEmpleados}" method="post">
+            <label for="nombre">Nombre:</label>
+            <input id="nombre" type="text" th:field="*{nombre}" required>
+
+            <label for="apellidos">Apellidos:</label>
+            <input id="apellidos" type="text" th:field="*{apellidos}" required>
+
+            <label for="dni">DNI:</label>
+            <input id="dni" type="text" th:field="*{dni}" required>
+
+            <label for="fech_nacimiento">Fecha de Nacimiento:</label>
+            <input id="fech_nacimiento" type="date" th:field="*{fech_nacimiento}" required>
+
+            <label for="fech_expedicion_titulo">Fecha de Expedición del Título:</label>
+            <input id="fech_expedicion_titulo" type="date" th:field="*{fech_expedicion_titulo}" required>
+
+            <input type="submit" value="Guardar">
+        </form>
+        <a href="/" class="back-link">Volver al inicio</a>
+    </div>
+</body>
+</html>

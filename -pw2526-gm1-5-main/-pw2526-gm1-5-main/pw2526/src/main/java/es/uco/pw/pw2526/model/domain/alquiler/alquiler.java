@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class alquiler {
+public class Alquiler {
 
     private int idAlquiler;
     private int idSocioTitular;
@@ -16,7 +16,7 @@ public class alquiler {
     private double precioTotal;
     private List<String> dnisTripulantes;
 
-    public alquiler() {
+    public Alquiler() {
         this.idAlquiler = -1;
         this.idSocioTitular = -1;
         this.dniSocioTitular = "";
@@ -100,7 +100,7 @@ public class alquiler {
         this.dnisTripulantes = dnisTripulantes;
     }
 
-    public void addDniTripulante(String dni) {
+    public void agregarDniTripulante(String dni) {
         if (this.dnisTripulantes == null) {
             this.dnisTripulantes = new ArrayList<>();
         }
@@ -108,7 +108,7 @@ public class alquiler {
     }
 
 
-    public String getTripulantesComoString() {
+    public String obtenerTripulantesComoString() {
         if (dnisTripulantes == null || dnisTripulantes.isEmpty()) {
             return dniSocioTitular;
         }

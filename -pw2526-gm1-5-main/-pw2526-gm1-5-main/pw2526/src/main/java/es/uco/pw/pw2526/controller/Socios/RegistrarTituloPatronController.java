@@ -20,8 +20,7 @@ public class RegistrarTituloPatronController {
     }
 
     @GetMapping("/registrarTituloPatron")
-    public ModelAndView getSociosPendientesDeTitulo() {
-        // Se llama al método actualizado que devuelve Socios con TipoMiembro TITULAR o CONYUGE y sin título.
+    public ModelAndView mostrarSociosPendientesDeTitulo() {
         List<Socio> miembrosPendientes = socioRepository.obtenerMiembrosSinTituloPatron();
         
         ModelAndView model = new ModelAndView("registrarTituloPatronView.html");
@@ -33,7 +32,7 @@ public class RegistrarTituloPatronController {
     public ModelAndView otorgarTitulo(@RequestParam String dni) {
         Socio miembro = socioRepository.obtenerSocioPorDni(dni);
         ModelAndView modelAndView;
-        boolean success = false;
+        boolean otorgadoConExito = false;
 
         if (miembro == null) {
             modelAndView = new ModelAndView("registrarTituloPatronViewFail.html");
@@ -45,9 +44,9 @@ public class RegistrarTituloPatronController {
 
         if (tipoMiembro.equals("TITULAR") || tipoMiembro.equals("CONYUGE")) {
             
-            success = socioRepository.actualizarTituloPatron(dni, true);
+            otorgadoConExito = socioRepository.actualizarTituloPatron(dni, true);
             
-            if (success) {
+            if (otorgadoConExito) {
                 miembro.setTieneTituloPatron(true);
                 modelAndView = new ModelAndView("registrarTituloPatronViewSuccess.html");
                 modelAndView.addObject("mensaje", "Título de patrón otorgado a " + miembro.getNombre() + " " + miembro.getApellidos() + ".");

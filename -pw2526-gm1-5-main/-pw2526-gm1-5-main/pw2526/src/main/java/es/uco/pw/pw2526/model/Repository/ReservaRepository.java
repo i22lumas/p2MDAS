@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import es.uco.pw.pw2526.model.domain.reserva.reserva;
+import es.uco.pw.pw2526.model.domain.reserva.Reserva;
 
 @Repository
 public class ReservaRepository extends AbstractRepository {
@@ -29,14 +29,14 @@ public class ReservaRepository extends AbstractRepository {
     /**
      * Inserta una nueva reserva en la base de datos
      * 
-     * @param nuevaReserva Objeto reserva a insertar
+     * @param nuevaReserva Objeto Reserva a insertar
      * @return true si la inserción fue exitosa, false en caso contrario
      */
-    public boolean insertarReserva(reserva nuevaReserva) {
+    public boolean insertarReserva(Reserva nuevaReserva) {
         try {
             String query = sqlQueries.getProperty("reservas.insertar");
             if (query != null) {
-                int result = jdbcTemplate.update(query,
+                int filasAfectadas = jdbcTemplate.update(query,
                         nuevaReserva.getIdSocioSolicitante(),
                         nuevaReserva.getPlazasSolicitadas(),
                         nuevaReserva.getPropositoActividad(),
@@ -44,14 +44,14 @@ public class ReservaRepository extends AbstractRepository {
                         nuevaReserva.getMatriculaEmbarcacion(),
                         nuevaReserva.getFechaActividad(),
                         nuevaReserva.getIdPatron());
-                return result > 0;
+                return filasAfectadas > 0;
             } else {
                 System.err.println("ERROR: Propiedad 'reservas.insertar' no encontrada en sql.properties");
                 return false;
             }
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("No se pudo insertar la reserva");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -106,16 +106,15 @@ public class ReservaRepository extends AbstractRepository {
 
             return disponible;
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error verificando disponibilidad para embarcación: " + matricula);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
 
     /**
      * Verifica si una embarcación tiene patrón asignado
-     * CORREGIDO: Ahora verifica directamente en la tabla Embarcaciones
      * 
      * @param matricula Matrícula de la embarcación
      * @param fecha     Fecha para la que se verifica
@@ -132,16 +131,15 @@ public class ReservaRepository extends AbstractRepository {
             boolean tienePatron = count != null && count > 0;
             System.out.println("¿Tiene patrón asignado " + matricula + "? " + tienePatron);
             return tienePatron;
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error verificando patrón asignado para embarcación: " + matricula);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
 
     /**
      * Obtiene el patrón asignado a una embarcación
-     * CORREGIDO: Ahora obtiene directamente de Embarcaciones
      * 
      * @param matricula Matrícula de la embarcación
      * @param fecha     Fecha para la que se consulta
@@ -164,16 +162,15 @@ public class ReservaRepository extends AbstractRepository {
             Integer patron = resultados.isEmpty() ? null : resultados.get(0);
             System.out.println("Patrón asignado a " + matricula + ": " + patron);
             return patron;
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo patrón asignado para embarcación: " + matricula);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return null;
         }
     }
 
     /**
      * Obtiene las embarcaciones disponibles con patrón en una fecha específica
-     * CORREGIDO: Consulta simplificada usando solo Embarcaciones
      * 
      * @param fecha Fecha para la que se consulta disponibilidad
      * @return Lista de matrículas de embarcaciones disponibles
@@ -193,9 +190,9 @@ public class ReservaRepository extends AbstractRepository {
             return jdbcTemplate.query(query,
                     new Object[] { fecha },
                     (rs, rowNum) -> rs.getString("matricula"));
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo embarcaciones disponibles para fecha: " + fecha);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -213,9 +210,9 @@ public class ReservaRepository extends AbstractRepository {
             int capacidadFinal = capacidad != null ? capacidad : 0;
             System.out.println("Capacidad de " + matricula + ": " + capacidadFinal + " plazas");
             return capacidadFinal;
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo capacidad de embarcación: " + matricula);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return 0;
         }
     }
@@ -225,7 +222,7 @@ public class ReservaRepository extends AbstractRepository {
      * 
      * @return Lista de todas las reservas
      */
-    public List<reserva> obtenerTodasLasReservas() {
+    public List<Reserva> obtenerTodasLasReservas() {
         try {
             String query = sqlQueries.getProperty("reservas.obtener.todas");
             if (query == null) {
@@ -235,9 +232,9 @@ public class ReservaRepository extends AbstractRepository {
             }
 
             return jdbcTemplate.query(query, new ReservaRowMapper());
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo todas las reservas");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -248,15 +245,15 @@ public class ReservaRepository extends AbstractRepository {
      * @param idSocio ID del socio
      * @return Lista de reservas del socio
      */
-    public List<reserva> obtenerReservasPorSocio(Integer idSocio) {
+    public List<Reserva> obtenerReservasPorSocio(Integer idSocio) {
         try {
             String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
                     "proposito_actividad, precio_total, matricula_embarcacion, " +
                     "fecha_reserva, id_empleado FROM Reserva WHERE id_socio_solicitante = ? ORDER BY fecha_reserva DESC";
             return jdbcTemplate.query(query, new Object[] { idSocio }, new ReservaRowMapper());
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo reservas para socio: " + idSocio);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -272,9 +269,9 @@ public class ReservaRepository extends AbstractRepository {
             String query = "SELECT tiene_titulo_patron FROM Socios WHERE id_socio = ?";
             Boolean tieneTitulo = jdbcTemplate.queryForObject(query, Boolean.class, idSocio);
             return tieneTitulo != null && tieneTitulo;
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error verificando título de patrón para socio: " + idSocio);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -285,7 +282,7 @@ public class ReservaRepository extends AbstractRepository {
      * @param fecha Fecha a partir de la cual se buscan reservas futuras
      * @return Lista de reservas futuras ordenadas por fecha
      */
-    public List<reserva> obtenerReservasFuturas(LocalDate fecha) {
+    public List<Reserva> obtenerReservasFuturas(LocalDate fecha) {
         try {
             String query = sqlQueries.getProperty("reservas.obtener.futuras");
             if (query == null) {
@@ -295,9 +292,9 @@ public class ReservaRepository extends AbstractRepository {
             }
 
             return jdbcTemplate.query(query, new Object[] { fecha }, new ReservaRowMapper());
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo reservas futuras desde fecha: " + fecha);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -306,18 +303,18 @@ public class ReservaRepository extends AbstractRepository {
      * Obtiene una reserva por ID
      * 
      * @param idReserva ID de la reserva a buscar
-     * @return Objeto reserva encontrado, null si no existe
+     * @return Objeto Reserva encontrado, null si no existe
      */
-    public reserva obtenerReservaPorId(Integer idReserva) {
+    public Reserva obtenerReservaPorId(Integer idReserva) {
         try {
             String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
                     "proposito_actividad, precio_total, matricula_embarcacion, " +
                     "fecha_reserva, id_empleado FROM Reserva WHERE id_reserva = ?";
-            List<reserva> resultados = jdbcTemplate.query(query, new Object[] { idReserva }, new ReservaRowMapper());
+            List<Reserva> resultados = jdbcTemplate.query(query, new Object[] { idReserva }, new ReservaRowMapper());
             return resultados.isEmpty() ? null : resultados.get(0);
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo reserva por ID: " + idReserva);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return null;
         }
     }
@@ -325,18 +322,18 @@ public class ReservaRepository extends AbstractRepository {
     /**
      * RowMapper para la entidad Reserva - CORREGIDO (usa fecha_reserva)
      */
-    private static class ReservaRowMapper implements RowMapper<reserva> {
+    private static class ReservaRowMapper implements RowMapper<Reserva> {
         /**
-         * Mapea un ResultSet a un objeto reserva
+         * Mapea un ResultSet a un objeto Reserva
          * 
          * @param rs     ResultSet con los datos de la base de datos
          * @param rowNum Número de fila
-         * @return Objeto reserva mapeado
+         * @return Objeto Reserva mapeado
          * @throws SQLException Si ocurre un error al acceder a los datos
          */
         @Override
-        public reserva mapRow(ResultSet rs, int rowNum) throws SQLException {
-            reserva reserva = new reserva();
+        public Reserva mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Reserva reserva = new Reserva();
             reserva.setIdReserva(rs.getInt("id_reserva"));
             reserva.setIdSocioSolicitante(rs.getInt("id_socio_solicitante"));
             reserva.setPlazasSolicitadas(rs.getInt("plazas_solicitadas"));
@@ -356,7 +353,7 @@ public class ReservaRepository extends AbstractRepository {
                 } else {
                     reserva.setIdPatron(null);
                 }
-            } catch (SQLException e) {
+            } catch (SQLException excepcion) {
                 reserva.setIdPatron(null);
             }
 
@@ -373,11 +370,11 @@ public class ReservaRepository extends AbstractRepository {
     public boolean eliminarReserva(Integer idReserva) {
         try {
             String query = "DELETE FROM Reserva WHERE id_reserva = ?";
-            int result = jdbcTemplate.update(query, idReserva);
-            return result > 0;
-        } catch (DataAccessException e) {
+            int filasAfectadas = jdbcTemplate.update(query, idReserva);
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
             System.err.println("Error eliminando reserva: " + idReserva);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -397,9 +394,9 @@ public class ReservaRepository extends AbstractRepository {
                 return fechaNacimiento.plusYears(18).isBefore(hoy) || fechaNacimiento.plusYears(18).isEqual(hoy);
             }
             return false;
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error verificando edad del socio: " + idSocio);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -410,15 +407,15 @@ public class ReservaRepository extends AbstractRepository {
      * @param matricula Matrícula de la embarcación
      * @return Lista de reservas de la embarcación
      */
-    public List<reserva> obtenerReservasPorEmbarcacion(String matricula) {
+    public List<Reserva> obtenerReservasPorEmbarcacion(String matricula) {
         try {
             String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
                     "proposito_actividad, precio_total, matricula_embarcacion, " +
                     "fecha_reserva, id_empleado FROM Reserva WHERE matricula_embarcacion = ? ORDER BY fecha_reserva DESC";
             return jdbcTemplate.query(query, new Object[] { matricula }, new ReservaRowMapper());
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo reservas para embarcación: " + matricula);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -429,15 +426,15 @@ public class ReservaRepository extends AbstractRepository {
      * @param fecha Fecha para la que se consultan las reservas
      * @return Lista de reservas para la fecha especificada
      */
-    public List<reserva> obtenerReservasPorFecha(LocalDate fecha) {
+    public List<Reserva> obtenerReservasPorFecha(LocalDate fecha) {
         try {
             String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
                     "proposito_actividad, precio_total, matricula_embarcacion, " +
                     "fecha_reserva, id_empleado FROM Reserva WHERE fecha_reserva = ? ORDER BY id_reserva DESC";
             return jdbcTemplate.query(query, new Object[] { fecha }, new ReservaRowMapper());
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo reservas para fecha: " + fecha);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }

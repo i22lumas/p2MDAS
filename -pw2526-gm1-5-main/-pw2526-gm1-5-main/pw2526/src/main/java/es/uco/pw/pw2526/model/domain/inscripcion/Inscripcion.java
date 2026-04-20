@@ -31,11 +31,11 @@ public class Inscripcion {
     }
 
   
-    public boolean isIndividual() {
+    public boolean esIndividual() {
         return this.tipoInscripcion == TipoInscripcion.INDIVIDUAL;
     }
 
-    public boolean isFamiliar() {
+    public boolean esFamiliar() {
         return this.tipoInscripcion == TipoInscripcion.FAMILIAR;
     }
 

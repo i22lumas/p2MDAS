@@ -9,8 +9,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import es.uco.pw.pw2526.model.domain.embarcacion.embarcacion;
-import es.uco.pw.pw2526.model.domain.embarcacion.TiposBarcos;
+import es.uco.pw.pw2526.model.domain.embarcacion.Embarcacion;
+import es.uco.pw.pw2526.model.domain.embarcacion.TipoEmbarcacion;
 
 @Repository
 public class EmbarcacionRepository extends AbstractRepository {
@@ -29,35 +29,35 @@ public class EmbarcacionRepository extends AbstractRepository {
      * 
      * @return Lista de embarcaciones, null si hay error
      */
-    public List<embarcacion> obtenerEmbarcaciones() {
+    public List<Embarcacion> obtenerEmbarcaciones() {
         try {
             String query = sqlQueries.getProperty("embarcaciones.obtener.todas");
             if (query != null) {
-                return jdbcTemplate.query(query, new RowMapper<embarcacion>() {
-                    public embarcacion mapRow(ResultSet rs, int rowNum) throws SQLException {
-                        embarcacion e = new embarcacion();
-                        e.setMatricula(rs.getString("matricula"));
-                        e.setNombre(rs.getString("nombre"));
-                        e.setTipo(TiposBarcos.valueOf(rs.getString("tipo_embarcacion")));
-                        e.setPlaza(rs.getInt("numero_plazas"));
-                        e.setDimensiones(parseDimensiones(rs.getString("dimensiones")));
+                return jdbcTemplate.query(query, new RowMapper<Embarcacion>() {
+                    public Embarcacion mapRow(ResultSet rs, int rowNum) throws SQLException {
+                        Embarcacion embarcacion = new Embarcacion();
+                        embarcacion.setMatricula(rs.getString("matricula"));
+                        embarcacion.setNombre(rs.getString("nombre"));
+                        embarcacion.setTipo(TipoEmbarcacion.valueOf(rs.getString("tipo_embarcacion")));
+                        embarcacion.setNumeroPlazas(rs.getInt("numero_plazas"));
+                        embarcacion.setEsloraEnMetros(parseDimensiones(rs.getString("dimensiones")));
 
                         // Nuevo campo: patrón asignado
                         Integer idPatron = rs.getInt("id_patron_asignado");
                         if (!rs.wasNull()) {
-                            e.setIdPatronAsignado(idPatron);
+                            embarcacion.setIdPatronAsignado(idPatron);
                         }
 
-                        return e;
+                        return embarcacion;
                     }
                 });
             } else {
                 System.err.println("ERROR: Propiedad 'embarcaciones.obtener.todas' no encontrada en sql.properties");
                 return null;
             }
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo embarcaciones desde la base de datos");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return null;
         }
     }
@@ -65,27 +65,27 @@ public class EmbarcacionRepository extends AbstractRepository {
     /**
      * Inserta una nueva embarcación en la base de datos
      * 
-     * @param nueva Objeto embarcacion a insertar
+     * @param nueva Objeto Embarcacion a insertar
      * @return true si la inserción fue exitosa, false en caso contrario
      */
-    public boolean addEmbarcacion(embarcacion nueva) {
+    public boolean insertarEmbarcacion(Embarcacion nueva) {
         try {
             String query = sqlQueries.getProperty("embarcaciones.insertar");
             if (query != null) {
-                int result = jdbcTemplate.update(query,
+                int filasAfectadas = jdbcTemplate.update(query,
                         nueva.getMatricula().trim().toUpperCase(),
                         nueva.getTipo().name(),
                         nueva.getNombre().trim(),
-                        nueva.getPlaza(),
-                        nueva.getDimensiones() + "m");
-                return result > 0;
+                        nueva.getNumeroPlazas(),
+                        nueva.getEsloraEnMetros() + "m");
+                return filasAfectadas > 0;
             } else {
                 System.err.println("ERROR: Propiedad 'embarcaciones.insertar' no encontrada en sql.properties");
                 return false;
             }
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("No se pudo insertar la embarcación (posiblemente matrícula duplicada o error SQL)");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -94,30 +94,30 @@ public class EmbarcacionRepository extends AbstractRepository {
      * Busca una embarcación por matrícula
      * 
      * @param matricula Matrícula de la embarcación a buscar
-     * @return Objeto embarcacion encontrado, null si no existe
+     * @return Objeto Embarcacion encontrado, null si no existe
      */
-    public embarcacion buscarPorMatricula(String matricula) {
+    public Embarcacion buscarPorMatricula(String matricula) {
         try {
             String query = sqlQueries.getProperty("embarcaciones.buscar.por_matricula");
             if (query != null) {
-                List<embarcacion> resultado = jdbcTemplate.query(query,
+                List<Embarcacion> resultado = jdbcTemplate.query(query,
                         new Object[] { matricula.trim().toUpperCase() },
-                        new RowMapper<embarcacion>() {
-                            public embarcacion mapRow(ResultSet rs, int rowNum) throws SQLException {
-                                embarcacion e = new embarcacion();
-                                e.setMatricula(rs.getString("matricula"));
-                                e.setNombre(rs.getString("nombre"));
-                                e.setTipo(TiposBarcos.valueOf(rs.getString("tipo_embarcacion")));
-                                e.setPlaza(rs.getInt("numero_plazas"));
-                                e.setDimensiones(parseDimensiones(rs.getString("dimensiones")));
+                        new RowMapper<Embarcacion>() {
+                            public Embarcacion mapRow(ResultSet rs, int rowNum) throws SQLException {
+                                Embarcacion embarcacion = new Embarcacion();
+                                embarcacion.setMatricula(rs.getString("matricula"));
+                                embarcacion.setNombre(rs.getString("nombre"));
+                                embarcacion.setTipo(TipoEmbarcacion.valueOf(rs.getString("tipo_embarcacion")));
+                                embarcacion.setNumeroPlazas(rs.getInt("numero_plazas"));
+                                embarcacion.setEsloraEnMetros(parseDimensiones(rs.getString("dimensiones")));
 
                                 // Nuevo campo: patrón asignado
                                 Integer idPatron = rs.getInt("id_patron_asignado");
                                 if (!rs.wasNull()) {
-                                    e.setIdPatronAsignado(idPatron);
+                                    embarcacion.setIdPatronAsignado(idPatron);
                                 }
 
-                                return e;
+                                return embarcacion;
                             }
                         });
                 return resultado.isEmpty() ? null : resultado.get(0);
@@ -126,9 +126,9 @@ public class EmbarcacionRepository extends AbstractRepository {
                         "ERROR: Propiedad 'embarcaciones.buscar.por_matricula' no encontrada en sql.properties");
                 return null;
             }
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error buscando embarcación por matrícula");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return null;
         }
     }
@@ -139,34 +139,34 @@ public class EmbarcacionRepository extends AbstractRepository {
      * @param tipo Tipo de embarcación a buscar
      * @return Lista de embarcaciones del tipo especificado
      */
-    public List<embarcacion> buscarPorTipo(TiposBarcos tipo) {
+    public List<Embarcacion> buscarPorTipo(TipoEmbarcacion tipo) {
         try {
             String query = sqlQueries.getProperty("embarcaciones.buscar.por_tipo");
             System.out.println("🔍 Buscando embarcaciones por tipo: " + tipo);
             System.out.println("🔍 Consulta SQL: " + query);
 
             if (query != null) {
-                List<embarcacion> resultado = jdbcTemplate.query(query,
+                List<Embarcacion> resultado = jdbcTemplate.query(query,
                         new Object[] { tipo.name() },
-                        new RowMapper<embarcacion>() {
-                            public embarcacion mapRow(ResultSet rs, int rowNum) throws SQLException {
-                                embarcacion e = new embarcacion();
-                                e.setMatricula(rs.getString("matricula"));
-                                e.setNombre(rs.getString("nombre"));
-                                e.setTipo(TiposBarcos.valueOf(rs.getString("tipo_embarcacion")));
-                                e.setPlaza(rs.getInt("numero_plazas"));
-                                e.setDimensiones(parseDimensiones(rs.getString("dimensiones")));
+                        new RowMapper<Embarcacion>() {
+                            public Embarcacion mapRow(ResultSet rs, int rowNum) throws SQLException {
+                                Embarcacion embarcacion = new Embarcacion();
+                                embarcacion.setMatricula(rs.getString("matricula"));
+                                embarcacion.setNombre(rs.getString("nombre"));
+                                embarcacion.setTipo(TipoEmbarcacion.valueOf(rs.getString("tipo_embarcacion")));
+                                embarcacion.setNumeroPlazas(rs.getInt("numero_plazas"));
+                                embarcacion.setEsloraEnMetros(parseDimensiones(rs.getString("dimensiones")));
 
                                 // Nuevo campo: patrón asignado
                                 Integer idPatron = rs.getInt("id_patron_asignado");
                                 if (!rs.wasNull()) {
-                                    e.setIdPatronAsignado(idPatron);
+                                    embarcacion.setIdPatronAsignado(idPatron);
                                 }
 
                                 System.out.println(
-                                        "✅ Encontrada embarcación: " + e.getMatricula() + " - " + e.getNombre() +
-                                                " - Patrón: " + (e.getIdPatronAsignado() != null ? "SÍ" : "NO"));
-                                return e;
+                                        "✅ Encontrada embarcación: " + embarcacion.getMatricula() + " - " + embarcacion.getNombre() +
+                                                " - Patrón: " + (embarcacion.getIdPatronAsignado() != null ? "SÍ" : "NO"));
+                                return embarcacion;
                             }
                         });
                 System.out.println("📊 Total embarcaciones encontradas: " + resultado.size());
@@ -174,37 +174,37 @@ public class EmbarcacionRepository extends AbstractRepository {
             } else {
                 System.err.println("⚠️ Usando consulta por defecto para buscar por tipo");
                 String defaultQuery = "SELECT * FROM Embarcaciones WHERE tipo_embarcacion = ? ORDER BY nombre";
-                List<embarcacion> resultado = jdbcTemplate.query(defaultQuery,
+                List<Embarcacion> resultado = jdbcTemplate.query(defaultQuery,
                         new Object[] { tipo.name() },
-                        new RowMapper<embarcacion>() {
+                        new RowMapper<Embarcacion>() {
 
-                            public embarcacion mapRow(ResultSet rs, int rowNum) throws SQLException {
-                                embarcacion e = new embarcacion();
-                                e.setMatricula(rs.getString("matricula"));
-                                e.setNombre(rs.getString("nombre"));
-                                e.setTipo(TiposBarcos.valueOf(rs.getString("tipo_embarcacion")));
-                                e.setPlaza(rs.getInt("numero_plazas"));
-                                e.setDimensiones(parseDimensiones(rs.getString("dimensiones")));
+                            public Embarcacion mapRow(ResultSet rs, int rowNum) throws SQLException {
+                                Embarcacion embarcacion = new Embarcacion();
+                                embarcacion.setMatricula(rs.getString("matricula"));
+                                embarcacion.setNombre(rs.getString("nombre"));
+                                embarcacion.setTipo(TipoEmbarcacion.valueOf(rs.getString("tipo_embarcacion")));
+                                embarcacion.setNumeroPlazas(rs.getInt("numero_plazas"));
+                                embarcacion.setEsloraEnMetros(parseDimensiones(rs.getString("dimensiones")));
 
                                 // Nuevo campo: patrón asignado
                                 Integer idPatron = rs.getInt("id_patron_asignado");
                                 if (!rs.wasNull()) {
-                                    e.setIdPatronAsignado(idPatron);
+                                    embarcacion.setIdPatronAsignado(idPatron);
                                 }
 
-                                return e;
+                                return embarcacion;
                             }
                         });
                 System.out.println("📊 Total embarcaciones encontradas (consulta por defecto): " + resultado.size());
                 return resultado;
             }
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("❌ Error buscando embarcaciones por tipo: " + tipo);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             System.err.println("❌ Error inesperado buscando embarcaciones por tipo: " + tipo);
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -214,7 +214,7 @@ public class EmbarcacionRepository extends AbstractRepository {
      * 
      * @return Lista de embarcaciones con información del patrón
      */
-    public List<embarcacion> obtenerEmbarcacionesConPatron() {
+    public List<Embarcacion> obtenerEmbarcacionesConPatron() {
         try {
             String query = sqlQueries.getProperty("embarcaciones.obtener.con.patron");
             if (query == null) {
@@ -223,27 +223,27 @@ public class EmbarcacionRepository extends AbstractRepository {
                         "LEFT JOIN Empleado em ON e.id_patron_asignado = em.id_empleado";
             }
 
-            return jdbcTemplate.query(query, new RowMapper<embarcacion>() {
-                public embarcacion mapRow(ResultSet rs, int rowNum) throws SQLException {
-                    embarcacion e = new embarcacion();
-                    e.setMatricula(rs.getString("matricula"));
-                    e.setNombre(rs.getString("nombre"));
-                    e.setTipo(TiposBarcos.valueOf(rs.getString("tipo_embarcacion")));
-                    e.setPlaza(rs.getInt("numero_plazas"));
-                    e.setDimensiones(parseDimensiones(rs.getString("dimensiones")));
+            return jdbcTemplate.query(query, new RowMapper<Embarcacion>() {
+                public Embarcacion mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    Embarcacion embarcacion = new Embarcacion();
+                    embarcacion.setMatricula(rs.getString("matricula"));
+                    embarcacion.setNombre(rs.getString("nombre"));
+                    embarcacion.setTipo(TipoEmbarcacion.valueOf(rs.getString("tipo_embarcacion")));
+                    embarcacion.setNumeroPlazas(rs.getInt("numero_plazas"));
+                    embarcacion.setEsloraEnMetros(parseDimensiones(rs.getString("dimensiones")));
 
                     Integer idPatron = rs.getInt("id_patron_asignado");
                     if (!rs.wasNull()) {
-                        e.setIdPatronAsignado(idPatron);
+                        embarcacion.setIdPatronAsignado(idPatron);
                     }
 
-                    return e;
+                    return embarcacion;
                 }
             });
 
-        } catch (DataAccessException e) {
+        } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo embarcaciones con patrón");
-            e.printStackTrace();
+            excepcion.printStackTrace();
             return List.of();
         }
     }
@@ -251,27 +251,27 @@ public class EmbarcacionRepository extends AbstractRepository {
     /**
      * Actualiza los campos de información de una embarcación, excepto la matrícula
      * 
-     * @param embarcacion Objeto embarcacion con los datos actualizados
+     * @param embarcacion Objeto Embarcacion con los datos actualizados
      * @return true si la actualización fue exitosa, false en caso contrario
      */
-    public boolean actualizarEmbarcacion(embarcacion embarcacion) {
+    public boolean actualizarEmbarcacion(Embarcacion embarcacion) {
         try {
             String query = sqlQueries.getProperty("embarcaciones.actualizar");
             if (query == null) {
                 query = "UPDATE Embarcaciones SET tipo_embarcacion = ?, nombre = ?, numero_plazas = ?, dimensiones = ? WHERE matricula = ?";
             }
 
-            int result = jdbcTemplate.update(query,
+            int filasAfectadas = jdbcTemplate.update(query,
                     embarcacion.getTipo().name(),
                     embarcacion.getNombre().trim(),
-                    embarcacion.getPlaza(),
-                    embarcacion.getDimensiones() + "m",
+                    embarcacion.getNumeroPlazas(),
+                    embarcacion.getEsloraEnMetros() + "m",
                     embarcacion.getMatricula().trim().toUpperCase());
 
-            return result > 0;
-        } catch (DataAccessException e) {
-            System.err.println("Error actualizando embarcación: " + e.getMessage());
-            e.printStackTrace();
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error actualizando embarcación: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -290,14 +290,14 @@ public class EmbarcacionRepository extends AbstractRepository {
                 query = "UPDATE Embarcaciones SET id_patron_asignado = ? WHERE matricula = ?";
             }
 
-            int result = jdbcTemplate.update(query,
+            int filasAfectadas = jdbcTemplate.update(query,
                     idPatron,
                     matricula.trim().toUpperCase());
 
-            return result > 0;
-        } catch (DataAccessException e) {
-            System.err.println("Error vinculando patrón a embarcación: " + e.getMessage());
-            e.printStackTrace();
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error vinculando patrón a embarcación: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -315,13 +315,13 @@ public class EmbarcacionRepository extends AbstractRepository {
                 query = "UPDATE Embarcaciones SET id_patron_asignado = NULL WHERE matricula = ?";
             }
 
-            int result = jdbcTemplate.update(query,
+            int filasAfectadas = jdbcTemplate.update(query,
                     matricula.trim().toUpperCase());
 
-            return result > 0;
-        } catch (DataAccessException e) {
-            System.err.println("Error desvinculando patrón de embarcación: " + e.getMessage());
-            e.printStackTrace();
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error desvinculando patrón de embarcación: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -335,8 +335,8 @@ public class EmbarcacionRepository extends AbstractRepository {
     public boolean eliminarEmbarcacion(String matricula) {
         try {
             // Verificar si la embarcación existe primero
-            embarcacion emb = buscarPorMatricula(matricula);
-            if (emb == null) {
+            Embarcacion embarcacionExistente = buscarPorMatricula(matricula);
+            if (embarcacionExistente == null) {
                 System.err.println("La embarcación con matrícula " + matricula + " no existe");
                 return false;
             }
@@ -362,11 +362,11 @@ public class EmbarcacionRepository extends AbstractRepository {
                 query = "DELETE FROM Embarcaciones WHERE matricula = ?";
             }
 
-            int result = jdbcTemplate.update(query, matricula.trim().toUpperCase());
-            return result > 0;
-        } catch (DataAccessException e) {
-            System.err.println("Error eliminando embarcación: " + e.getMessage());
-            e.printStackTrace();
+            int filasAfectadas = jdbcTemplate.update(query, matricula.trim().toUpperCase());
+            return filasAfectadas > 0;
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error eliminando embarcación: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return false;
         }
     }
@@ -382,9 +382,9 @@ public class EmbarcacionRepository extends AbstractRepository {
             String query = "SELECT COUNT(*) FROM Embarcaciones WHERE matricula = ?";
             Integer count = jdbcTemplate.queryForObject(query, Integer.class, matricula.trim().toUpperCase());
             return count != null && count > 0;
-        } catch (DataAccessException e) {
-            System.err.println("Error verificando existencia de embarcación: " + e.getMessage());
-            e.printStackTrace();
+        } catch (DataAccessException excepcion) {
+            System.err.println("Error verificando existencia de embarcación: " + excepcion.getMessage());
+            excepcion.printStackTrace();
             return false;
         }
     }

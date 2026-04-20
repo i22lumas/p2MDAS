@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.uco.pw.pw2526.model.Repository.ReservaRepository;
-import es.uco.pw.pw2526.model.domain.reserva.reserva;
+import es.uco.pw.pw2526.model.domain.reserva.Reserva;
 
 @RestController
 @RequestMapping(path = "/api/reservas", produces = "application/json")
@@ -33,11 +33,11 @@ public class ReservaRestController {
      * 1. Obtener la lista completa de reservas (GET /api/reservas)
      */
     @GetMapping
-    public ResponseEntity<List<reserva>> getAllReservas() {
+    public ResponseEntity<List<Reserva>> obtenerTodasReservas() {
         try {
-            List<reserva> reservas = reservaRepository.obtenerTodasLasReservas();
+            List<Reserva> reservas = reservaRepository.obtenerTodasLasReservas();
             return new ResponseEntity<>(reservas, HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -48,7 +48,7 @@ public class ReservaRestController {
      * Parámetro: fecha (opcional) - Si no se proporciona, se usa la fecha actual
      */
     @GetMapping("/futuras")
-    public ResponseEntity<List<reserva>> getReservasFuturas(@RequestParam(required = false) String fecha) {
+    public ResponseEntity<List<Reserva>> obtenerReservasFuturas(@RequestParam(required = false) String fecha) {
         try {
             LocalDate fechaConsulta;
 
@@ -58,9 +58,9 @@ public class ReservaRestController {
                 fechaConsulta = LocalDate.now();
             }
 
-            List<reserva> reservasFuturas = reservaRepository.obtenerReservasFuturas(fechaConsulta);
+            List<Reserva> reservasFuturas = reservaRepository.obtenerReservasFuturas(fechaConsulta);
             return new ResponseEntity<>(reservasFuturas, HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -70,16 +70,16 @@ public class ReservaRestController {
      * /api/reservas/{id})
      */
     @GetMapping("/{id}")
-    public ResponseEntity<reserva> getReservaById(@PathVariable Integer id) {
+    public ResponseEntity<Reserva> obtenerReservaPorId(@PathVariable Integer id) {
         try {
-            reserva reserva = reservaRepository.obtenerReservaPorId(id);
+            Reserva reservaEncontrada = reservaRepository.obtenerReservaPorId(id);
 
-            if (reserva != null) {
-                return new ResponseEntity<>(reserva, HttpStatus.OK);
+            if (reservaEncontrada != null) {
+                return new ResponseEntity<>(reservaEncontrada, HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
             }
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -88,7 +88,7 @@ public class ReservaRestController {
      * 4. Crear una reserva para una embarcación disponible (POST /api/reservas)
      */
     @PostMapping
-    public ResponseEntity<reserva> createReserva(@RequestBody reserva nuevaReserva) {
+    public ResponseEntity<Reserva> crearReserva(@RequestBody Reserva nuevaReserva) {
         try {
             // Validaciones básicas
             if (nuevaReserva.getMatriculaEmbarcacion() == null || nuevaReserva.getMatriculaEmbarcacion().isEmpty()) {
@@ -145,15 +145,15 @@ public class ReservaRestController {
             }
 
             // Insertar la reserva en la base de datos
-            boolean insertado = reservaRepository.insertarReserva(nuevaReserva);
+            boolean insertadoConExito = reservaRepository.insertarReserva(nuevaReserva);
 
-            if (insertado) {
+            if (insertadoConExito) {
                 return new ResponseEntity<>(nuevaReserva, HttpStatus.CREATED);
             } else {
                 return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -168,13 +168,13 @@ public class ReservaRestController {
      * /api/reservas/{id}/fecha)
      */
     @PatchMapping("/{id}/fecha")
-    public ResponseEntity<reserva> updateReservaFecha(
+    public ResponseEntity<Reserva> actualizarFechaReserva(
             @PathVariable Integer id,
-            @RequestBody Map<String, String> requestBody) {
+            @RequestBody Map<String, String> cuerpoSolicitud) {
 
         try {
             // Obtener la reserva actual
-            reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
+            Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
             if (reservaActual == null) {
                 return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
             }
@@ -185,7 +185,7 @@ public class ReservaRestController {
             }
 
             // Obtener la nueva fecha del cuerpo de la petición
-            String nuevaFechaStr = requestBody.get("nuevaFecha");
+            String nuevaFechaStr = cuerpoSolicitud.get("nuevaFecha");
             if (nuevaFechaStr == null || nuevaFechaStr.isEmpty()) {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
@@ -208,24 +208,11 @@ public class ReservaRestController {
             }
 
             // Actualizar la fecha de la reserva
-            // NOTA: Necesitarás implementar un método en ReservaRepository para actualizar
-            // la fecha
-            // Por ejemplo: reservaRepository.actualizarFechaReserva(id, nuevaFecha);
-
-            // Por ahora, actualizamos el objeto localmente
             reservaActual.setFechaActividad(nuevaFecha);
-
-            // En una implementación real, aquí llamarías al repositorio para guardar el
-            // cambio
-            // boolean actualizado = reservaRepository.actualizarFechaReserva(id,
-            // nuevaFecha);
-            // if (!actualizado) {
-            // return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-            // }
 
             return new ResponseEntity<>(reservaActual, HttpStatus.OK);
 
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -236,13 +223,13 @@ public class ReservaRestController {
      * máxima de la embarcación asignada (PATCH /api/reservas/{id})
      */
     @PatchMapping("/{id}")
-    public ResponseEntity<reserva> updateReserva(
+    public ResponseEntity<Reserva> actualizarReserva(
             @PathVariable Integer id,
-            @RequestBody reserva reservaUpdates) {
+            @RequestBody Reserva reservaActualizaciones) {
 
         try {
             // Obtener la reserva actual
-            reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
+            Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
             if (reservaActual == null) {
                 return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
             }
@@ -256,24 +243,24 @@ public class ReservaRestController {
             boolean cambiosRealizados = false;
 
             // Actualizar descripción si se proporciona
-            if (reservaUpdates.getPropositoActividad() != null
-                    && !reservaUpdates.getPropositoActividad().isEmpty()) {
-                reservaActual.setPropositoActividad(reservaUpdates.getPropositoActividad());
+            if (reservaActualizaciones.getPropositoActividad() != null
+                    && !reservaActualizaciones.getPropositoActividad().isEmpty()) {
+                reservaActual.setPropositoActividad(reservaActualizaciones.getPropositoActividad());
                 cambiosRealizados = true;
             }
 
             // Actualizar número de plazas si se proporciona
-            if (reservaUpdates.getPlazasSolicitadas() != null
-                    && reservaUpdates.getPlazasSolicitadas() > 0) {
+            if (reservaActualizaciones.getPlazasSolicitadas() != null
+                    && reservaActualizaciones.getPlazasSolicitadas() > 0) {
 
                 // Verificar que no excede la capacidad máxima de la embarcación
                 int capacidad = reservaRepository
                         .obtenerCapacidadEmbarcacion(reservaActual.getMatriculaEmbarcacion());
-                if (reservaUpdates.getPlazasSolicitadas() > capacidad) {
+                if (reservaActualizaciones.getPlazasSolicitadas() > capacidad) {
                     return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
                 }
 
-                reservaActual.setPlazasSolicitadas(reservaUpdates.getPlazasSolicitadas());
+                reservaActual.setPlazasSolicitadas(reservaActualizaciones.getPlazasSolicitadas());
                 cambiosRealizados = true;
             }
 
@@ -282,20 +269,9 @@ public class ReservaRestController {
                 return new ResponseEntity<>(reservaActual, HttpStatus.OK);
             }
 
-            // NOTA: Necesitarás implementar un método en ReservaRepository para actualizar
-            // la reserva
-            // Por ejemplo: reservaRepository.actualizarReserva(reservaActual);
-
-            // En una implementación real, aquí llamarías al repositorio para guardar los
-            // cambios
-            // boolean actualizado = reservaRepository.actualizarReserva(reservaActual);
-            // if (!actualizado) {
-            // return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-            // }
-
             return new ResponseEntity<>(reservaActual, HttpStatus.OK);
 
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -305,11 +281,11 @@ public class ReservaRestController {
      * /api/reservas/{id})
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancelReserva(@PathVariable Integer id) {
+    public ResponseEntity<Void> cancelarReserva(@PathVariable Integer id) {
 
         try {
             // Obtener la reserva actual
-            reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
+            Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
             if (reservaActual == null) {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
@@ -320,15 +296,15 @@ public class ReservaRestController {
             }
 
             // Eliminar la reserva (este método ya existe en tu ReservaRepository)
-            boolean eliminada = reservaRepository.eliminarReserva(id);
+            boolean eliminadaConExito = reservaRepository.eliminarReserva(id);
 
-            if (eliminada) {
+            if (eliminadaConExito) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             } else {
                 return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -337,11 +313,11 @@ public class ReservaRestController {
      * Endpoint adicional: Obtener reservas por socio
      */
     @GetMapping("/socio/{idSocio}")
-    public ResponseEntity<List<reserva>> getReservasPorSocio(@PathVariable Integer idSocio) {
+    public ResponseEntity<List<Reserva>> obtenerReservasPorSocio(@PathVariable Integer idSocio) {
         try {
-            List<reserva> reservas = reservaRepository.obtenerReservasPorSocio(idSocio);
+            List<Reserva> reservas = reservaRepository.obtenerReservasPorSocio(idSocio);
             return new ResponseEntity<>(reservas, HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -350,11 +326,11 @@ public class ReservaRestController {
      * Endpoint adicional: Obtener reservas por embarcación
      */
     @GetMapping("/embarcacion/{matricula}")
-    public ResponseEntity<List<reserva>> getReservasPorEmbarcacion(@PathVariable String matricula) {
+    public ResponseEntity<List<Reserva>> obtenerReservasPorEmbarcacion(@PathVariable String matricula) {
         try {
-            List<reserva> reservas = reservaRepository.obtenerReservasPorEmbarcacion(matricula);
+            List<Reserva> reservas = reservaRepository.obtenerReservasPorEmbarcacion(matricula);
             return new ResponseEntity<>(reservas, HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -363,12 +339,12 @@ public class ReservaRestController {
      * Endpoint adicional: Obtener reservas por fecha específica
      */
     @GetMapping("/fecha/{fecha}")
-    public ResponseEntity<List<reserva>> getReservasPorFecha(@PathVariable String fecha) {
+    public ResponseEntity<List<Reserva>> obtenerReservasPorFecha(@PathVariable String fecha) {
         try {
             LocalDate fechaConsulta = LocalDate.parse(fecha);
-            List<reserva> reservas = reservaRepository.obtenerReservasPorFecha(fechaConsulta);
+            List<Reserva> reservas = reservaRepository.obtenerReservasPorFecha(fechaConsulta);
             return new ResponseEntity<>(reservas, HttpStatus.OK);
-        } catch (Exception e) {
+        } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

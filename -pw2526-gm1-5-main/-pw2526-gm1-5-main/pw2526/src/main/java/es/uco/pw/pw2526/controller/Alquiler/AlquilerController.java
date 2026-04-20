@@ -13,8 +13,8 @@ import es.uco.pw.pw2526.model.Repository.AlquilerRepository;
 import es.uco.pw.pw2526.model.Repository.EmbarcacionRepository;
 import es.uco.pw.pw2526.model.Repository.SocioRepository;
 import es.uco.pw.pw2526.model.Repository.ReservaRepository;
-import es.uco.pw.pw2526.model.domain.alquiler.alquiler;
-import es.uco.pw.pw2526.model.domain.embarcacion.embarcacion;
+import es.uco.pw.pw2526.model.domain.alquiler.Alquiler;
+import es.uco.pw.pw2526.model.domain.embarcacion.Embarcacion;
 import es.uco.pw.pw2526.model.domain.Socio.Socio;
 
 @Controller
@@ -63,7 +63,7 @@ public class AlquilerController {
         }
 
         try {
-            List<embarcacion> todasEmbarcaciones = embarcacionRepository.obtenerEmbarcaciones();
+            List<Embarcacion> todasEmbarcaciones = embarcacionRepository.obtenerEmbarcaciones();
             System.out.println("Total embarcaciones encontradas: "
                     + (todasEmbarcaciones != null ? todasEmbarcaciones.size() : "NULL"));
 
@@ -72,9 +72,9 @@ public class AlquilerController {
                 return model;
             }
 
-            List<embarcacion> embarcacionesDisponibles = new ArrayList<>();
+            List<Embarcacion> embarcacionesDisponibles = new ArrayList<>();
 
-            for (embarcacion embarcacion : todasEmbarcaciones) {
+            for (Embarcacion embarcacion : todasEmbarcaciones) {
                 System.out.println("Verificando disponibilidad de: " + embarcacion.getMatricula());
 
                 boolean disponibleAlquiler = alquilerRepository.estaDisponible(embarcacion.getMatricula(), fechaInicio,
@@ -102,10 +102,10 @@ public class AlquilerController {
                     embarcacionesDisponibles.isEmpty() ? "No hay embarcaciones disponibles en las fechas seleccionadas."
                             : "Se encontraron " + embarcacionesDisponibles.size() + " embarcaciones disponibles.");
 
-        } catch (Exception e) {
-            System.err.println("ERROR en búsqueda de disponibilidad: " + e.getMessage());
-            e.printStackTrace();
-            model.addObject("error", "Error al buscar disponibilidad: " + e.getMessage());
+        } catch (Exception excepcion) {
+            System.err.println("ERROR en búsqueda de disponibilidad: " + excepcion.getMessage());
+            excepcion.printStackTrace();
+            model.addObject("error", "Error al buscar disponibilidad: " + excepcion.getMessage());
         }
 
         return model;
@@ -114,13 +114,13 @@ public class AlquilerController {
     @GetMapping("/alquilarEmbarcacion")
     public ModelAndView mostrarFormularioAlquiler() {
         ModelAndView model = new ModelAndView("addAlquilerView.html");
-        model.addObject("nuevoAlquiler", new alquiler());
+        model.addObject("nuevoAlquiler", new Alquiler());
 
         try {
-            List<embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
+            List<Embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
             model.addObject("embarcaciones", embarcaciones != null ? embarcaciones : new ArrayList<>());
-        } catch (Exception e) {
-            System.err.println("Error cargando embarcaciones: " + e.getMessage());
+        } catch (Exception excepcion) {
+            System.err.println("Error cargando embarcaciones: " + excepcion.getMessage());
             model.addObject("embarcaciones", new ArrayList<>());
         }
 
@@ -128,7 +128,7 @@ public class AlquilerController {
     }
 
     @PostMapping("/alquilarEmbarcacion")
-    public ModelAndView procesarAlquiler(@ModelAttribute alquiler nuevoAlquiler,
+    public ModelAndView procesarAlquiler(@ModelAttribute Alquiler nuevoAlquiler,
             @RequestParam(value = "dnisTripulantes", required = false) List<String> dnisTripulantes) {
         ModelAndView model = new ModelAndView();
 
@@ -157,7 +157,7 @@ public class AlquilerController {
             return model;
         }
 
-        if (!titular.isEsPatron()) {
+        if (!titular.esPatron()) {
             model.setViewName("addAlquilerViewFail.html");
             model.addObject("mensaje", "El socio titular no tiene título de patrón de embarcación.");
             return model;
@@ -165,12 +165,12 @@ public class AlquilerController {
 
         nuevoAlquiler.setIdSocioTitular(titular.getId());
 
-        List<embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
-        embarcacion embarcacionSeleccionada = null;
+        List<Embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
+        Embarcacion embarcacionSeleccionada = null;
 
         if (embarcaciones != null) {
             embarcacionSeleccionada = embarcaciones.stream()
-                    .filter(e -> e.getMatricula().equals(nuevoAlquiler.getMatriculaEmbarcacion()))
+                    .filter(embarcacion -> embarcacion.getMatricula().equals(nuevoAlquiler.getMatriculaEmbarcacion()))
                     .findFirst()
                     .orElse(null);
         }
@@ -232,12 +232,12 @@ public class AlquilerController {
             return model;
         }
 
-        boolean capacidadOk = plazas <= embarcacionSeleccionada.getPlaza();
-        if (!capacidadOk) {
+        boolean capacidadSuficiente = plazas <= embarcacionSeleccionada.getNumeroPlazas();
+        if (!capacidadSuficiente) {
             model.setViewName("addAlquilerViewFail.html");
             model.addObject("mensaje",
                     "Plazas solicitadas (" + plazas + ") exceden la capacidad de la embarcación (" +
-                            embarcacionSeleccionada.getPlaza() + " plazas).");
+                            embarcacionSeleccionada.getNumeroPlazas() + " plazas).");
             return model;
         }
 
@@ -292,15 +292,15 @@ public class AlquilerController {
         ModelAndView model = new ModelAndView("listarAlquileresView.html");
 
         try {
-            List<alquiler> alquileres = alquilerRepository.obtenerAlquileresFuturos();
+            List<Alquiler> alquileres = alquilerRepository.obtenerAlquileresFuturos();
             System.out.println("Alquileres futuros encontrados: " + (alquileres != null ? alquileres.size() : "NULL"));
 
             model.addObject("alquileres", alquileres != null ? alquileres : new ArrayList<>());
             model.addObject("mensaje",
                     alquileres == null || alquileres.isEmpty() ? "No hay alquileres futuros registrados."
                             : "Se encontraron " + alquileres.size() + " alquileres futuros.");
-        } catch (Exception e) {
-            System.err.println("Error obteniendo alquileres futuros: " + e.getMessage());
+        } catch (Exception excepcion) {
+            System.err.println("Error obteniendo alquileres futuros: " + excepcion.getMessage());
             model.addObject("alquileres", new ArrayList<>());
             model.addObject("mensaje", "Error al cargar los alquileres futuros.");
         }
@@ -313,15 +313,15 @@ public class AlquilerController {
         ModelAndView model = new ModelAndView("listarTodosAlquileresView.html");
 
         try {
-            List<alquiler> alquileres = alquilerRepository.obtenerTodosAlquileres();
+            List<Alquiler> alquileres = alquilerRepository.obtenerTodosAlquileres();
             System.out.println("Total alquileres encontrados: " + (alquileres != null ? alquileres.size() : "NULL"));
 
             model.addObject("alquileres", alquileres != null ? alquileres : new ArrayList<>());
             model.addObject("mensaje",
                     alquileres == null || alquileres.isEmpty() ? "No hay alquileres registrados."
                             : "Se encontraron " + alquileres.size() + " alquileres.");
-        } catch (Exception e) {
-            System.err.println("Error obteniendo todos los alquileres: " + e.getMessage());
+        } catch (Exception excepcion) {
+            System.err.println("Error obteniendo todos los alquileres: " + excepcion.getMessage());
             model.addObject("alquileres", new ArrayList<>());
             model.addObject("mensaje", "Error al cargar los alquileres.");
         }
@@ -340,15 +340,15 @@ public class AlquilerController {
         ModelAndView model = new ModelAndView("buscarAlquileresPorSocio.html");
 
         try {
-            List<alquiler> alquileres = alquilerRepository.obtenerAlquileresPorSocio(dniSocio);
+            List<Alquiler> alquileres = alquilerRepository.obtenerAlquileresPorSocio(dniSocio);
 
             model.addObject("alquileres", alquileres != null ? alquileres : new ArrayList<>());
             model.addObject("dniSocio", dniSocio);
             model.addObject("mensaje",
                     alquileres == null || alquileres.isEmpty() ? "No se encontraron alquileres para el DNI: " + dniSocio
                             : "Se encontraron " + alquileres.size() + " alquileres para el DNI: " + dniSocio);
-        } catch (Exception e) {
-            System.err.println("Error obteniendo alquileres por socio: " + e.getMessage());
+        } catch (Exception excepcion) {
+            System.err.println("Error obteniendo alquileres por socio: " + excepcion.getMessage());
             model.addObject("alquileres", new ArrayList<>());
             model.addObject("mensaje", "Error al buscar alquileres para el DNI: " + dniSocio);
         }
@@ -361,10 +361,10 @@ public class AlquilerController {
         ModelAndView model = new ModelAndView("buscarAlquileresPorEmbarcacion.html");
 
         try {
-            List<embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
+            List<Embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
             model.addObject("embarcaciones", embarcaciones != null ? embarcaciones : new ArrayList<>());
-        } catch (Exception e) {
-            System.err.println("Error cargando embarcaciones: " + e.getMessage());
+        } catch (Exception excepcion) {
+            System.err.println("Error cargando embarcaciones: " + excepcion.getMessage());
             model.addObject("embarcaciones", new ArrayList<>());
         }
 
@@ -376,8 +376,8 @@ public class AlquilerController {
         ModelAndView model = new ModelAndView("buscarAlquileresPorEmbarcacion.html");
 
         try {
-            List<alquiler> alquileres = alquilerRepository.obtenerAlquileresPorEmbarcacion(matricula);
-            List<embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
+            List<Alquiler> alquileres = alquilerRepository.obtenerAlquileresPorEmbarcacion(matricula);
+            List<Embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
 
             model.addObject("alquileres", alquileres != null ? alquileres : new ArrayList<>());
             model.addObject("embarcaciones", embarcaciones != null ? embarcaciones : new ArrayList<>());
@@ -386,8 +386,8 @@ public class AlquilerController {
                     alquileres == null || alquileres.isEmpty()
                             ? "No se encontraron alquileres para la matrícula: " + matricula
                             : "Se encontraron " + alquileres.size() + " alquileres para la matrícula: " + matricula);
-        } catch (Exception e) {
-            System.err.println("Error obteniendo alquileres por embarcación: " + e.getMessage());
+        } catch (Exception excepcion) {
+            System.err.println("Error obteniendo alquileres por embarcación: " + excepcion.getMessage());
             model.addObject("alquileres", new ArrayList<>());
             model.addObject("mensaje", "Error al buscar alquileres para la matrícula: " + matricula);
         }

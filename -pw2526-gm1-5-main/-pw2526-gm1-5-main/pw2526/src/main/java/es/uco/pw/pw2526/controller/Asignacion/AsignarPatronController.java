@@ -9,9 +9,9 @@ import java.util.List;
 
 import es.uco.pw.pw2526.model.Repository.AsignacionRepository;
 import es.uco.pw.pw2526.model.Repository.EmbarcacionRepository;
-import es.uco.pw.pw2526.model.Repository.EmpleadosRepository;
-import es.uco.pw.pw2526.model.domain.embarcacion.embarcacion;
-import es.uco.pw.pw2526.model.domain.Empleados.Empleados;
+import es.uco.pw.pw2526.model.Repository.PatronRepository;
+import es.uco.pw.pw2526.model.domain.embarcacion.Embarcacion;
+import es.uco.pw.pw2526.model.domain.Empleados.Patron;
 
 @Controller
 @RequestMapping("/asignarPatron")
@@ -24,7 +24,7 @@ public class AsignarPatronController {
     private EmbarcacionRepository embarcacionRepository;
 
     @Autowired
-    private EmpleadosRepository empleadosRepository;
+    private PatronRepository patronRepository;
 
     /**
      * Muestra el formulario para asignar un patrón a una embarcación
@@ -34,11 +34,11 @@ public class AsignarPatronController {
      */
     @GetMapping
     public String mostrarFormulario(Model model) {
-        List<embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
-        List<Empleados> empleadosDisponibles = empleadosRepository.obtenerEmpleadosDisponibles();
+        List<Embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
+        List<Patron> patronesDisponibles = patronRepository.obtenerPatronesDisponibles();
 
         model.addAttribute("embarcaciones", embarcaciones);
-        model.addAttribute("empleados", empleadosDisponibles);
+        model.addAttribute("empleados", patronesDisponibles);
         return "AsignarPatronView";
     }
 
@@ -64,19 +64,19 @@ public class AsignarPatronController {
         if (idPatronActual != null) {
             System.out.println("✅ Embarcación tiene patrón actual, mostrando confirmación...");
 
-            Empleados patronActual = empleadosRepository.obtenerEmpleadoPorId(idPatronActual);
-            Empleados nuevoPatron = empleadosRepository.obtenerEmpleadoPorId(idEmpleado);
-            embarcacion embarcacion = embarcacionRepository.buscarPorMatricula(matricula);
+            Patron patronActual = patronRepository.obtenerPatronPorId(idPatronActual);
+            Patron nuevoPatron = patronRepository.obtenerPatronPorId(idEmpleado);
+            Embarcacion embarcacionEncontrada = embarcacionRepository.buscarPorMatricula(matricula);
 
             System.out.println("🔍 Patrón Actual: " + (patronActual != null ? patronActual.getNombre() : "null"));
             System.out.println("🔍 Nuevo Patrón: " + (nuevoPatron != null ? nuevoPatron.getNombre() : "null"));
-            System.out.println("🔍 Embarcación: " + (embarcacion != null ? embarcacion.getNombre() : "null"));
+            System.out.println("🔍 Embarcación: " + (embarcacionEncontrada != null ? embarcacionEncontrada.getNombre() : "null"));
 
             model.addAttribute("matricula", matricula);
             model.addAttribute("idEmpleadoNuevo", idEmpleado);
             model.addAttribute("patronActual", patronActual);
             model.addAttribute("nuevoPatron", nuevoPatron);
-            model.addAttribute("embarcacion", embarcacion);
+            model.addAttribute("embarcacion", embarcacionEncontrada);
 
             return "ConfirmarReemplazoPatron";
         }
@@ -110,20 +110,20 @@ public class AsignarPatronController {
                 "🔍 Confirmando reemplazo para matrícula: " + matricula + ", nuevo empleado: " + idEmpleadoNuevo);
 
         Integer idPatronActual = asignacionRepository.obtenerPatronActual(matricula);
-        Empleados patronActual = null;
+        Patron patronActual = null;
         if (idPatronActual != null) {
-            patronActual = empleadosRepository.obtenerEmpleadoPorId(idPatronActual);
+            patronActual = patronRepository.obtenerPatronPorId(idPatronActual);
         }
 
-        Empleados nuevoPatron = empleadosRepository.obtenerEmpleadoPorId(idEmpleadoNuevo);
-        embarcacion embarcacion = embarcacionRepository.buscarPorMatricula(matricula);
+        Patron nuevoPatron = patronRepository.obtenerPatronPorId(idEmpleadoNuevo);
+        Embarcacion embarcacionEncontrada = embarcacionRepository.buscarPorMatricula(matricula);
 
         boolean asignacionExitosa = asignacionRepository.asignarPatron(matricula, idEmpleadoNuevo);
 
         if (asignacionExitosa) {
             StringBuilder mensaje = new StringBuilder();
             mensaje.append("✅ Patrón ").append(nuevoPatron.getNombre()).append(" ").append(nuevoPatron.getApellidos())
-                    .append(" asignado correctamente a la embarcación ").append(embarcacion.getNombre()).append(".");
+                    .append(" asignado correctamente a la embarcación ").append(embarcacionEncontrada.getNombre()).append(".");
 
             if (patronActual != null) {
                 mensaje.append("\n\n🔄 Se ha liberado al patrón anterior: ")

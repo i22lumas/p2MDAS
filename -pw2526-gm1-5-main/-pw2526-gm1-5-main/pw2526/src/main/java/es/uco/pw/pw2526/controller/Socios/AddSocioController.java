@@ -28,50 +28,50 @@ public class AddSocioController {
     }
 
     @GetMapping("/addSocio")
-    public ModelAndView getAddSocioView() {
+    public ModelAndView mostrarFormularioAnadirSocio() {
         ModelAndView modelAndView = new ModelAndView("addSocioView.html");
         modelAndView.addObject("newSocio", new Socio());
         return modelAndView;
     }
 
     @PostMapping("/addSocio")
-    public ModelAndView addSocio(@ModelAttribute Socio newSocio) {
+    public ModelAndView insertarSocio(@ModelAttribute Socio nuevoSocio) {
         ModelAndView modelAndView;
 
-        if (socioRepository.existeSocioPorDni(newSocio.getDni())) {
+        if (socioRepository.existeSocioPorDni(nuevoSocio.getDni())) {
             modelAndView = new ModelAndView("addSocioViewFail.html");
-            modelAndView.addObject("error", "El DNI " + newSocio.getDni() + " ya está registrado.");
-        } else if (!newSocio.esMayorDeEdad()) {
+            modelAndView.addObject("error", "El DNI " + nuevoSocio.getDni() + " ya está registrado.");
+        } else if (!nuevoSocio.esMayorDeEdad()) {
              modelAndView = new ModelAndView("addSocioViewFail.html");
              modelAndView.addObject("error", "El socio debe ser mayor de edad para la inscripción.");
         } else {
             
-            newSocio.setFechaInscripcion(LocalDate.now()); 
-            newSocio.setTipoMiembro(TipoMiembro.TITULAR); 
-            newSocio.setTieneTituloPatron(false);
+            nuevoSocio.setFechaInscripcion(LocalDate.now()); 
+            nuevoSocio.setTipoMiembro(TipoMiembro.TITULAR); 
+            nuevoSocio.setTieneTituloPatron(false);
             
             Inscripcion nuevaInscripcion = new Inscripcion();
             nuevaInscripcion.setTipoInscripcion(TipoInscripcion.INDIVIDUAL);
             nuevaInscripcion.setCuotaAnual(CUOTA_ADULTO_INDIVIDUAL);
             
-            int inscripcionId = inscripcionRepository.addInscripcion(nuevaInscripcion);
+            int inscripcionId = inscripcionRepository.insertarInscripcion(nuevaInscripcion);
             
             if (inscripcionId > 0) {
                 
-                newSocio.setInscripcionId(inscripcionId);
-                newSocio.setIdSocioTitularFk(null); 
+                nuevoSocio.setInscripcionId(inscripcionId);
+                nuevoSocio.setIdSocioTitularFk(null); 
 
-                int idSocioCreado = socioRepository.addSocioAndReturnId(newSocio, inscripcionId); 
+                int idSocioCreado = socioRepository.insertarSocioYRetornarId(nuevoSocio, inscripcionId); 
                 
                 if (idSocioCreado > 0) {
                     
-                    newSocio.setIdSocioTitularFk(idSocioCreado); 
+                    nuevoSocio.setIdSocioTitularFk(idSocioCreado); 
                     
-                    boolean actualizacionFk = socioRepository.actualizarIdSocioTitular(idSocioCreado, idSocioCreado);
+                    boolean fkActualizada = socioRepository.actualizarIdSocioTitular(idSocioCreado, idSocioCreado);
                     
-                    boolean actualizacionTitular = inscripcionRepository.actualizarSocioTitular(inscripcionId, idSocioCreado);
+                    boolean titularActualizado = inscripcionRepository.actualizarSocioTitular(inscripcionId, idSocioCreado);
                     
-                    if (actualizacionTitular && actualizacionFk) {
+                    if (titularActualizado && fkActualizada) {
                         modelAndView = new ModelAndView("addSocioViewSuccess.html");
                     } else {
                         modelAndView = new ModelAndView("addSocioViewFail.html");
@@ -87,7 +87,7 @@ public class AddSocioController {
             }
         }
 
-        modelAndView.addObject("Socio", newSocio);
+        modelAndView.addObject("Socio", nuevoSocio);
         return modelAndView;
     }
 }

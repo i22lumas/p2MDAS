@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otorgar Título de Patrón - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 900px;
+            padding: 0;
+            box-shadow: none;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        .action-button {
+            padding: 8px 12px;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .action-button:hover {
+            background-color: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Socios Pendientes de Título de Patrón</h1>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>DNI</th>
+                    <th>Nombre Completo</th>
+                    <th>Fecha Nac.</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${socios.empty}">
+                    <td colspan="4" class="no-data">No hay socios sin título de patrón para registrar.</td>
+                </tr>
+                <tr th:each="socio : ${socios}">
+                    <td th:text="${socio.dni}"></td>
+                    <td th:text="${socio.nombre + ' ' + socio.apellidos}"></td>
+                    <td th:text="${#temporals.format(socio.fechaNacimiento, 'dd/MM/yyyy')}"></td>
+                    <td>
+                        <form th:action="@{/registrarTituloPatron/otorgar}" method="post">
+                            <input type="hidden" name="dni" th:value="${socio.dni}">
+                            <button type="submit" class="action-button">Otorgar Título</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a href="/" class="back-link">Volver al Menú Principal</a>
+    </div>
+</body>
+</html>

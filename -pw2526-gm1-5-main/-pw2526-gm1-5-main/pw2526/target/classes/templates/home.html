@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Náutico - Menú Principal</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #003070;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        ol {
+            list-style-type: decimal;
+            padding-left: 1.5rem;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--primary-color);
+            display: block;
+            padding: 0.5rem 0;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #003080;
+        }
+
+        .menu-section {
+            background: white;
+            padding: 1.5rem 2rem;
+            margin: 1rem 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 350px;
+        }
+
+        footer {
+            margin-top: 3rem;
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>Menú Principal - Club Náutico</h2>
+
+    <div class="menu-section">
+        <h3>Socios e Inscripciones</h3>
+        <ol>
+            <li><a href="/addSocio">Inscribir Nuevo Socio</a></li>
+            <li><a href="/verSocios">Listar Socios</a></li>
+            <li><a href="/ampliarInscripcion">Ampliación a Familiar</a></li> 
+            <li><a href="/registrarTituloPatron">Incorporar Título de Patrón</a></li>
+            <li><a href="/listarInscripciones">Listar Detalles de Inscripciones</a></li>
+        </ol>
+    </div>
+
+    <div class="menu-section">
+        <h3>Empleados</h3>
+        <ol>
+            <li><a href="/addEmpleados">Añadir Empleados</a></li>
+            <li><a href="/verEmpleados">Ver Empleados</a></li>
+        </ol>
+    </div>
+
+    <div class="menu-section">
+        <h3>Flota</h3>
+        <ol>
+            <li><a href="/addEmbarcacion">Añadir Embarcación</a></li>
+            <li><a href="/verEmbarcaciones">Ver Embarcaciones</a></li>
+            <li><a href="/consultarEmbarcacionPorTipo">Consultar por Tipo</a></li>
+        </ol>
+    </div>
+
+    <div class="menu-section">
+        <h3>Asignaciones</h3>
+        <ol>
+            <li><a href="/asignarPatron">Asignar Patrón a Embarcación</a></li>
+        </ol>
+    </div>
+
+    <div class="menu-section">
+        <h3>Alquiler de Embarcaciones</h3>
+        <ol>
+            <li><a href="/buscarEmbarcacionesDisponibles">Buscar Embarcaciones Disponibles</a></li>
+            <li><a href="/alquilarEmbarcacion">Realizar Alquiler</a></li>
+            <li><a href="/listarAlquileresFuturos">Ver Alquileres Futuros</a></li>
+        </ol>
+    </div>
+
+    <div class="menu-section">
+        <h3>Reservas de Actividades</h3>
+        <ol>
+            <li><a href="/reservarEmbarcacion">Reservar Embarcación para Actividad</a></li>
+            <li><a href="/verReservas">Ver Reservas Existentes</a></li>
+        </ol>
+    </div>
+
+    <footer>
+        <p>Club Náutico © 2025 - Gestión de flota y personal</p>
+    </footer>
+</body>
+</html>

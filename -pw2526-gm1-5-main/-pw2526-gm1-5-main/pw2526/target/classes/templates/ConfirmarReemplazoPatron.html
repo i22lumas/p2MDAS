@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Reemplazo de Patrón - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 600px;
+        }
+        h1 {
+            color: #e67e22;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .info-box {
+            background-color: #e8f4fd;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .patron-info {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .confirmation-text {
+            text-align: center;
+            margin: 1.5rem 0;
+            font-weight: bold;
+        }
+
+        .btn-confirm {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-cancel {
+            background-color: var(--error-color);
+            color: white;
+        }
+        
+        .actions .btn {
+            padding: 10px 20px;
+            margin-top: 1.5rem;
+        }
+
+        .actions {
+             gap: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Confirmar Reemplazo de Patrón</h1>
+
+        <div class="warning-box">
+            <strong>Atención:</strong> La embarcación <strong th:text="${embarcacion.nombre}"></strong> 
+            (Matrícula: <strong th:text="${matricula}"></strong>) ya tiene un patrón asignado.
+        </div>
+
+        <div class="info-box">
+            <h3>Patrón Actual:</h3>
+            <div class="patron-info">
+                <strong>Nombre:</strong> <span th:text="${patronActual.nombre + ' ' + patronActual.apellidos}"></span><br>
+                <strong>DNI:</strong> <span th:text="${patronActual.dni}"></span><br>
+                <strong>ID:</strong> <span th:text="${patronActual.id}"></span>
+            </div>
+
+            <h3>Nuevo Patrón:</h3>
+            <div class="patron-info">
+                <strong>Nombre:</strong> <span th:text="${nuevoPatron.nombre + ' ' + nuevoPatron.apellidos}"></span><br>
+                <strong>DNI:</strong> <span th:text="${nuevoPatron.dni}"></span><br>
+                <strong>ID:</strong> <span th:text="${nuevoPatron.id}"></span>
+            </div>
+        </div>
+
+        <p class="confirmation-text">¿Está seguro de que desea reemplazar al patrón actual?</p>
+
+        <form th:action="@{/asignarPatron/confirmarReemplazo}" method="post">
+            <input type="hidden" name="matricula" th:value="${matricula}">
+            <input type="hidden" name="idEmpleadoNuevo" th:value="${idEmpleadoNuevo}">
+            
+            <div class="actions">
+                <button type="submit" class="btn btn-confirm">Sí, Reemplazar</button>
+                <a th:href="@{/asignarPatron}" class="btn btn-cancel">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 package es.uco.pw.pw2526.api;
 
-import es.uco.pw.pw2526.model.domain.Empleados.Empleados;
-import es.uco.pw.pw2526.model.Repository.EmpleadosRepository;
+import es.uco.pw.pw2526.model.domain.Empleados.Patron;
+import es.uco.pw.pw2526.model.Repository.PatronRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,7 @@ import java.util.List;
 public class PatronRestController {
 
     @Autowired
-    private EmpleadosRepository empleadosRepository;
+    private PatronRepository patronRepository;
 
     // ----------------------------------------------------------------------
     // SEMANA 1: GET y POST (Patrones)
@@ -24,9 +24,9 @@ public class PatronRestController {
      * 3. Obtener la lista completa de patrones (GET /api/patrones) [cite: 55]
      */
     @GetMapping
-    public ResponseEntity<List<Empleados>> getAllPatrones() {
-        List<Empleados> empleados = empleadosRepository.obtenerEmpleados();
-        return new ResponseEntity<>(empleados, HttpStatus.OK);
+    public ResponseEntity<List<Patron>> obtenerTodosPatrones() {
+        List<Patron> patrones = patronRepository.obtenerPatrones();
+        return new ResponseEntity<>(patrones, HttpStatus.OK);
     }
 
     /**
@@ -34,10 +34,10 @@ public class PatronRestController {
      * [cite: 55]
      */
     @PostMapping
-    public ResponseEntity<String> createPatron(@RequestBody Empleados nuevoEmpleado) {
-        boolean ok = empleadosRepository.addEmpleados(nuevoEmpleado);
+    public ResponseEntity<String> crearPatron(@RequestBody Patron nuevoPatron) {
+        boolean creadoConExito = patronRepository.insertarPatron(nuevoPatron);
 
-        if (ok) {
+        if (creadoConExito) {
             return new ResponseEntity<>("Patrón creado correctamente", HttpStatus.CREATED);
         } else {
             return new ResponseEntity<>("Error creando patrón", HttpStatus.BAD_REQUEST);
@@ -53,41 +53,41 @@ public class PatronRestController {
      * /api/patrones/{id}) [cite: 76]
      */
     @PatchMapping("/{id}")
-    public ResponseEntity<Empleados> updatePatron(
+    public ResponseEntity<Patron> actualizarPatron(
             @PathVariable Integer id,
-            @RequestBody Empleados empleadoUpdates) {
+            @RequestBody Patron patronActualizaciones) {
 
-        Empleados currentEmpleado = empleadosRepository.obtenerEmpleadoPorId(id);
-        if (currentEmpleado == null) {
+        Patron patronActual = patronRepository.obtenerPatronPorId(id);
+        if (patronActual == null) {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
 
         // El DNI no se puede actualizar - verificar que no se haya modificado
-        if (empleadoUpdates.getDni() != null && !empleadoUpdates.getDni().equals(currentEmpleado.getDni())) {
+        if (patronActualizaciones.getDni() != null && !patronActualizaciones.getDni().equals(patronActual.getDni())) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
 
         // Aplicar solo los campos que se pueden modificar
-        if (empleadoUpdates.getNombre() != null && !empleadoUpdates.getNombre().isEmpty()) {
-            currentEmpleado.setNombre(empleadoUpdates.getNombre());
+        if (patronActualizaciones.getNombre() != null && !patronActualizaciones.getNombre().isEmpty()) {
+            patronActual.setNombre(patronActualizaciones.getNombre());
         }
 
-        if (empleadoUpdates.getApellidos() != null && !empleadoUpdates.getApellidos().isEmpty()) {
-            currentEmpleado.setApellidos(empleadoUpdates.getApellidos());
+        if (patronActualizaciones.getApellidos() != null && !patronActualizaciones.getApellidos().isEmpty()) {
+            patronActual.setApellidos(patronActualizaciones.getApellidos());
         }
 
-        if (empleadoUpdates.getFech_nacimiento() != null) {
-            currentEmpleado.setFech_nacimiento(empleadoUpdates.getFech_nacimiento());
+        if (patronActualizaciones.getFechaNacimiento() != null) {
+            patronActual.setFechaNacimiento(patronActualizaciones.getFechaNacimiento());
         }
 
-        if (empleadoUpdates.getFech_expedicion_titulo() != null) {
-            currentEmpleado.setFech_expedicion_titulo(empleadoUpdates.getFech_expedicion_titulo());
+        if (patronActualizaciones.getFechaExpedicionTitulo() != null) {
+            patronActual.setFechaExpedicionTitulo(patronActualizaciones.getFechaExpedicionTitulo());
         }
 
-        boolean resultOk = empleadosRepository.actualizarEmpleado(currentEmpleado);
+        boolean actualizadoConExito = patronRepository.actualizarPatron(patronActual);
 
-        if (resultOk) {
-            return new ResponseEntity<>(currentEmpleado, HttpStatus.OK);
+        if (actualizadoConExito) {
+            return new ResponseEntity<>(patronActual, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -98,17 +98,17 @@ public class PatronRestController {
      * /api/patrones/{id}) [cite: 77]
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePatron(@PathVariable Integer id) {
+    public ResponseEntity<Void> eliminarPatron(@PathVariable Integer id) {
 
-        Empleados empleado = empleadosRepository.obtenerEmpleadoPorId(id);
+        Patron patron = patronRepository.obtenerPatronPorId(id);
 
-        if (empleado == null) {
+        if (patron == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        boolean ok = empleadosRepository.eliminarEmpleado(id);
+        boolean eliminadoConExito = patronRepository.eliminarPatron(id);
 
-        if (ok) {
+        if (eliminadoConExito) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
             // Error al eliminar (probablemente está asignado a una embarcación)
@@ -125,10 +125,10 @@ public class PatronRestController {
      * Devuelve un patrón por ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Empleados> getPatronById(@PathVariable Integer id) {
-        Empleados empleado = empleadosRepository.obtenerEmpleadoPorId(id);
-        if (empleado != null) {
-            return new ResponseEntity<>(empleado, HttpStatus.OK);
+    public ResponseEntity<Patron> obtenerPatronPorId(@PathVariable Integer id) {
+        Patron patron = patronRepository.obtenerPatronPorId(id);
+        if (patron != null) {
+            return new ResponseEntity<>(patron, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
@@ -139,8 +139,8 @@ public class PatronRestController {
      * Devuelve los patrones disponibles (no asignados a embarcaciones)
      */
     @GetMapping("/disponibles")
-    public ResponseEntity<List<Empleados>> getPatronesDisponibles() {
-        List<Empleados> empleadosDisponibles = empleadosRepository.obtenerEmpleadosDisponibles();
-        return new ResponseEntity<>(empleadosDisponibles, HttpStatus.OK);
+    public ResponseEntity<List<Patron>> obtenerPatronesDisponibles() {
+        List<Patron> patronesDisponibles = patronRepository.obtenerPatronesDisponibles();
+        return new ResponseEntity<>(patronesDisponibles, HttpStatus.OK);
     }
 }

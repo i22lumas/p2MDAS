@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error de Ampliación - Club Náutico</title>
+<link rel="stylesheet" th:href="@{/css/style.css}" />    
+    <style>
+        .main-container {
+            max-width: 500px;
+        }
+        h1 {
+            color: var(--error-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box main-container">
+        <h1 class="header-error">❌ Ampliación Fallida</h1>
+        <div class="error-message">
+            <p th:text="${error}">Error desconocido al procesar la solicitud de ampliación.</p>
+        </div>
+        <div class="actions">
+            <a href="/ampliarInscripcion" class="btn">Volver a buscar titular</a>
+            <a href="/" class="btn">Volver al Menú Principal</a>
+        </div>
+    </div>
+</body>
+</html>
