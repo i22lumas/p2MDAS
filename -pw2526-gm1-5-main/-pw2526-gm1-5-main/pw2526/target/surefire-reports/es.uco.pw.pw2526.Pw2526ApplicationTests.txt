@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: es.uco.pw.pw2526.Pw2526ApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.017 s -- in es.uco.pw.pw2526.Pw2526ApplicationTests

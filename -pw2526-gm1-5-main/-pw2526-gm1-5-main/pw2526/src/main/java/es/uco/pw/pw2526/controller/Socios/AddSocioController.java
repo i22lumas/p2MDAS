@@ -1,4 +1,4 @@
-package es.uco.pw.pw2526.controller.socios;
+package es.uco.pw.pw2526.controller.Socios;
 
 import java.time.LocalDate;
 import org.springframework.stereotype.Controller;
@@ -48,7 +48,6 @@ public class AddSocioController {
             
             nuevoSocio.setFechaInscripcion(LocalDate.now()); 
             nuevoSocio.setTipoMiembro(TipoMiembro.TITULAR); 
-            nuevoSocio.setTieneTituloPatron(false);
             
             Inscripcion nuevaInscripcion = new Inscripcion();
             nuevaInscripcion.setTipoInscripcion(TipoInscripcion.INDIVIDUAL);

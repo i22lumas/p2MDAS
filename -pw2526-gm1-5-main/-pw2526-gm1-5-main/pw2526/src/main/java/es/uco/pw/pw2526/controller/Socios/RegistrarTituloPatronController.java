@@ -1,4 +1,4 @@
-package es.uco.pw.pw2526.controller.socios;
+package es.uco.pw.pw2526.controller.Socios;
 
 import java.util.List;
 import org.springframework.stereotype.Controller;

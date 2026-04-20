@@ -1,4 +1,4 @@
-package es.uco.pw.pw2526.controller.socios;
+package es.uco.pw.pw2526.controller.Socios;
 
 import java.time.LocalDate;
 import java.util.List;
