@@ -36,7 +36,7 @@ public class Reserva {
         this.idPatron = idPatron;
     }
 
-    // Getters y Setters
+
     public Integer getIdReserva() {
         return idReserva;
     }

@@ -16,9 +16,7 @@ public class PatronRestController {
     @Autowired
     private PatronRepository patronRepository;
 
-    // ----------------------------------------------------------------------
-    // SEMANA 1: GET y POST (Patrones)
-    // ----------------------------------------------------------------------
+
 
     /**
      * 3. Obtener la lista completa de patrones (GET /api/patrones) [cite: 55]
@@ -44,9 +42,7 @@ public class PatronRestController {
         }
     }
 
-    // ----------------------------------------------------------------------
-    // SEMANA 2: PATCH y DELETE (Patrones)
-    // ----------------------------------------------------------------------
+
 
     /**
      * 2. Actualizar los campos de información de un patrón, excepto el DNI (PATCH
@@ -62,12 +58,12 @@ public class PatronRestController {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
 
-        // El DNI no se puede actualizar - verificar que no se haya modificado
+
         if (patronActualizaciones.getDni() != null && !patronActualizaciones.getDni().equals(patronActual.getDni())) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
 
-        // Aplicar solo los campos que se pueden modificar
+
         if (patronActualizaciones.getNombre() != null && !patronActualizaciones.getNombre().isEmpty()) {
             patronActual.setNombre(patronActualizaciones.getNombre());
         }
@@ -116,9 +112,7 @@ public class PatronRestController {
         }
     }
 
-    // ----------------------------------------------------------------------
-    // ENDPOINTS ADICIONALES
-    // ----------------------------------------------------------------------
+
 
     /**
      * GET /api/patrones/{id}

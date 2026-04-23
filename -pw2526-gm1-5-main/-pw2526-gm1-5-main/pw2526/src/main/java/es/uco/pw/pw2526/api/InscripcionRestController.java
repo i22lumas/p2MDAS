@@ -114,12 +114,12 @@ public class InscripcionRestController {
         Inscripcion inscripcionActual = inscripcionRepository.obtenerInscripcionPorId(titular.getInscripcionId());
         
         if (inscripcionActual == null || inscripcionActual.getTipoInscripcion() != TipoInscripcion.INDIVIDUAL) {
-            return new ResponseEntity<>(null, HttpStatus.UNPROCESSABLE_ENTITY); // No existe o no es individual
+            return new ResponseEntity<>(null, HttpStatus.UNPROCESSABLE_ENTITY);
         }
         
-        // Lógica de negocio (actualizar cuota y tipo)
+
         inscripcionActual.setTipoInscripcion(TipoInscripcion.FAMILIAR);
-        // La cuota debería actualizarse aquí, pero la omitimos por simplicidad del ejemplo.
+
         
         boolean actualizadoConExito = inscripcionRepository.actualizarInscripcion(inscripcionActual);
         
@@ -147,7 +147,7 @@ public class InscripcionRestController {
         if (inscripcion == null || inscripcion.getTipoInscripcion() != TipoInscripcion.FAMILIAR) {
             return new ResponseEntity<>(null, HttpStatus.UNPROCESSABLE_ENTITY);
         }
-        // Verificar que el miembro no esté ya asociado a NINGUNA inscripción
+
         if (socioMiembro.getInscripcionId() != -1) {
             return new ResponseEntity<>(null, HttpStatus.CONFLICT);
         }
@@ -184,7 +184,7 @@ public class InscripcionRestController {
         if (inscripcion == null || inscripcion.getTipoInscripcion() != TipoInscripcion.FAMILIAR) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        // El miembro debe pertenecer a esta inscripción y no debe ser el titular
+
         if (socioMiembro.getInscripcionId() != inscripcion.getId() || socioMiembro.esTitular()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }

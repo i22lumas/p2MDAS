@@ -92,7 +92,7 @@ public class AmpliacionFamiliarController {
         int adultosAnadidos = 0;
         int totalHijosAnadidos = 0;
         
-        // --- 1. PROCESAMIENTO DEL CÓNYUGE (Adulto adicional)
+
         boolean existeConyugeData = dniNuevoAdulto != null && !dniNuevoAdulto.trim().isEmpty();
 
         if (existeConyugeData) {
@@ -107,7 +107,7 @@ public class AmpliacionFamiliarController {
                 return modelAndView;
             }
 
-            // Inserción del cónyuge
+
             nuevoAdulto.setDni(dniNuevoAdulto); 
             nuevoAdulto.setIdSocioTitularFk(titularId);
             nuevoAdulto.setInscripcionId(inscripcionId);
@@ -128,7 +128,7 @@ public class AmpliacionFamiliarController {
             }
         }
 
-        // 2. PROCESAMIENTO DE HIJOS 
+
         
         String dniHijo = (hijosDniList != null && !hijosDniList.isEmpty()) ? hijosDniList.get(0).trim() : "";
         
@@ -178,7 +178,7 @@ public class AmpliacionFamiliarController {
             }
         }
 
-        // 3. ACTUALIZACIÓN FINAL DE LA INSCRIPCIÓN
+
 
         if (adultosAnadidos > 0 || totalHijosAnadidos > 0) {
             if (inscripcion.getTipoInscripcion() == TipoInscripcion.INDIVIDUAL) {

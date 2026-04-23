@@ -15,11 +15,7 @@ import es.uco.pw.pw2526.model.domain.embarcacion.TipoEmbarcacion;
 @Repository
 public class EmbarcacionRepository extends AbstractRepository {
 
-    /**
-     * Constructor del repositorio de embarcaciones
-     * 
-     * @param jdbcTemplate Plantilla JDBC para operaciones de base de datos
-     */
+
     public EmbarcacionRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -42,7 +38,7 @@ public class EmbarcacionRepository extends AbstractRepository {
                         embarcacion.setNumeroPlazas(rs.getInt("numero_plazas"));
                         embarcacion.setEsloraEnMetros(parseDimensiones(rs.getString("dimensiones")));
 
-                        // Nuevo campo: patrón asignado
+
                         Integer idPatron = rs.getInt("id_patron_asignado");
                         if (!rs.wasNull()) {
                             embarcacion.setIdPatronAsignado(idPatron);
@@ -334,14 +330,14 @@ public class EmbarcacionRepository extends AbstractRepository {
      */
     public boolean eliminarEmbarcacion(String matricula) {
         try {
-            // Verificar si la embarcación existe primero
+
             Embarcacion embarcacionExistente = buscarPorMatricula(matricula);
             if (embarcacionExistente == null) {
                 System.err.println("La embarcación con matrícula " + matricula + " no existe");
                 return false;
             }
 
-            // Verificar si tiene alquileres o reservas
+
             String checkAlquileresQuery = "SELECT COUNT(*) FROM Alquiler WHERE matricula_embarcacion = ?";
             String checkReservasQuery = "SELECT COUNT(*) FROM Reserva WHERE matricula_embarcacion = ?";
 

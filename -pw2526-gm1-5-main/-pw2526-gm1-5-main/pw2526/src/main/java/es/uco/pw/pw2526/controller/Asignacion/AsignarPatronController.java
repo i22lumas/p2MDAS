@@ -57,7 +57,7 @@ public class AsignarPatronController {
 
         System.out.println("🔍 Iniciando asignación para matrícula: " + matricula + ", empleado: " + idEmpleado);
 
-        // Verificar si la embarcación ya tiene un patrón asignado
+
         Integer idPatronActual = asignacionRepository.obtenerPatronActual(matricula);
         System.out.println("🔍 ID Patrón Actual encontrado: " + idPatronActual);
 
@@ -83,7 +83,7 @@ public class AsignarPatronController {
 
         System.out.println("🔍 Embarcación NO tiene patrón actual, asignando directamente...");
 
-        // Si no hay patrón actual, asignar directamente
+
         if (asignacionRepository.asignarPatron(matricula, idEmpleado)) {
             model.addAttribute("mensaje", "✅ Patrón asignado correctamente a la embarcación.");
             return "AsignarPatronSuccess";

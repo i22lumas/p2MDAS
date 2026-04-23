@@ -91,7 +91,7 @@ public class TestReservasAPI {
         System.out.println("\n✅ TESTS COMPLETADOS");
     }
 
-    // ==================== MÉTODOS AUXILIARES ====================
+
 
     private static void printTestHeader(String nombre) {
         System.out.println("\n" + (testCounter++) + ". " + nombre);
@@ -122,7 +122,7 @@ public class TestReservasAPI {
                 .format(DateTimeFormatter.ISO_DATE);
     }
 
-    // ==================== PRUEBAS GET ====================
+
 
     private static void testGetAllReservas() {
         printTestHeader("GET /api/reservas - Obtener todas las reservas");
@@ -329,7 +329,7 @@ public class TestReservasAPI {
         }
     }
 
-    // ==================== PRUEBAS POST ====================
+
 
     private static void testPostReservaExitoso() {
         printTestHeader("POST /api/reservas - Caso exitoso básico");
@@ -551,7 +551,7 @@ public class TestReservasAPI {
         }
     }
 
-    // ==================== PRUEBAS DELETE ====================
+
 
     private static void testDeleteReservaInexistente() {
         printTestHeader("DELETE /api/reservas/99999 - Reserva inexistente");
@@ -612,7 +612,7 @@ public class TestReservasAPI {
         }
     }
 
-    // ==================== MÉTODOS DE APOYO ====================
+
 
     private static boolean ejecutarPostReserva(String json, boolean esperaExito) {
         HttpHeaders headers = new HttpHeaders();

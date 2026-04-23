@@ -14,21 +14,13 @@ public class ObtenerEmbarcacionesController {
 
     private EmbarcacionRepository embarcacionRepository;
 
-    /**
-     * Constructor del controlador para obtener embarcaciones
-     * 
-     * @param embarcacionRepository Repositorio de embarcaciones
-     */
+
     public ObtenerEmbarcacionesController(EmbarcacionRepository embarcacionRepository) {
         this.embarcacionRepository = embarcacionRepository;
         this.embarcacionRepository.setSQLQueriesFileName("./src/main/resources/db/sql.properties");
     }
 
-    /**
-     * Obtiene y muestra la lista de todas las embarcaciones
-     * 
-     * @return ModelAndView con la lista de embarcaciones
-     */
+
     @GetMapping("/verEmbarcaciones")
     public ModelAndView obtenerEmbarcaciones() {
         List<Embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();

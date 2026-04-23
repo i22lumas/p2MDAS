@@ -16,34 +16,31 @@ public class TestFlotaPatrones {
     private static final RestTemplate restTemplate;
 
     static {
-        // Configurar RestTemplate para soportar PATCH
+
         HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
                 HttpClients.createDefault());
-        requestFactory.setConnectTimeout(5000); // 5 segundos para conectar
-        requestFactory.setReadTimeout(5000); // 5 segundos para recibir respuesta
+        requestFactory.setConnectTimeout(5000);
+        requestFactory.setReadTimeout(5000);
         restTemplate = new RestTemplate(requestFactory);
     }
 
     public static void main(String[] args) {
         System.out.println("=== INICIANDO PRUEBAS COMPLETAS DE LA API ===\n");
 
-        // ============================================
-        // PRUEBAS DE CASOS EXITOSOS
-        // ============================================
-        System.out.println("=== SECCIÓN 1: PRUEBAS EXITOSAS ===\n");
 
-        // Pruebas GET exitosas
+
+
         testGetAllBoats();
         testGetBoatsByType();
         testGetAllPatrones();
         testGetPatronesDisponibles();
         testGetPatronById();
 
-        // Pruebas POST exitosas
+
         String nuevaMatricula = testPostBoats();
         Integer nuevoPatronId = testPostPatrones();
 
-        // Pruebas PATCH exitosas
+
         if (nuevaMatricula != null) {
             testPatchBoat(nuevaMatricula);
             testPatchAssignPatron(nuevaMatricula);
@@ -54,34 +51,28 @@ public class TestFlotaPatrones {
             testPatchPatron(nuevoPatronId);
         }
 
-        // ============================================
-        // PRUEBAS DE CASOS DE ERROR
-        // ============================================
+
         System.out.println("\n=== SECCIÓN 2: PRUEBAS DE ERRORES Y VALIDACIONES ===\n");
 
-        // Pruebas GET con errores
+
         testGetErrors();
 
-        // Pruebas POST con datos inválidos
+
         testPostErrors();
 
-        // Pruebas PATCH con errores
+
         if (nuevaMatricula != null) {
             testPatchErrors(nuevaMatricula);
         }
 
-        // Pruebas DELETE con errores
+
         if (nuevaMatricula != null && nuevoPatronId != null) {
             testDeleteErrors(nuevaMatricula, nuevoPatronId);
         }
 
-        // ============================================
-        // LIMPIEZA FINAL
-        // ============================================
-        System.out.println("\n=== SECCIÓN 3: LIMPIEZA FINAL ===\n");
 
-        // Pruebas DELETE exitosas (limpieza)
-        if (nuevaMatricula != null) {
+
+
             testDeleteBoat(nuevaMatricula);
         }
 
@@ -93,7 +84,7 @@ public class TestFlotaPatrones {
         System.out.println("📊 RESUMEN FINAL DE PRUEBAS");
         System.out.println("=".repeat(60));
 
-        // PORCENTAJES VISIBLES
+
         System.out.println("\n✅ GET - CONSULTAS:          100% COMPLETADO");
         System.out.println("   • Todas las consultas funcionan perfectamente");
         System.out.println("   • Manejo correcto de errores 400/404");
@@ -124,9 +115,7 @@ public class TestFlotaPatrones {
         System.out.println("=".repeat(60));
     }
 
-    // ----------------------------------------------------------------------
-    // PRUEBAS GET (EXITOSAS)
-    // ----------------------------------------------------------------------
+
 
     private static void testGetAllBoats() {
         System.out.println("=== TEST GET /api/boats (ÉXITO) ===");
@@ -226,13 +215,10 @@ public class TestFlotaPatrones {
         System.out.println();
     }
 
-    // ----------------------------------------------------------------------
-    // PRUEBAS POST (EXITOSAS)
-    // ----------------------------------------------------------------------
 
     private static String testPostBoats() {
         System.out.println("=== TEST POST /api/boats (ÉXITO) ===");
-        // MATRÍCULA MÁS ÚNICA PARA EVITAR DUPLICADOS
+
         long nanoTime = System.nanoTime();
         String matricula = "T" + Math.abs((nanoTime % 10000000)) + "X";
 
@@ -273,7 +259,7 @@ public class TestFlotaPatrones {
 
     private static Integer testPostPatrones() {
         System.out.println("\n=== TEST POST /api/patrones (ÉXITO) ===");
-        // DNI MÁS ÚNICO PARA EVITAR DUPLICADOS
+
         long nanoTime = System.nanoTime();
         String dni = String.valueOf(Math.abs((nanoTime % 100000000))) + "X";
 
@@ -300,7 +286,7 @@ public class TestFlotaPatrones {
             System.out.println("✅ Status: " + response.getStatusCode());
             System.out.println("✅ Respuesta: " + response.getBody());
 
-            // Intentar obtener el ID del patrón creado
+
             ResponseEntity<List<Map<String, Object>>> allPatrones = restTemplate.exchange(
                     BASE_URL + "/api/patrones",
                     HttpMethod.GET,
@@ -327,9 +313,6 @@ public class TestFlotaPatrones {
         }
     }
 
-    // ----------------------------------------------------------------------
-    // PRUEBAS PATCH (EXITOSAS)
-    // ----------------------------------------------------------------------
 
     private static void testPatchBoat(String matricula) {
         System.out.println("\n=== TEST PATCH /api/boats/" + matricula + " (ÉXITO) ===");
@@ -413,7 +396,7 @@ public class TestFlotaPatrones {
     private static void testPatchPatron(Integer id) {
         System.out.println("\n=== TEST PATCH /api/patrones/" + id + " (ÉXITO) ===");
 
-        // Primero obtener el patrón para tener su DNI
+
         try {
             ResponseEntity<Map<String, Object>> getResponse = restTemplate.exchange(
                     BASE_URL + "/api/patrones/" + id,
@@ -455,9 +438,6 @@ public class TestFlotaPatrones {
         }
     }
 
-    // ----------------------------------------------------------------------
-    // PRUEBAS DELETE (EXITOSAS)
-    // ----------------------------------------------------------------------
 
     private static void testDeleteBoat(String matricula) {
         System.out.println("\n=== TEST DELETE /api/boats/" + matricula + " (ÉXITO) ===");
@@ -503,14 +483,11 @@ public class TestFlotaPatrones {
         }
     }
 
-    // ----------------------------------------------------------------------
-    // PRUEBAS DE ERRORES - GET (CORREGIDAS)
-    // ----------------------------------------------------------------------
 
-    private static void testGetErrors() {
         System.out.println("=== PRUEBAS GET CON ERRORES ===");
 
-        // 1. GET con tipo de embarcación inválido (debería dar 400)
+    private static void testGetErrors() {
+
         System.out.println("\n1. GET /api/boats/type/TIPO_INEXISTENTE");
         try {
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
@@ -526,7 +503,7 @@ public class TestFlotaPatrones {
             System.out.println("⚠️  Error inesperado: " + e.getMessage());
         }
 
-        // 2. GET patrón con ID inexistente (debería dar 404)
+
         System.out.println("\n2. GET /api/patrones/999999");
         try {
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
@@ -542,7 +519,7 @@ public class TestFlotaPatrones {
             System.out.println("⚠️  Error inesperado: " + e.getMessage());
         }
 
-        // 3. GET a ruta inexistente (debería dar 404)
+
         System.out.println("\n3. GET /api/ruta/inexistente");
         try {
             ResponseEntity<String> response = restTemplate.getForEntity(
@@ -558,17 +535,16 @@ public class TestFlotaPatrones {
         }
     }
 
-    // ----------------------------------------------------------------------
-    // PRUEBAS DE ERRORES - POST
-    // ----------------------------------------------------------------------
 
-    private static void testPostErrors() {
         System.out.println("\n=== PRUEBAS POST CON ERRORES ===");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // 1. POST embarcación con datos incompletos
+    private static void testPostErrors() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
         System.out.println("\n1. POST /api/boats (datos incompletos - sin tipo)");
         String incompleteBoatJson = """
                 {
@@ -592,7 +568,7 @@ public class TestFlotaPatrones {
             System.out.println("⚠️  Error: " + e.getMessage());
         }
 
-        // 2. POST patrón con DNI duplicado (si existe el DNI 12345678A)
+
         System.out.println("\n2. POST /api/patrones (posible DNI duplicado)");
         String duplicatePatronJson = """
                 {
@@ -606,14 +582,14 @@ public class TestFlotaPatrones {
 
         request = new HttpEntity<>(duplicatePatronJson, headers);
         try {
-            // Primera creación (debería funcionar)
+
             ResponseEntity<String> firstResponse = restTemplate.postForEntity(
                     BASE_URL + "/api/patrones",
                     request,
                     String.class);
             System.out.println("✅ Primera creación exitosa: " + firstResponse.getStatusCode());
 
-            // Segunda creación con mismo DNI (debería fallar)
+
             ResponseEntity<String> secondResponse = restTemplate.postForEntity(
                     BASE_URL + "/api/patrones",
                     request,
@@ -629,7 +605,7 @@ public class TestFlotaPatrones {
             System.out.println("⚠️  Error: " + e.getMessage());
         }
 
-        // 3. POST con datos inválidos (plaza negativa)
+
         System.out.println("\n3. POST /api/boats (plaza negativa)");
         String invalidBoatJson = """
                 {
@@ -654,7 +630,7 @@ public class TestFlotaPatrones {
             System.out.println("⚠️  Error: " + e.getMessage());
         }
 
-        // 4. POST con tipo de embarcación inválido
+
         System.out.println("\n4. POST /api/boats (tipo inválido)");
         String invalidTypeBoatJson = """
                 {
@@ -680,9 +656,6 @@ public class TestFlotaPatrones {
         }
     }
 
-    // ----------------------------------------------------------------------
-    // PRUEBAS DE ERRORES - PATCH
-    // ----------------------------------------------------------------------
 
     private static void testPatchErrors(String matricula) {
         System.out.println("\n=== PRUEBAS PATCH CON ERRORES ===");
@@ -690,7 +663,7 @@ public class TestFlotaPatrones {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // 1. PATCH embarcación inexistente
+
         System.out.println("\n1. PATCH /api/boats/MATRICULA_INEXISTENTE_123456");
         String patchJson = """
                 {
@@ -712,7 +685,7 @@ public class TestFlotaPatrones {
             System.out.println("⚠️  Error: " + e.getMessage());
         }
 
-        // 2. PATCH patrón inexistente
+
         System.out.println("\n2. PATCH /api/patrones/999999");
         String patchPatronJson = """
                 {
@@ -734,7 +707,7 @@ public class TestFlotaPatrones {
             System.out.println("⚠️  Error: " + e.getMessage());
         }
 
-        // 3. PATCH assign-patron con patrón inexistente
+
         System.out.println("\n3. PATCH /api/boats/" + matricula + "/assign-patron (patrón inexistente)");
         String assignInvalidJson = """
                 {
@@ -756,7 +729,7 @@ public class TestFlotaPatrones {
             System.out.println("⚠️  Error: " + e.getMessage());
         }
 
-        // 4. PATCH con datos inválidos (matrícula diferente)
+
         System.out.println("\n4. PATCH /api/boats/" + matricula + " (intento cambiar matrícula)");
         String invalidPatchMatricula = String.format("""
                 {
@@ -778,14 +751,12 @@ public class TestFlotaPatrones {
         }
     }
 
-    // ----------------------------------------------------------------------
-    // PRUEBAS DE ERRORES - DELETE (CORREGIDO)
-    // ----------------------------------------------------------------------
+
+        System.out.println("\n=== PRUEBAS DELETE CON ERRORES ===");
 
     private static void testDeleteErrors(String matricula, Integer patronId) {
         System.out.println("\n=== PRUEBAS DELETE CON ERRORES ===");
 
-        // 1. DELETE embarcación inexistente
         System.out.println("\n1. DELETE /api/boats/EMBARCACION_INEXISTENTE_123456");
         try {
             ResponseEntity<Void> response = restTemplate.exchange(
@@ -800,7 +771,7 @@ public class TestFlotaPatrones {
             System.out.println("⚠️  Error: " + e.getMessage());
         }
 
-        // 2. DELETE patrón inexistente
+
         System.out.println("\n2. DELETE /api/patrones/999999");
         try {
             ResponseEntity<Void> response = restTemplate.exchange(

@@ -15,21 +15,13 @@ public class AddEmbarcacionController {
     private ModelAndView modelAndView = new ModelAndView();
     private EmbarcacionRepository embarcacionRepository;
 
-    /**
-     * Constructor del controlador para añadir embarcaciones
-     * 
-     * @param embarcacionRepository Repositorio de embarcaciones
-     */
+
     public AddEmbarcacionController(EmbarcacionRepository embarcacionRepository) {
         this.embarcacionRepository = embarcacionRepository;
         this.embarcacionRepository.setSQLQueriesFileName("./src/main/resources/db/sql.properties");
     }
 
-    /**
-     * Muestra la vista para añadir una nueva embarcación
-     * 
-     * @return ModelAndView con el formulario de añadir embarcación
-     */
+
     @GetMapping("/addEmbarcacion")
     public ModelAndView mostrarFormularioAnadirEmbarcacion() {
         this.modelAndView.setViewName("addEmbarcacionView.html");
@@ -37,13 +29,7 @@ public class AddEmbarcacionController {
         return this.modelAndView;
     }
 
-    /**
-     * Procesa la adición de una nueva embarcación
-     * 
-     * @param nuevaEmbarcacion Objeto Embarcacion con los datos de la nueva
-     *                         embarcación
-     * @return ModelAndView con el resultado de la operación (éxito o error)
-     */
+
     @PostMapping("/addEmbarcacion")
     public ModelAndView insertarEmbarcacion(@ModelAttribute Embarcacion nuevaEmbarcacion) {
         boolean insertadoConExito = embarcacionRepository.insertarEmbarcacion(nuevaEmbarcacion);

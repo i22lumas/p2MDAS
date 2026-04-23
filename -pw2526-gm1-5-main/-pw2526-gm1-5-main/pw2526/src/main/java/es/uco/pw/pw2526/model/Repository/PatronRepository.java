@@ -13,11 +13,7 @@ import es.uco.pw.pw2526.model.domain.Empleados.Patron;
 @Repository
 public class PatronRepository extends AbstractRepository {
 
-    /**
-     * Constructor del repositorio de patrones
-     * 
-     * @param jdbcTemplate Plantilla JDBC para operaciones de base de datos
-     */
+
     public PatronRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         this.sqlQueries = cargarSqlProperties();
@@ -127,14 +123,14 @@ public class PatronRepository extends AbstractRepository {
      */
     public boolean actualizarPatron(Patron patron) {
         try {
-            // Primero obtenemos el patrón actual para verificar el DNI
+
             Patron patronActual = obtenerPatronPorId(patron.getId());
             if (patronActual == null) {
                 System.err.println("El patrón con ID " + patron.getId() + " no existe");
                 return false;
             }
 
-            // Verificamos que el DNI no se haya modificado
+
             if (!patronActual.getDni().equals(patron.getDni())) {
                 System.err.println("No se puede modificar el DNI de un patrón");
                 return false;
@@ -165,7 +161,7 @@ public class PatronRepository extends AbstractRepository {
      */
     public boolean eliminarPatron(int id) {
         try {
-            // Verificar si el patrón está asignado a alguna embarcación
+
             String checkQuery = "SELECT COUNT(*) FROM Embarcaciones WHERE id_patron_asignado = ?";
             Integer count = jdbcTemplate.queryForObject(checkQuery, Integer.class, id);
 
@@ -174,7 +170,7 @@ public class PatronRepository extends AbstractRepository {
                 return false;
             }
 
-            // Eliminar el patrón
+
             String deleteQuery = "DELETE FROM Empleado WHERE id_empleado = ?";
             int filasAfectadas = jdbcTemplate.update(deleteQuery, id);
 

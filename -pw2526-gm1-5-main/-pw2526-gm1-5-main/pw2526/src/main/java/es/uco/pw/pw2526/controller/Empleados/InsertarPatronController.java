@@ -14,22 +14,14 @@ public class InsertarPatronController {
 
     private final PatronRepository patronRepository;
 
-    /**
-     * Constructor del controlador para insertar patrones
-     * 
-     * @param patronRepository Repositorio de patrones
-     */
+
     public InsertarPatronController(PatronRepository patronRepository) {
         this.patronRepository = patronRepository;
         String sqlQueriesFileName = "./src/main/resources/db/sql.properties";
         this.patronRepository.setSQLQueriesFileName(sqlQueriesFileName);
     }
 
-    /**
-     * Muestra la vista para añadir un nuevo patrón
-     * 
-     * @return ModelAndView con el formulario de añadir patrón
-     */
+
     @GetMapping("/addEmpleados")
     public ModelAndView mostrarFormularioAnadirPatron() {
         ModelAndView modelAndView = new ModelAndView("addEmpleadosView.html");
@@ -37,12 +29,7 @@ public class InsertarPatronController {
         return modelAndView;
     }
 
-    /**
-     * Procesa la adición de un nuevo patrón
-     * 
-     * @param nuevoPatron Objeto Patron con los datos del nuevo patrón
-     * @return ModelAndView con el resultado de la operación (éxito o error)
-     */
+
     @PostMapping("/addEmpleados")
     public ModelAndView insertarPatron(@ModelAttribute Patron nuevoPatron) {
         boolean insertadoConExito = patronRepository.insertarPatron(nuevoPatron);

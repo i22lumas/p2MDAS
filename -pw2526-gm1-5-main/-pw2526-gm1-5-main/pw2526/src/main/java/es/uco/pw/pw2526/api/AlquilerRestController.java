@@ -1,6 +1,6 @@
 package es.uco.pw.pw2526.api;
 
-import es.uco.pw.pw2526.model.Repository.AlquilerRepository;
+import es.uco.pw.pw2526.model.Repository.AlquilerRepository; 
 import es.uco.pw.pw2526.model.Repository.EmbarcacionRepository;
 import es.uco.pw.pw2526.model.Repository.ReservaRepository;
 import es.uco.pw.pw2526.model.Repository.SocioRepository;
@@ -41,8 +41,6 @@ public class AlquilerRestController {
         this.socioRepository = socioRepository;
     }
 
-    // ==================== GET ====================
-    // C.1: Obtener la lista completa de alquileres
     @GetMapping
     public ResponseEntity<List<Alquiler>> obtenerTodosAlquileres() {
         try {
@@ -53,7 +51,6 @@ public class AlquilerRestController {
         }
     }
 
-    // C.2: Obtener la lista de alquileres futuros dada una fecha
     @GetMapping("/futuros")
     public ResponseEntity<?> obtenerAlquileresFuturos(@RequestParam(required = false) String fecha) {
         try {
@@ -77,7 +74,6 @@ public class AlquilerRestController {
         }
     }
 
-    // C.3: Obtener la información concreta de un alquiler dado su identificador
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerAlquilerPorId(@PathVariable int id) {
         try {
@@ -99,13 +95,11 @@ public class AlquilerRestController {
         }
     }
 
-    // C.4: Obtener las embarcaciones disponibles dada una fecha de inicio y de fin
     @GetMapping("/disponibles")
     public ResponseEntity<?> obtenerEmbarcacionesDisponibles(
             @RequestParam String fechaInicio, 
             @RequestParam String fechaFin) {
         try {
-            // Validar formato de fechas
             LocalDate inicio;
             LocalDate fin;
             try {
@@ -115,20 +109,18 @@ public class AlquilerRestController {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Formato de fecha inválido. Use YYYY-MM-DD"));
             }
-            
-            // Validar que fecha inicio no sea pasada
+
             if (inicio.isBefore(LocalDate.now())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "La fecha de inicio no puede ser en el pasado"));
             }
-            
-            // Validar que fecha fin no sea anterior a inicio
+
             if (fin.isBefore(inicio)) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "La fecha de fin no puede ser anterior a la fecha de inicio"));
             }
             
-            // Validar duración según temporada (según guion)
+
             String errorDuracion = validarDuracionSegunTemporada(inicio, fin);
             if (errorDuracion != null) {
                 return ResponseEntity.badRequest().body(Map.of("error", errorDuracion));
@@ -152,13 +144,9 @@ public class AlquilerRestController {
         }
     }
 
-    // ==================== POST ====================
-    // C.5: Crear un alquiler para una embarcación disponible, sin incluir la vinculación 
-    //      de los socios que participan en ella
     @PostMapping
     public ResponseEntity<?> crearAlquiler(@RequestBody Alquiler nuevoAlquiler) {
         try {
-            // Validaciones básicas
             if (nuevoAlquiler.getDniSocioTitular() == null || nuevoAlquiler.getDniSocioTitular().trim().isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El DNI del socio titular es obligatorio"));
@@ -173,23 +161,20 @@ public class AlquilerRestController {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Las fechas de inicio y fin son obligatorias"));
             }
-            
-            // Validar socio
+
             Socio titular = socioRepository.obtenerSocioPorDni(nuevoAlquiler.getDniSocioTitular());
             if (titular == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Socio titular con DNI " + nuevoAlquiler.getDniSocioTitular() + " no encontrado"));
             }
-            
-            // Validar que el socio es patrón (según guion: solo patrones pueden alquilar)
+
             if (!titular.esPatron()) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El socio titular no tiene título de patrón de embarcación"));
             }
             
             nuevoAlquiler.setIdSocioTitular(titular.getId());
-            
-            // Validar embarcación
+
             Embarcacion embarcacionSeleccionada = embarcacionRepository.obtenerEmbarcaciones().stream()
                     .filter(embarcacion -> embarcacion.getMatricula().equals(nuevoAlquiler.getMatriculaEmbarcacion()))
                     .findFirst()
@@ -199,8 +184,7 @@ public class AlquilerRestController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Embarcación con matrícula " + nuevoAlquiler.getMatriculaEmbarcacion() + " no encontrada"));
             }
-            
-            // Validar fechas
+
             if (nuevoAlquiler.getFechaInicio().isBefore(LocalDate.now())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "La fecha de inicio no puede ser en el pasado"));
@@ -210,14 +194,12 @@ public class AlquilerRestController {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "La fecha de fin no puede ser anterior a la fecha de inicio"));
             }
-            
-            // Validar duración según temporada (SEGÚN GUION)
+
             String errorDuracion = validarDuracionSegunTemporada(nuevoAlquiler.getFechaInicio(), nuevoAlquiler.getFechaFin());
             if (errorDuracion != null) {
                 return ResponseEntity.badRequest().body(Map.of("error", errorDuracion));
             }
-            
-            // Validar capacidad
+
             if (nuevoAlquiler.getPlazasSolicitadas() <= 0) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El número de plazas solicitadas debe ser mayor a 0"));
@@ -229,8 +211,7 @@ public class AlquilerRestController {
                                 "Plazas solicitadas (" + nuevoAlquiler.getPlazasSolicitadas() + 
                                 ") exceden la capacidad de la embarcación (" + embarcacionSeleccionada.getNumeroPlazas() + ")"));
             }
-            
-            // Validar disponibilidad
+
             boolean disponibleAlquiler = alquilerRepository.estaDisponible(
                     nuevoAlquiler.getMatriculaEmbarcacion(), 
                     nuevoAlquiler.getFechaInicio(), 
@@ -246,13 +227,11 @@ public class AlquilerRestController {
                         .body(Map.of("error", 
                                 "La embarcación no está disponible en las fechas seleccionadas"));
             }
-            
-            // Calcular precio (20€ por persona por día según guion)
+
             long dias = ChronoUnit.DAYS.between(nuevoAlquiler.getFechaInicio(), nuevoAlquiler.getFechaFin()) + 1;
             double precio = 20.0 * nuevoAlquiler.getPlazasSolicitadas() * dias;
             nuevoAlquiler.setPrecioTotal(precio);
-            
-            // Crear alquiler (sin tripulantes - según especificación C.5)
+
             int idAlquiler = alquilerRepository.insertarAlquilerYRetornarId(nuevoAlquiler);
             if (idAlquiler > 0) {
                 nuevoAlquiler.setIdAlquiler(idAlquiler);
@@ -271,9 +250,6 @@ public class AlquilerRestController {
         }
     }
 
-    // ==================== PATCH ====================
-    // C.1: Vincular a un nuevo socio (no titular) a un alquiler futuro, 
-    //      actualizando el coste y número de plazas
     @PatchMapping("/{id}/agregar-socio")
     public ResponseEntity<?> agregarSocio(@PathVariable int id, @RequestParam String dniSocio) {
         try {
@@ -281,49 +257,42 @@ public class AlquilerRestController {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El parámetro 'dniSocio' es obligatorio"));
             }
-            
-            // Verificar que el alquiler existe y es futuro
+
             Alquiler alquilerExistente = encontrarAlquilerPorId(id);
             if (alquilerExistente == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Alquiler con ID " + id + " no encontrado"));
             }
-            
+
             if (alquilerExistente.getFechaInicio().isBefore(LocalDate.now())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "No se puede modificar un alquiler pasado"));
             }
-            
-            // Verificar que el socio existe
+
             Socio socio = socioRepository.obtenerSocioPorDni(dniSocio);
             if (socio == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Socio con DNI " + dniSocio + " no encontrado"));
             }
-            
-            // Verificar que no es el titular
+
             if (dniSocio.equals(alquilerExistente.getDniSocioTitular())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El socio titular ya está incluido en el alquiler"));
             }
-            
-            // Verificar que no está ya en la lista de tripulantes
+
             if (alquilerExistente.getDnisTripulantes() != null && alquilerExistente.getDnisTripulantes().contains(dniSocio)) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El socio ya está en la lista de tripulantes"));
             }
-            
-            // Verificar capacidad
+
             int totalTripulantes = 1 + (alquilerExistente.getDnisTripulantes() != null ? alquilerExistente.getDnisTripulantes().size() : 0);
             if (totalTripulantes >= alquilerExistente.getPlazasSolicitadas()) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "No hay plazas disponibles en este alquiler"));
             }
-            
-            // Agregar socio
+
             boolean agregadoConExito = alquilerRepository.agregarSocioNoTitular(id, dniSocio);
             if (agregadoConExito) {
-                // Actualizar precio (una plaza más)
                 long dias = ChronoUnit.DAYS.between(alquilerExistente.getFechaInicio(), alquilerExistente.getFechaFin()) + 1;
                 double nuevoPrecio = 20.0 * (totalTripulantes + 1) * dias;
                 
@@ -344,8 +313,6 @@ public class AlquilerRestController {
         }
     }
 
-    // C.2: Desvincular a un socio (no titular) de un alquiler futuro, 
-    //      actualizando el coste y el número de plazas
     @PatchMapping("/{id}/quitar-socio")
     public ResponseEntity<?> quitarSocio(@PathVariable int id, @RequestParam String dniSocio) {
         try {
@@ -353,35 +320,30 @@ public class AlquilerRestController {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El parámetro 'dniSocio' es obligatorio"));
             }
-            
-            // Verificar que el alquiler existe y es futuro
+
             Alquiler alquilerExistente = encontrarAlquilerPorId(id);
             if (alquilerExistente == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Alquiler con ID " + id + " no encontrado"));
             }
-            
+
             if (alquilerExistente.getFechaInicio().isBefore(LocalDate.now())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "No se puede modificar un alquiler pasado"));
             }
-            
-            // Verificar que no es el titular
+
             if (dniSocio.equals(alquilerExistente.getDniSocioTitular())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "No se puede quitar al socio titular del alquiler"));
             }
-            
-            // Verificar que está en la lista de tripulantes
+
             if (alquilerExistente.getDnisTripulantes() == null || !alquilerExistente.getDnisTripulantes().contains(dniSocio)) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "El socio no está en la lista de tripulantes de este alquiler"));
             }
-            
-            // Quitar socio
+
             boolean quitadoConExito = alquilerRepository.quitarSocioNoTitular(id, dniSocio);
             if (quitadoConExito) {
-                // Actualizar precio (una plaza menos)
                 long dias = ChronoUnit.DAYS.between(alquilerExistente.getFechaInicio(), alquilerExistente.getFechaFin()) + 1;
                 int totalTripulantes = 1 + (alquilerExistente.getDnisTripulantes() != null ? alquilerExistente.getDnisTripulantes().size() : 0);
                 double nuevoPrecio = 20.0 * (totalTripulantes - 1) * dias;
@@ -403,19 +365,15 @@ public class AlquilerRestController {
         }
     }
 
-    // ==================== DELETE ====================
-    // C.3: Cancelar un alquiler que aún no se haya realizado
     @DeleteMapping("/{id}")
     public ResponseEntity<?> cancelarAlquiler(@PathVariable int id) {
         try {
-            // Verificar que el alquiler existe
             Alquiler alquilerExistente = encontrarAlquilerPorId(id);
             if (alquilerExistente == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Alquiler con ID " + id + " no encontrado"));
             }
-            
-            // Verificar que es futuro (según guion: "que aún no se haya realizado")
+
             if (alquilerExistente.getFechaInicio().isBefore(LocalDate.now())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "No se puede cancelar un alquiler pasado"));
@@ -437,8 +395,6 @@ public class AlquilerRestController {
         }
     }
 
-    // ==================== MÉTODOS PRIVADOS AUXILIARES ====================
-    
     private Alquiler encontrarAlquilerPorId(int id) {
         List<Alquiler> todos = alquilerRepository.obtenerTodosAlquileres();
         return todos.stream()
@@ -456,11 +412,14 @@ public class AlquilerRestController {
         long dias = ChronoUnit.DAYS.between(inicio, fin) + 1;
         int mes = inicio.getMonthValue();
         
-        if (mes >= 10 || mes <= 4) { // Temporada baja: octubre a abril
+        boolean esTemporadaBaja = mes >= 10 || mes <= 4;
+        boolean esTemporadaAlta = mes >= 5 && mes <= 9;
+
+        if (esTemporadaBaja) {
             if (dias > 3) {
                 return "En temporada baja (octubre-abril) el máximo es 3 días. Seleccionaste: " + dias + " días.";
             }
-        } else if (mes >= 5 && mes <= 9) { // Temporada alta: mayo a septiembre
+        } else if (esTemporadaAlta) {
             if (dias != 7 && dias != 14) {
                 return "En temporada alta (mayo-septiembre) solo se permiten 7 días (1 semana) o 14 días (2 semanas). Seleccionaste: " + dias + " días.";
             }

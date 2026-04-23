@@ -15,7 +15,7 @@ public class TestInscripciones {
     private static final String BASE_URL = "http://localhost:8080";
     private static final RestTemplate restTemplate;
 
-    // Constantes de prueba
+
     private static final String DNI_TITULAR_I = "99999999I";
     private static final String DNI_MIEMBRO_VINC = "88888888M";
     private static int ID_TITULAR_I = -1;
@@ -33,46 +33,46 @@ public class TestInscripciones {
     public static void main(String[] args) {
         System.out.println("=== INICIANDO PRUEBAS DE INSCRIPCIONES (/api/inscripciones) ===\n");
 
-        // 1. SETUP: Crear Socio Titular y Socio Miembro (necesario para POST)
+
         setupSocios();
 
-        // 2. PRUEBAS POST
+
         testPostInscripcion();
 
-        // 3. PRUEBAS GET
+
         testGetInscripciones();
 
-        // 4. PRUEBAS PUT/PATCH (Modificación y Vinculación)
+
         if (ID_INSCRIPCION > 0) {
             testPutConvertirFamiliar();
             testPatchVincularDesvincular();
         }
 
-        // 5. PRUEBAS DELETE
+
         testDeleteInscripcion();
 
-        // 6. LIMPIEZA FINAL DE SOCIOS DE PRUEBA (si no fueron eliminados en el test)
+
         limpiezaFinal();
         
         System.out.println("\n=== FIN DE PRUEBAS DE INSCRIPCIONES ===\n");
     }
 
-    // --- SETUP ---
+
 
     private static void setupSocios() {
         System.out.println("--- 1. SETUP: Creando Socios Requeridos ---");
         
-        // Crear Socio Titular (no inscrito inicialmente)
+
         try {
             String titularJson = String.format("""
                     { "dni": "%s", "nombre": "Inscripcion", "apellidos": "Titular", "fechaNacimiento": "1975-01-01", "direccion": "C/ I-Titular" }
                     """, DNI_TITULAR_I);
-            // Asumiendo que el endpoint de socios devuelve el ID
+
             Map<String, Object> response = restTemplate.postForObject(BASE_URL + "/api/socios", new HttpEntity<>(titularJson, getJsonHeaders()), Map.class);
             
             System.out.println("Socio Titular (" + DNI_TITULAR_I + ") creado.");
             
-            // Obtener su ID para el POST de Inscripción
+
             ID_TITULAR_I = (Integer) restTemplate.exchange(BASE_URL + "/api/socios/" + DNI_TITULAR_I, HttpMethod.GET, null, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody().get("id");
             
         } catch (HttpClientErrorException.Conflict e) {
@@ -82,7 +82,7 @@ public class TestInscripciones {
             System.out.println("ERROR SETUP Titular: " + e.getMessage());
         }
 
-        // Crear Socio Miembro (no inscrito inicialmente)
+
         try {
             String miembroJson = String.format("""
                     { "dni": "%s", "nombre": "Inscripcion", "apellidos": "Miembro", "fechaNacimiento": "1990-01-01", "direccion": "C/ I-Miembro" }
@@ -99,13 +99,13 @@ public class TestInscripciones {
         }
     }
 
-    // --- PRUEBAS POST ---
+
 
     private static void testPostInscripcion() {
         if (ID_TITULAR_I < 0) return;
         System.out.println("\n--- 2. POST /api/inscripciones (Creación Inicial) ---");
 
-        // Caso 1: Creación exitosa de Inscripción Individual
+
         try {
             String inscripcionJson = String.format("""
                     { "idSocioTitular": %d, "tipoInscripcion": "INDIVIDUAL", "cuotaAnual": 300.0 }
@@ -121,12 +121,12 @@ public class TestInscripciones {
         }
     }
 
-    // --- PRUEBAS GET ---
+
 
     private static void testGetInscripciones() {
         System.out.println("\n--- 3. GET /api/inscripciones (Pruebas de Lectura) ---");
 
-        // 1. Obtener lista de inscripciones individuales
+
         try {
             ResponseEntity<List<Map<String, Object>>> inscripciones = restTemplate.exchange(
                     BASE_URL + "/api/inscripciones?tipo=individual", HttpMethod.GET, null, 
@@ -136,7 +136,7 @@ public class TestInscripciones {
             System.out.println("Error GET ?tipo=individual: " + e.getMessage());
         }
         
-        // 2. Obtener lista completa (sin filtro)
+
         try {
             ResponseEntity<List<Map<String, Object>>> inscripciones = restTemplate.exchange(
                     BASE_URL + "/api/inscripciones", HttpMethod.GET, null, 
@@ -147,7 +147,7 @@ public class TestInscripciones {
         }
 
 
-        // 3. Obtener información de una inscripción dado el DNI del titular
+
         try {
             ResponseEntity<Map<String, Object>> inscripcion = restTemplate.exchange(
                     BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I, HttpMethod.GET, null, 
@@ -158,13 +158,13 @@ public class TestInscripciones {
         }
     }
 
-    // --- PRUEBAS PUT / PATCH ---
+
 
     private static void testPutConvertirFamiliar() {
         if (ID_TITULAR_I < 0) return;
         System.out.println("\n--- 4. PUT /api/inscripciones/{dniTitular}/tipo (Convertir a Familiar) ---");
         
-        // El cuerpo simula el objeto Inscripcion actualizado a FAMILIAR con nueva cuota
+
         String putJson = """
                 { "tipoInscripcion": "FAMILIAR", "cuotaAnual": 550.0 }
                 """;
@@ -183,7 +183,7 @@ public class TestInscripciones {
     private static void testPatchVincularDesvincular() {
         if (ID_TITULAR_I < 0 || ID_MIEMBRO_VINC < 0) return;
 
-        // 1. Vincular a un nuevo miembro (PATCH A.3)
+
         System.out.println("\n--- 5. PATCH Vincular y Desvincular Miembros ---");
         String patchVincularJson = String.format("""
                 { "dni": "%s", "tipoMiembro": "CONYUGE" }
@@ -200,9 +200,9 @@ public class TestInscripciones {
             return; // Si falla la vinculación, no podemos desvincular
         }
 
-        // 2. Desvincular un miembro (PATCH A.4)
+
         try {
-            // *CORRECCIÓN*: Cambiado HttpMethod.DELETE a HttpMethod.PATCH
+
             ResponseEntity<Void> response = restTemplate.exchange(
                     BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I + "/miembros/" + DNI_MIEMBRO_VINC, HttpMethod.PATCH, 
                     null, Void.class);
@@ -213,12 +213,12 @@ public class TestInscripciones {
         }
     }
 
-    // --- PRUEBAS DELETE ---
+
 
     private static void testDeleteInscripcion() {
         System.out.println("\n--- 6. DELETE /api/inscripciones/{dniTitular} (Cancelar) ---");
 
-        // Caso 1: Cancelación exitosa
+
         try {
             restTemplate.exchange(BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I, HttpMethod.DELETE, null, Void.class);
             System.out.println("DELETE /api/inscripciones/{dniTitular}: Status 204 No Content (Inscripción cancelada).");
@@ -227,12 +227,12 @@ public class TestInscripciones {
         }
     }
     
-    // --- LIMPIEZA FINAL ---
+
     
     private static void limpiezaFinal() {
         System.out.println("\n--- 7. LIMPIEZA: Eliminando Socios de Prueba ---");
         
-        // Eliminar Socio Titular (ahora que la inscripción está cancelada)
+
         try {
             restTemplate.exchange(BASE_URL + "/api/socios/" + DNI_TITULAR_I, HttpMethod.DELETE, null, Void.class);
             System.out.println("Socio Titular (" + DNI_TITULAR_I + ") eliminado.");
@@ -240,7 +240,7 @@ public class TestInscripciones {
             System.out.println("Error al eliminar Socio Titular: " + e.getMessage());
         }
         
-        // Eliminar Socio Miembro (debe estar desvinculado)
+
         try {
             restTemplate.exchange(BASE_URL + "/api/socios/" + DNI_MIEMBRO_VINC, HttpMethod.DELETE, null, Void.class);
             System.out.println("Socio Miembro (" + DNI_MIEMBRO_VINC + ") eliminado.");

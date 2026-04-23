@@ -35,7 +35,7 @@ public class Socio {
         this.idSocioTitularFk = null;
     }
     
-    // Constructor completo (mantenido o asumido)
+
     public Socio(int id, String dni, String nombre, String apellidos, LocalDate fechaNacimiento, String direccion, LocalDate fechaInscripcion, boolean tieneTituloPatron, TipoMiembro tipoMiembro, int inscripcionId, Integer idSocioTitularFk) {
         this.id = id;
         this.dni = dni;

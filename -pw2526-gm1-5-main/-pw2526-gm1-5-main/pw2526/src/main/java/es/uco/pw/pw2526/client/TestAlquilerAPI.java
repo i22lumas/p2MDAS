@@ -91,7 +91,7 @@ public class TestAlquilerAPI {
         System.out.println("=".repeat(60));
     }
 
-    // ==================== MÉTODOS AUXILIARES ====================
+
 
     private static void printTestHeader(String nombre) {
         System.out.println("\n" + (testCounter++) + ". " + nombre);
@@ -149,7 +149,7 @@ public class TestAlquilerAPI {
         System.out.println();
     }
 
-    // ==================== PRUEBAS GET ====================
+
 
     private static void testGetAllAlquileres() {
         printTestHeader("GET /api/alquileres - Obtener todos los alquileres");
@@ -248,7 +248,7 @@ public class TestAlquilerAPI {
         }
     }
 
-    // ==================== PRUEBAS POST ====================
+
 
     private static void testPostAlquilerSinDatos() {
         printTestHeader("POST /api/alquileres - Sin datos (error esperado)");
@@ -462,7 +462,7 @@ public class TestAlquilerAPI {
                     "fechaFin": "2024-12-03",
                     "plazasSolicitadas": 2
                     "precioTotal": 120.0
-                """; // Falta coma después de plazasSolicitadas
+        
 
         HttpHeaders headers = getJsonHeaders();
         HttpEntity<String> request = new HttpEntity<>(alquilerJson, headers);
@@ -484,7 +484,7 @@ public class TestAlquilerAPI {
         }
     }
 
-    // ==================== PRUEBAS PATCH ====================
+
 
     private static void testPatchAgregarSocioAlquilerInexistente() {
         printTestHeader("PATCH /api/alquileres/99999/agregar-socio - Alquiler inexistente");
@@ -566,7 +566,7 @@ public class TestAlquilerAPI {
         }
     }
 
-    // ==================== PRUEBAS DELETE ====================
+
 
     private static void testDeleteAlquilerInexistente() {
         printTestHeader("DELETE /api/alquileres/99999 - Alquiler inexistente");

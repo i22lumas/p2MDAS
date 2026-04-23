@@ -90,7 +90,7 @@ public class ReservaRestController {
     @PostMapping
     public ResponseEntity<Reserva> crearReserva(@RequestBody Reserva nuevaReserva) {
         try {
-            // Validaciones básicas
+
             if (nuevaReserva.getMatriculaEmbarcacion() == null || nuevaReserva.getMatriculaEmbarcacion().isEmpty()) {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
@@ -103,7 +103,7 @@ public class ReservaRestController {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
 
-            // Verificar disponibilidad de la embarcación
+
             boolean disponible = reservaRepository.estaDisponible(
                     nuevaReserva.getMatriculaEmbarcacion(),
                     nuevaReserva.getFechaActividad(),
@@ -113,38 +113,37 @@ public class ReservaRestController {
                 return new ResponseEntity<>(null, HttpStatus.CONFLICT);
             }
 
-            // Verificar que el socio existe y es mayor de edad
+
             boolean esMayorDeEdad = reservaRepository.esSocioMayorDeEdad(nuevaReserva.getIdSocioSolicitante());
             if (!esMayorDeEdad) {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
 
-            // Verificar capacidad de la embarcación
+
             int capacidad = reservaRepository.obtenerCapacidadEmbarcacion(nuevaReserva.getMatriculaEmbarcacion());
             if (nuevaReserva.getPlazasSolicitadas() > capacidad) {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
 
-            // Verificar si necesita patrón y asignarlo si es necesario
+
             boolean tienePatron = reservaRepository.tienePatronAsignado(nuevaReserva.getMatriculaEmbarcacion(),
                     nuevaReserva.getFechaActividad());
             if (!tienePatron) {
-                // Si la embarcación no tiene patrón asignado, verificar si el socio tiene
-                // título de patrón
+
                 boolean socioEsPatron = reservaRepository.socioTieneTituloPatron(nuevaReserva.getIdSocioSolicitante());
                 if (!socioEsPatron) {
                     return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
                 }
-                // Si el socio es patrón, se asigna a sí mismo como patrón
+
                 nuevaReserva.setIdPatron(nuevaReserva.getIdSocioSolicitante());
             } else {
-                // Si la embarcación tiene patrón asignado, obtenerlo
+
                 Integer idPatron = reservaRepository.obtenerPatronAsignado(nuevaReserva.getMatriculaEmbarcacion(),
                         nuevaReserva.getFechaActividad());
                 nuevaReserva.setIdPatron(idPatron);
             }
 
-            // Insertar la reserva en la base de datos
+
             boolean insertadoConExito = reservaRepository.insertarReserva(nuevaReserva);
 
             if (insertadoConExito) {
@@ -158,9 +157,7 @@ public class ReservaRestController {
         }
     }
 
-    // ----------------------------------------------------------------------
-    // SEMANA 2: PATCH y DELETE (Reservas)
-    // ----------------------------------------------------------------------
+
 
     /**
      * D.1. Modificar la fecha de una reserva futura a otra posterior, solo si la
@@ -173,18 +170,18 @@ public class ReservaRestController {
             @RequestBody Map<String, String> cuerpoSolicitud) {
 
         try {
-            // Obtener la reserva actual
+
             Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
             if (reservaActual == null) {
                 return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
             }
 
-            // Verificar que la reserva es futura
+
             if (reservaActual.getFechaActividad().isBefore(LocalDate.now())) {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
 
-            // Obtener la nueva fecha del cuerpo de la petición
+
             String nuevaFechaStr = cuerpoSolicitud.get("nuevaFecha");
             if (nuevaFechaStr == null || nuevaFechaStr.isEmpty()) {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
@@ -192,12 +189,12 @@ public class ReservaRestController {
 
             LocalDate nuevaFecha = LocalDate.parse(nuevaFechaStr);
 
-            // Verificar que la nueva fecha es posterior a la fecha actual de la reserva
+
             if (!nuevaFecha.isAfter(reservaActual.getFechaActividad())) {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
 
-            // Verificar disponibilidad de la embarcación en la nueva fecha
+
             boolean disponible = reservaRepository.estaDisponible(
                     reservaActual.getMatriculaEmbarcacion(),
                     nuevaFecha,
@@ -207,7 +204,7 @@ public class ReservaRestController {
                 return new ResponseEntity<>(null, HttpStatus.CONFLICT);
             }
 
-            // Actualizar la fecha de la reserva
+
             reservaActual.setFechaActividad(nuevaFecha);
 
             return new ResponseEntity<>(reservaActual, HttpStatus.OK);
@@ -228,32 +225,32 @@ public class ReservaRestController {
             @RequestBody Reserva reservaActualizaciones) {
 
         try {
-            // Obtener la reserva actual
+
             Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
             if (reservaActual == null) {
                 return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
             }
 
-            // Verificar que la reserva es futura
+
             if (reservaActual.getFechaActividad().isBefore(LocalDate.now())) {
                 return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
             }
 
-            // Aplicar las actualizaciones solo a los campos permitidos
+
             boolean cambiosRealizados = false;
 
-            // Actualizar descripción si se proporciona
+
             if (reservaActualizaciones.getPropositoActividad() != null
                     && !reservaActualizaciones.getPropositoActividad().isEmpty()) {
                 reservaActual.setPropositoActividad(reservaActualizaciones.getPropositoActividad());
                 cambiosRealizados = true;
             }
 
-            // Actualizar número de plazas si se proporciona
+
             if (reservaActualizaciones.getPlazasSolicitadas() != null
                     && reservaActualizaciones.getPlazasSolicitadas() > 0) {
 
-                // Verificar que no excede la capacidad máxima de la embarcación
+
                 int capacidad = reservaRepository
                         .obtenerCapacidadEmbarcacion(reservaActual.getMatriculaEmbarcacion());
                 if (reservaActualizaciones.getPlazasSolicitadas() > capacidad) {
@@ -264,7 +261,7 @@ public class ReservaRestController {
                 cambiosRealizados = true;
             }
 
-            // Si no hay cambios, devolver la reserva actual sin modificar
+
             if (!cambiosRealizados) {
                 return new ResponseEntity<>(reservaActual, HttpStatus.OK);
             }
@@ -284,18 +281,18 @@ public class ReservaRestController {
     public ResponseEntity<Void> cancelarReserva(@PathVariable Integer id) {
 
         try {
-            // Obtener la reserva actual
+
             Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
             if (reservaActual == null) {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
 
-            // Verificar que la reserva es futura
+
             if (reservaActual.getFechaActividad().isBefore(LocalDate.now())) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
-            // Eliminar la reserva (este método ya existe en tu ReservaRepository)
+
             boolean eliminadaConExito = reservaRepository.eliminarReserva(id);
 
             if (eliminadaConExito) {

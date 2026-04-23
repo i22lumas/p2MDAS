@@ -8,7 +8,7 @@ public class Alquiler {
 
     private int idAlquiler;
     private int idSocioTitular;
-    private String dniSocioTitular;
+    private String dniSocioTitular; 
     private String matriculaEmbarcacion;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;

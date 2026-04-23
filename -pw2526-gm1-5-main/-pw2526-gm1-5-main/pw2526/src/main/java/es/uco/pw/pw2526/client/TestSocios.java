@@ -15,7 +15,7 @@ public class TestSocios {
     private static final String BASE_URL = "http://localhost:8080";
     private static final RestTemplate restTemplate;
 
-    // Constantes de prueba
+
     private static final String DNI_TITULAR_NUEVO = "55555555N";
     private static final String DNI_TITULAR_VINCULADO = "12345678A"; // DNI de un socio ya existente
     
@@ -30,25 +30,25 @@ public class TestSocios {
     public static void main(String[] args) {
         System.out.println("=== INICIANDO PRUEBAS DE SOCIOS (/api/socios) ===\n");
 
-        // 1. SETUP: Crear un socio titular que luego eliminaremos (o verificaremos su no existencia)
+
         testPostSocioExitoso();
         
-        // 2. PRUEBAS GET
+
         testGetSocios();
         
-        // 3. PRUEBAS PATCH
+
         testPatchSocio(DNI_TITULAR_NUEVO); 
 
-        // 4. PRUEBAS POST con Errores
+
         testPostSocioErrores();
 
-        // 5. PRUEBAS DELETE
+
         testDeleteSocio();
         
         System.out.println("\n=== FIN DE PRUEBAS DE SOCIOS ===\n");
     }
 
-    // --- SETUP Y PRUEBAS POST ---
+
 
     private static void testPostSocioExitoso() {
         System.out.println("--- 1. POST /api/socios (Creación Exitosa) ---");
@@ -70,7 +70,7 @@ public class TestSocios {
     private static void testPostSocioErrores() {
         System.out.println("\n--- 4. POST /api/socios (Pruebas de Errores) ---");
 
-        // Error 1: DNI Duplicado
+
         System.out.println(">> DNI Duplicado");
         String duplicateSocioJson = String.format("""
                 { "dni": "%s", "nombre": "Duplicado", "apellidos": "Error", "fechaNacimiento": "1990-01-01", "direccion": "C/ Error" }
@@ -85,12 +85,12 @@ public class TestSocios {
         }
     }
 
-    // --- PRUEBAS GET ---
+
 
     private static void testGetSocios() {
         System.out.println("\n--- 2. GET /api/socios (Pruebas de Lectura) ---");
 
-        // 1. Obtener lista completa de socios
+
         try {
             ResponseEntity<List<Map<String, Object>>> socios = restTemplate.exchange(
                     BASE_URL + "/api/socios", HttpMethod.GET, null, 
@@ -100,7 +100,7 @@ public class TestSocios {
             System.out.println("Error GET /api/socios: " + e.getMessage());
         }
 
-        // 2. Obtener información de un socio por DNI
+
         try {
             ResponseEntity<Map<String, Object>> socio = restTemplate.exchange(
                     BASE_URL + "/api/socios/" + DNI_TITULAR_NUEVO, HttpMethod.GET, null, 
@@ -110,7 +110,7 @@ public class TestSocios {
             System.out.println("Error GET /api/socios/{dni}: " + e.getMessage());
         }
 
-        // 3. Obtener socio inexistente
+
         try {
             restTemplate.getForEntity(BASE_URL + "/api/socios/00000000Z", String.class);
             System.out.println("ERROR: Debería fallar con 404 Not Found.");
@@ -121,7 +121,7 @@ public class TestSocios {
         }
     }
 
-    // --- PRUEBAS PATCH ---
+
 
     private static void testPatchSocio(String dni) {
         System.out.println("\n--- 3. PATCH /api/socios/{dni} (Actualización) ---");
@@ -141,12 +141,12 @@ public class TestSocios {
         }
     }
 
-    // --- PRUEBAS DELETE ---
+
 
     private static void testDeleteSocio() {
         System.out.println("\n--- 5. DELETE /api/socios/{dni} (Eliminación) ---");
 
-        // Caso 1: Intentar eliminar un socio vinculado (debe fallar con 409)
+
         System.out.println(">> DELETE Socio Vinculado");
         try {
             restTemplate.exchange(BASE_URL + "/api/socios/" + DNI_TITULAR_VINCULADO, HttpMethod.DELETE, null, Void.class);
@@ -159,10 +159,10 @@ public class TestSocios {
             System.out.println("Error: " + e.getMessage());
         }
         
-        // Caso 2: Eliminar un socio no vinculado, socio de prueba DNI_TITULAR_NUEVO)
+
         System.out.println(">> DELETE Socio No Vinculado");
         try {
-            // Nota: Se asume que DNI_TITULAR_NUEVO no tiene una inscripción activa.
+
             restTemplate.exchange(BASE_URL + "/api/socios/" + DNI_TITULAR_NUEVO, HttpMethod.DELETE, null, Void.class);
             System.out.println("DELETE /api/socios/{dni}: Status 204 No Content (Socio eliminado).");
         } catch (Exception e) {

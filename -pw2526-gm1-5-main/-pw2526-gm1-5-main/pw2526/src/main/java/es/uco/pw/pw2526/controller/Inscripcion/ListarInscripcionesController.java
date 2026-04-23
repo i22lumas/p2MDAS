@@ -16,21 +16,12 @@ public class ListarInscripcionesController {
 
     private final InscripcionRepository inscripcionRepository;
 
-    /**
-     * Constructor del controlador para listar inscripciones
-     * 
-     * @param inscripcionRepository Repositorio de inscripciones
-     */
+
     public ListarInscripcionesController(InscripcionRepository inscripcionRepository) {
         this.inscripcionRepository = inscripcionRepository;
     }
 
-    /**
-     * Obtiene y muestra la lista de todas las inscripciones con sus detalles
-     * 
-     * @param model Modelo para pasar datos a la vista
-     * @return String con el nombre de la vista de listado de inscripciones
-     */
+
     @GetMapping
     public String listarInscripciones(Model model) {
 

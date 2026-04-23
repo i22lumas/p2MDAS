@@ -22,7 +22,7 @@ public class AlquilerRepository extends AbstractRepository {
         this.setSQLQueriesFileName("./src/main/resources/db/sql.properties");
         this.sqlQueries = cargarSqlProperties();
     }
-    // --- PRÁCTICA 1: Métodos originales ---
+
     /**
      * Inserta un nuevo alquiler en la base de datos
      */
@@ -40,7 +40,7 @@ public class AlquilerRepository extends AbstractRepository {
                 System.out.println("Tripulantes: "
                         + (nuevoAlquiler.getDnisTripulantes() != null ? nuevoAlquiler.getDnisTripulantes().size() : 0));
 
-                // Insertar alquiler y obtener ID generado
+
                 var keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
 
                 int filasAfectadas = jdbcTemplate.update(connection -> {
@@ -58,7 +58,7 @@ public class AlquilerRepository extends AbstractRepository {
                     int idAlquiler = keyHolder.getKey().intValue();
                     System.out.println("Alquiler insertado con ID: " + idAlquiler);
 
-                    // Insertar tripulantes si los hay
+
                     if (nuevoAlquiler.getDnisTripulantes() != null && !nuevoAlquiler.getDnisTripulantes().isEmpty()) {
                         insertarTripulantesAlquiler(idAlquiler, nuevoAlquiler.getDnisTripulantes());
                     }
@@ -125,7 +125,7 @@ public class AlquilerRepository extends AbstractRepository {
         alquiler.setPlazasSolicitadas(rs.getInt("plazas_solicitadas"));
         alquiler.setPrecioTotal(rs.getDouble("precio_total"));
 
-        // Obtener tripulantes para este alquiler
+
         List<String> tripulantes = obtenerTripulantesPorAlquiler(rs.getInt("id_alquiler"));
         alquiler.setDnisTripulantes(tripulantes);
 
@@ -282,9 +282,9 @@ public class AlquilerRepository extends AbstractRepository {
         }
     }
 
-    // --- FIN PRÁCTICA 1 ---
 
-    // --- PRÁCTICA 2: Métodos añadidos ---
+
+
 
     /**
      *  PATCH: Agregar socio no titular 
@@ -332,6 +332,5 @@ public class AlquilerRepository extends AbstractRepository {
         return false;
         }
     }
-    // --- FIN PRÁCTICA 2 ---
 }
     
