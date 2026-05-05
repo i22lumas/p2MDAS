@@ -22,13 +22,7 @@ public class Inscripcion {
         this.fechaCreacion = LocalDate.now();
     }
 
-    public Inscripcion(int id, int idSocioTitular, TipoInscripcion tipoInscripcion, double cuotaAnual, LocalDate fechaCreacion) {
-        this.id = id;
-        this.idSocioTitular = idSocioTitular;
-        this.tipoInscripcion = tipoInscripcion;
-        this.cuotaAnual = cuotaAnual;
-        this.fechaCreacion = fechaCreacion;
-    }
+
 
     public boolean esIndividual() {
         return this.tipoInscripcion == TipoInscripcion.INDIVIDUAL;

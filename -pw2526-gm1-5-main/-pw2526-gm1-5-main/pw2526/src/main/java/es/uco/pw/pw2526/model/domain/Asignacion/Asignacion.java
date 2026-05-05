@@ -13,14 +13,7 @@ public class Asignacion {
     public Asignacion() {
     }
 
-    public Asignacion(int idAsignacion, String matriculaEmbarcacion, int idEmpleado, LocalDate fechaAsignacion,
-            LocalDate fechaFin) {
-        this.idAsignacion = idAsignacion;
-        this.matriculaEmbarcacion = matriculaEmbarcacion;
-        this.idEmpleado = idEmpleado;
-        this.fechaAsignacion = fechaAsignacion;
-        this.fechaFin = fechaFin;
-    }
+
 
     public int getIdAsignacion() {
         return idAsignacion;

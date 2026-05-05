@@ -23,18 +23,7 @@ public class Reserva {
         this.idPatron = null;
     }
 
-    public Reserva(Integer idReserva, String propositoActividad, Integer idSocioSolicitante,
-            LocalDate fechaActividad, Integer plazasSolicitadas, Double precioTotal,
-            String matriculaEmbarcacion, Integer idPatron) {
-        this.idReserva = idReserva;
-        this.propositoActividad = propositoActividad;
-        this.idSocioSolicitante = idSocioSolicitante;
-        this.fechaActividad = fechaActividad;
-        this.plazasSolicitadas = plazasSolicitadas;
-        this.precioTotal = precioTotal;
-        this.matriculaEmbarcacion = matriculaEmbarcacion;
-        this.idPatron = idPatron;
-    }
+
 
     public Integer getIdReserva() {
         return idReserva;

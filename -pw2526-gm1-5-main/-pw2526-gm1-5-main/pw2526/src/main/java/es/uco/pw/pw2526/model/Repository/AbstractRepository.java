@@ -17,15 +17,24 @@ public abstract class AbstractRepository {
     private void createProperties(String fileName) {
         sqlQueries = new Properties();
         try {
-            BufferedReader reader;
-            File archivoSql = new File(fileName);
-            reader = new BufferedReader(new FileReader(archivoSql));
+            cargarArchivoProperties(fileName);
+        } catch (IOException excepcion) {
+            manejarErrorProperties(excepcion);
+        }
+    }
+
+    private void cargarArchivoProperties(String fileName) throws IOException {
+        File archivoSql = new File(fileName);
+        try (BufferedReader reader = new BufferedReader(new FileReader(archivoSql))) {
             sqlQueries.load(reader);
             System.out.println("✅ Archivo " + fileName + " cargado correctamente.");
-        } catch (IOException excepcion) {
-            System.err.println("❌ Error creando objeto Properties para SQL queries: " + excepcion.getMessage());
-            excepcion.printStackTrace();
         }
+    }
+
+    private void manejarErrorProperties(IOException excepcion) {
+        System.err.println("❌ Error creando objeto Properties para SQL queries: " + excepcion.getMessage());
+        excepcion.printStackTrace();
+        throw new RuntimeException("Error cargando propiedades SQL", excepcion);
     }
 
     /**
@@ -44,9 +53,18 @@ public abstract class AbstractRepository {
      * @return Properties con las consultas SQL cargadas
      */
     public Properties cargarSqlProperties() {
+        inicializarPropertiesSiEsNecesario();
+        return devolverPropertiesOGenerarVacio();
+    }
+
+    private void inicializarPropertiesSiEsNecesario() {
         if (this.sqlQueries == null && this.sqlQueriesFileName != null) {
             createProperties(this.sqlQueriesFileName);
-        } else if (this.sqlQueries == null) {
+        }
+    }
+
+    private Properties devolverPropertiesOGenerarVacio() {
+        if (this.sqlQueries == null) {
             System.err.println("Advertencia: Propiedades SQL no inicializadas. Se devolverá un objeto vacío.");
             return new Properties();
         }

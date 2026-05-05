@@ -44,185 +44,191 @@ public class InscripcionRepository extends AbstractRepository {
         return inscripcion;
     }
 
+    private void verificarQueriesSQL() {
+        if (this.sqlQueries == null) {
+            this.sqlQueries = cargarSqlProperties();
+        }
+    }
+
     public int insertarInscripcion(Inscripcion inscripcion) {
         try {
-            if (this.sqlQueries == null)
-                this.sqlQueries = cargarSqlProperties();
-
-            final String query = sqlQueries.getProperty("inscripciones.insertar") != null
-                    ? sqlQueries.getProperty("inscripciones.insertar")
-                    : "INSERT INTO Inscripciones (id_socio_titular, tipo_inscripcion, cuota_anual, fecha_creacion) VALUES (?, ?, ?, ?)";
-
-            KeyHolder keyHolder = new GeneratedKeyHolder();
-
-            jdbcTemplate.update(connection -> {
-                PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-                ps.setInt(1, inscripcion.getIdSocioTitular());
-                ps.setString(2, inscripcion.getTipoInscripcion().toString());
-                ps.setDouble(3, inscripcion.getCuotaAnual());
-                ps.setObject(4, inscripcion.getFechaCreacion());
-                return ps;
-            }, keyHolder);
-
-            return keyHolder.getKey() != null ? keyHolder.getKey().intValue() : -1;
-
+            return ejecutarInsertarInscripcion(inscripcion);
         } catch (DataAccessException excepcion) {
             System.err.println("Error añadiendo inscripción: " + excepcion.getMessage());
-            excepcion.printStackTrace();
-            return -1;
+            throw excepcion;
         }
+    }
+
+    private int ejecutarInsertarInscripcion(Inscripcion inscripcion) {
+        verificarQueriesSQL();
+        final String query = sqlQueries.getProperty("inscripciones.insertar") != null
+                ? sqlQueries.getProperty("inscripciones.insertar")
+                : "INSERT INTO Inscripciones (id_socio_titular, tipo_inscripcion, cuota_anual, fecha_creacion) VALUES (?, ?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            ps.setInt(1, inscripcion.getIdSocioTitular());
+            ps.setString(2, inscripcion.getTipoInscripcion().toString());
+            ps.setDouble(3, inscripcion.getCuotaAnual());
+            ps.setObject(4, inscripcion.getFechaCreacion());
+            return ps;
+        }, keyHolder);
+        if (keyHolder.getKey() != null) {
+            return keyHolder.getKey().intValue();
+        }
+        throw new RuntimeException("No se pudo generar ID para la inscripción");
     }
     
     public boolean actualizarSocioTitular(int inscripcionId, int idSocioTitular) {
         try {
-            if (this.sqlQueries == null)
-                this.sqlQueries = cargarSqlProperties();
-                
-            final String query = "UPDATE Inscripciones SET id_socio_titular = ? WHERE id_inscripcion = ?";
-
-            int filasAfectadas = jdbcTemplate.update(query, idSocioTitular, inscripcionId);
-
-            return filasAfectadas > 0;
+            return ejecutarActualizarSocioTitular(inscripcionId, idSocioTitular);
         } catch (DataAccessException excepcion) {
             System.err.println("Error al actualizar el socio titular de la inscripción: " + excepcion.getMessage());
-            excepcion.printStackTrace();
-            return false;
+            throw excepcion;
         }
+    }
+
+    private boolean ejecutarActualizarSocioTitular(int inscripcionId, int idSocioTitular) {
+        verificarQueriesSQL();
+        final String query = "UPDATE Inscripciones SET id_socio_titular = ? WHERE id_inscripcion = ?";
+        int filasAfectadas = jdbcTemplate.update(query, idSocioTitular, inscripcionId);
+        return filasAfectadas > 0;
     }
 
     public boolean actualizarInscripcion(Inscripcion inscripcion) {
         try {
-            if (this.sqlQueries == null)
-                this.sqlQueries = cargarSqlProperties();
-            
-            final String query = "UPDATE Inscripciones SET cuota_anual = ?, tipo_inscripcion = ? WHERE id_inscripcion = ?";
-
-            int filasAfectadas = jdbcTemplate.update(query,
-                    inscripcion.getCuotaAnual(),
-                    inscripcion.getTipoInscripcion().toString(),
-                    inscripcion.getId());
-
-            return filasAfectadas > 0;
-
+            return ejecutarActualizarInscripcion(inscripcion);
         } catch (DataAccessException excepcion) {
             System.err.println("Error actualizando inscripción: " + excepcion.getMessage());
-            excepcion.printStackTrace();
-            return false;
+            throw excepcion;
         }
+    }
+
+    private boolean ejecutarActualizarInscripcion(Inscripcion inscripcion) {
+        verificarQueriesSQL();
+        final String query = "UPDATE Inscripciones SET cuota_anual = ?, tipo_inscripcion = ? WHERE id_inscripcion = ?";
+        int filasAfectadas = jdbcTemplate.update(query,
+                inscripcion.getCuotaAnual(),
+                inscripcion.getTipoInscripcion().toString(),
+                inscripcion.getId());
+        return filasAfectadas > 0;
     }
 
     public Inscripcion obtenerInscripcionPorId(int idInscripcion) {
         try {
-            if (this.sqlQueries == null)
-                this.sqlQueries = cargarSqlProperties();
-
-            final String query = sqlQueries.getProperty("inscripciones.buscar.id") != null
-                    ? sqlQueries.getProperty("inscripciones.buscar.id")
-                    : "SELECT * FROM Inscripciones WHERE id_inscripcion = ?";
-
-            return jdbcTemplate.queryForObject(query,
-                    new Object[] { idInscripcion },
-                    this::mapInscripcion);
-
+            return ejecutarObtenerInscripcionPorId(idInscripcion);
         } catch (EmptyResultDataAccessException excepcion) {
             return null;
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo inscripción por ID: " + idInscripcion);
-            return null;
+            throw excepcion;
         }
+    }
+
+    private Inscripcion ejecutarObtenerInscripcionPorId(int idInscripcion) {
+        verificarQueriesSQL();
+        final String query = sqlQueries.getProperty("inscripciones.buscar.id") != null
+                ? sqlQueries.getProperty("inscripciones.buscar.id")
+                : "SELECT * FROM Inscripciones WHERE id_inscripcion = ?";
+        return jdbcTemplate.queryForObject(query, new Object[] { idInscripcion }, this::mapInscripcion);
     }
     
     public List<Map<String, Object>> obtenerDetallesInscripcionesPorTipo(String tipoInscripcion) {
         try {
-            if (this.sqlQueries == null)
-                this.sqlQueries = cargarSqlProperties();
-                
-            String query = "SELECT I.id_inscripcion, I.cuota_anual, I.tipo_inscripcion, " +
-                    "S.dni AS dni_titular, " +
-                    "CONCAT(S.nombre, ' ', S.apellidos) AS nombre_titular, " +
-                    "COALESCE(COUNT(F.id_socio), 0) AS numero_familiares " + 
-                    "FROM Inscripciones I " +
-                    "JOIN Socios S ON I.id_socio_titular = S.id_socio " +
-                    "LEFT JOIN Socios F ON I.id_inscripcion = F.inscripcion_id AND F.tipo_miembro <> 'TITULAR' " + 
-                    "WHERE I.tipo_inscripcion = ? " +
-                    "GROUP BY I.id_inscripcion, I.cuota_anual, I.tipo_inscripcion, S.dni, S.nombre, S.apellidos " + 
-                    "ORDER BY I.id_inscripcion";
-
-            return jdbcTemplate.query(query, new Object[]{tipoInscripcion}, (rs, rowNum) -> {
-                Map<String, Object> detalle = new HashMap<>();
-                detalle.put("id_inscripcion", rs.getInt("id_inscripcion"));
-                detalle.put("cuota_anual", rs.getDouble("cuota_anual"));
-                detalle.put("tipo_inscripcion", rs.getString("tipo_inscripcion")); 
-                detalle.put("dni_titular", rs.getString("dni_titular"));
-                detalle.put("nombre_titular", rs.getString("nombre_titular"));
-                detalle.put("numero_familiares", rs.getInt("numero_familiares"));
-                return detalle;
-            });
-
+            return ejecutarObtenerDetallesInscripcionesPorTipo(tipoInscripcion);
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo el listado detallado de inscripciones por tipo: " + excepcion.getMessage());
-            excepcion.printStackTrace();
-            return List.of();
+            throw excepcion;
         }
+    }
+
+    private List<Map<String, Object>> ejecutarObtenerDetallesInscripcionesPorTipo(String tipoInscripcion) {
+        verificarQueriesSQL();
+        String query = "SELECT I.id_inscripcion, I.cuota_anual, I.tipo_inscripcion, " +
+                "S.dni AS dni_titular, " +
+                "CONCAT(S.nombre, ' ', S.apellidos) AS nombre_titular, " +
+                "COALESCE(COUNT(F.id_socio), 0) AS numero_familiares " + 
+                "FROM Inscripciones I " +
+                "JOIN Socios S ON I.id_socio_titular = S.id_socio " +
+                "LEFT JOIN Socios F ON I.id_inscripcion = F.inscripcion_id AND F.tipo_miembro <> 'TITULAR' " + 
+                "WHERE I.tipo_inscripcion = ? " +
+                "GROUP BY I.id_inscripcion, I.cuota_anual, I.tipo_inscripcion, S.dni, S.nombre, S.apellidos " + 
+                "ORDER BY I.id_inscripcion";
+
+        return jdbcTemplate.query(query, new Object[]{tipoInscripcion}, (rs, rowNum) -> {
+            Map<String, Object> detalle = new HashMap<>();
+            detalle.put("id_inscripcion", rs.getInt("id_inscripcion"));
+            detalle.put("cuota_anual", rs.getDouble("cuota_anual"));
+            detalle.put("tipo_inscripcion", rs.getString("tipo_inscripcion")); 
+            detalle.put("dni_titular", rs.getString("dni_titular"));
+            detalle.put("nombre_titular", rs.getString("nombre_titular"));
+            detalle.put("numero_familiares", rs.getInt("numero_familiares"));
+            return detalle;
+        });
     }
     
     public List<Map<String, Object>> obtenerDetallesInscripciones() {
         try {
-            if (this.sqlQueries == null)
-                this.sqlQueries = cargarSqlProperties();
-
-            String query = "SELECT I.id_inscripcion, I.cuota_anual, I.tipo_inscripcion, " +
-                    "S.dni AS dni_titular, " +
-                    "CONCAT(S.nombre, ' ', S.apellidos) AS nombre_titular, " +
-                    "COALESCE(COUNT(F.id_socio), 0) AS numero_familiares " + 
-                    "FROM Inscripciones I " +
-                    "JOIN Socios S ON I.id_socio_titular = S.id_socio " +
-                    "LEFT JOIN Socios F ON I.id_inscripcion = F.inscripcion_id AND F.tipo_miembro <> 'TITULAR' " + 
-                    "GROUP BY I.id_inscripcion, I.cuota_anual, I.tipo_inscripcion, S.dni, S.nombre, S.apellidos " + 
-                    "ORDER BY I.id_inscripcion";
-
-            return jdbcTemplate.query(query, (rs, rowNum) -> {
-                Map<String, Object> detalle = new HashMap<>();
-
-                detalle.put("id_inscripcion", rs.getInt("id_inscripcion"));
-                detalle.put("cuota_anual", rs.getDouble("cuota_anual"));
-                detalle.put("tipo_inscripcion", rs.getString("tipo_inscripcion")); 
-                detalle.put("dni_titular", rs.getString("dni_titular"));
-                detalle.put("nombre_titular", rs.getString("nombre_titular"));
-                detalle.put("numero_familiares", rs.getInt("numero_familiares"));
-
-                return detalle;
-            });
-
+            return ejecutarObtenerDetallesInscripciones();
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo el listado detallado de inscripciones: " + excepcion.getMessage());
-            excepcion.printStackTrace();
-            return List.of();
+            throw excepcion;
         }
+    }
+
+    private List<Map<String, Object>> ejecutarObtenerDetallesInscripciones() {
+        verificarQueriesSQL();
+        String query = "SELECT I.id_inscripcion, I.cuota_anual, I.tipo_inscripcion, " +
+                "S.dni AS dni_titular, " +
+                "CONCAT(S.nombre, ' ', S.apellidos) AS nombre_titular, " +
+                "COALESCE(COUNT(F.id_socio), 0) AS numero_familiares " + 
+                "FROM Inscripciones I " +
+                "JOIN Socios S ON I.id_socio_titular = S.id_socio " +
+                "LEFT JOIN Socios F ON I.id_inscripcion = F.inscripcion_id AND F.tipo_miembro <> 'TITULAR' " + 
+                "GROUP BY I.id_inscripcion, I.cuota_anual, I.tipo_inscripcion, S.dni, S.nombre, S.apellidos " + 
+                "ORDER BY I.id_inscripcion";
+
+        return jdbcTemplate.query(query, (rs, rowNum) -> {
+            Map<String, Object> detalle = new HashMap<>();
+            detalle.put("id_inscripcion", rs.getInt("id_inscripcion"));
+            detalle.put("cuota_anual", rs.getDouble("cuota_anual"));
+            detalle.put("tipo_inscripcion", rs.getString("tipo_inscripcion")); 
+            detalle.put("dni_titular", rs.getString("dni_titular"));
+            detalle.put("nombre_titular", rs.getString("nombre_titular"));
+            detalle.put("numero_familiares", rs.getInt("numero_familiares"));
+            return detalle;
+        });
     }
 
     public Inscripcion obtenerInscripcionPorDniTitular(String dniTitular) {
         try {
-            Socio socio = socioRepository.obtenerSocioPorDni(dniTitular); 
-            if (socio == null || !socio.esTitular() || socio.getInscripcionId() == -1) {
-                return null;
-            }
-            return obtenerInscripcionPorId(socio.getInscripcionId());
-
+            return ejecutarObtenerInscripcionPorDniTitular(dniTitular);
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo inscripción por DNI del titular: " + dniTitular);
+            throw excepcion;
+        }
+    }
+
+    private Inscripcion ejecutarObtenerInscripcionPorDniTitular(String dniTitular) {
+        Socio socio = socioRepository.obtenerSocioPorDni(dniTitular); 
+        if (socio == null || !socio.esTitular() || socio.getInscripcionId() == -1) {
             return null;
         }
+        return obtenerInscripcionPorId(socio.getInscripcionId());
     }
     
     public boolean cancelarInscripcion(int idInscripcion) {
         try {
-            final String query = "DELETE FROM Inscripciones WHERE id_inscripcion = ?";
-            int filasAfectadas = jdbcTemplate.update(query, idInscripcion);
-            return filasAfectadas > 0;
+            return ejecutarCancelarInscripcion(idInscripcion);
         } catch (DataAccessException excepcion) {
             System.err.println("Error cancelando/eliminando inscripción ID: " + idInscripcion);
-            return false;
+            throw excepcion;
         }
+    }
+
+    private boolean ejecutarCancelarInscripcion(int idInscripcion) {
+        final String query = "DELETE FROM Inscripciones WHERE id_inscripcion = ?";
+        int filasAfectadas = jdbcTemplate.update(query, idInscripcion);
+        return filasAfectadas > 0;
     }
 }

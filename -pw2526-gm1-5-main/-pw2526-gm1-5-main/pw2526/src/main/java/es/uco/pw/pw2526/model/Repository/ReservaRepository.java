@@ -15,322 +15,250 @@ import es.uco.pw.pw2526.model.domain.reserva.Reserva;
 @Repository
 public class ReservaRepository extends AbstractRepository {
 
-    /**
-     * Constructor del repositorio de reservas
-     * 
-     * @param jdbcTemplate Plantilla JDBC para operaciones de base de datos
-     */
     public ReservaRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         this.setSQLQueriesFileName("./src/main/resources/db/sql.properties");
         this.sqlQueries = cargarSqlProperties();
     }
 
-    /**
-     * Inserta una nueva reserva en la base de datos
-     * 
-     * @param nuevaReserva Objeto Reserva a insertar
-     * @return true si la inserción fue exitosa, false en caso contrario
-     */
+    private void verificarQueriesSQL() {
+        if (this.sqlQueries == null) {
+            this.sqlQueries = cargarSqlProperties();
+        }
+    }
+
     public boolean insertarReserva(Reserva nuevaReserva) {
         try {
-            String query = sqlQueries.getProperty("reservas.insertar");
-            if (query != null) {
-                int filasAfectadas = jdbcTemplate.update(query,
-                        nuevaReserva.getIdSocioSolicitante(),
-                        nuevaReserva.getPlazasSolicitadas(),
-                        nuevaReserva.getPropositoActividad(),
-                        nuevaReserva.getPrecioTotal(),
-                        nuevaReserva.getMatriculaEmbarcacion(),
-                        nuevaReserva.getFechaActividad(),
-                        nuevaReserva.getIdPatron());
-                return filasAfectadas > 0;
-            } else {
-                System.err.println("ERROR: Propiedad 'reservas.insertar' no encontrada en sql.properties");
-                return false;
-            }
+            return ejecutarInsertarReserva(nuevaReserva);
         } catch (DataAccessException excepcion) {
             System.err.println("No se pudo insertar la reserva");
-            excepcion.printStackTrace();
-            return false;
+            throw excepcion;
         }
     }
 
-    /**
-     * Verifica si una embarcación está disponible en un rango de fechas
-     * CORREGIDO: Ahora verifica tanto reservas como alquileres para evitar
-     * solapamientos
-     * 
-     * @param matricula   Matrícula de la embarcación
-     * @param fechaInicio Fecha de inicio del período
-     * @param fechaFin    Fecha de fin del período
-     * @return true si está disponible, false si ya está reservada o alquilada
-     */
+    private boolean ejecutarInsertarReserva(Reserva nuevaReserva) {
+        verificarQueriesSQL();
+        String query = sqlQueries.getProperty("reservas.insertar");
+        if (query == null) {
+            throw new RuntimeException("ERROR: Propiedad 'reservas.insertar' no encontrada en sql.properties");
+        }
+        int filasAfectadas = jdbcTemplate.update(query,
+                nuevaReserva.getIdSocioSolicitante(),
+                nuevaReserva.getPlazasSolicitadas(),
+                nuevaReserva.getPropositoActividad(),
+                nuevaReserva.getPrecioTotal(),
+                nuevaReserva.getMatriculaEmbarcacion(),
+                nuevaReserva.getFechaActividad(),
+                nuevaReserva.getIdPatron());
+        return filasAfectadas > 0;
+    }
+
     public boolean estaDisponible(String matricula, LocalDate fechaInicio, LocalDate fechaFin) {
         try {
-            System.out.println("=== VERIFICANDO DISPONIBILIDAD COMPLETA ===");
-            System.out.println("Matrícula: " + matricula);
-            System.out.println("Fecha inicio: " + fechaInicio);
-            System.out.println("Fecha fin: " + fechaFin);
-
-            String queryReservas = sqlQueries.getProperty("reservas.verificar.disponibilidad.rango");
-            if (queryReservas == null) {
-                queryReservas = "SELECT COUNT(*) FROM Reserva WHERE matricula_embarcacion = ? " +
-                        "AND fecha_reserva BETWEEN ? AND ?";
-            }
-
-            Integer countReservas = jdbcTemplate.queryForObject(queryReservas, Integer.class,
-                    matricula, fechaInicio, fechaFin);
-
-            System.out.println("Reservas encontradas en el rango: " + countReservas);
-
-            if (countReservas != null && countReservas > 0) {
-                System.out.println("❌ NO DISPONIBLE - Ya hay reservas en este rango");
-                return false;
-            }
-
-            String queryAlquileres = sqlQueries.getProperty("alquileres.verificar.disponibilidad");
-            if (queryAlquileres == null) {
-                queryAlquileres = "SELECT COUNT(*) FROM Alquiler WHERE matricula_embarcacion = ? " +
-                        "AND NOT (fecha_fin < ? OR fecha_inicio > ?)";
-            }
-
-            Integer countAlquileres = jdbcTemplate.queryForObject(queryAlquileres, Integer.class,
-                    matricula, fechaInicio, fechaFin);
-
-            System.out.println("Alquileres que se solapan: " + countAlquileres);
-
-            boolean disponible = countAlquileres == null || countAlquileres == 0;
-            System.out.println("¿Disponible? " + disponible);
-            System.out.println("=== FIN VERIFICACIÓN DISPONIBILIDAD ===");
-
-            return disponible;
-
+            return ejecutarEstaDisponible(matricula, fechaInicio, fechaFin);
         } catch (DataAccessException excepcion) {
             System.err.println("Error verificando disponibilidad para embarcación: " + matricula);
-            excepcion.printStackTrace();
-            return false;
+            throw excepcion;
         }
     }
 
-    /**
-     * Verifica si una embarcación tiene patrón asignado
-     * 
-     * @param matricula Matrícula de la embarcación
-     * @param fecha     Fecha para la que se verifica
-     * @return true si tiene patrón asignado, false en caso contrario
-     */
+    private boolean ejecutarEstaDisponible(String matricula, LocalDate fechaInicio, LocalDate fechaFin) {
+        verificarQueriesSQL();
+        if (tieneReservaEnRango(matricula, fechaInicio, fechaFin)) {
+            System.out.println("❌ NO DISPONIBLE - Ya hay reservas en este rango");
+            return false;
+        }
+        return !tieneAlquilerSolapado(matricula, fechaInicio, fechaFin);
+    }
+
+    private boolean tieneReservaEnRango(String matricula, LocalDate fechaInicio, LocalDate fechaFin) {
+        String queryReservas = sqlQueries.getProperty("reservas.verificar.disponibilidad.rango");
+        if (queryReservas == null) {
+            queryReservas = "SELECT COUNT(*) FROM Reserva WHERE matricula_embarcacion = ? " +
+                    "AND fecha_reserva BETWEEN ? AND ?";
+        }
+        Integer countReservas = jdbcTemplate.queryForObject(queryReservas, Integer.class, matricula, fechaInicio, fechaFin);
+        return countReservas != null && countReservas > 0;
+    }
+
+    private boolean tieneAlquilerSolapado(String matricula, LocalDate fechaInicio, LocalDate fechaFin) {
+        String queryAlquileres = sqlQueries.getProperty("alquileres.verificar.disponibilidad");
+        if (queryAlquileres == null) {
+            queryAlquileres = "SELECT COUNT(*) FROM Alquiler WHERE matricula_embarcacion = ? " +
+                    "AND NOT (fecha_fin < ? OR fecha_inicio > ?)";
+        }
+        Integer countAlquileres = jdbcTemplate.queryForObject(queryAlquileres, Integer.class, matricula, fechaInicio, fechaFin);
+        return countAlquileres != null && countAlquileres > 0;
+    }
+
     public boolean tienePatronAsignado(String matricula, LocalDate fecha) {
         try {
-            String query = sqlQueries.getProperty("reservas.verificar.patron.asignado");
-            if (query == null) {
-                query = "SELECT COUNT(*) FROM Embarcaciones WHERE matricula = ? AND id_patron_asignado IS NOT NULL";
-            }
-
-            Integer count = jdbcTemplate.queryForObject(query, Integer.class, matricula);
-            boolean tienePatron = count != null && count > 0;
-            System.out.println("¿Tiene patrón asignado " + matricula + "? " + tienePatron);
-            return tienePatron;
+            return ejecutarTienePatronAsignado(matricula);
         } catch (DataAccessException excepcion) {
             System.err.println("Error verificando patrón asignado para embarcación: " + matricula);
-            excepcion.printStackTrace();
-            return false;
+            throw excepcion;
         }
     }
 
-    /**
-     * Obtiene el patrón asignado a una embarcación
-     * 
-     * @param matricula Matrícula de la embarcación
-     * @param fecha     Fecha para la que se consulta
-     * @return ID del patrón asignado, null si no hay patrón
-     */
+    private boolean ejecutarTienePatronAsignado(String matricula) {
+        verificarQueriesSQL();
+        String query = sqlQueries.getProperty("reservas.verificar.patron.asignado");
+        if (query == null) {
+            query = "SELECT COUNT(*) FROM Embarcaciones WHERE matricula = ? AND id_patron_asignado IS NOT NULL";
+        }
+        Integer count = jdbcTemplate.queryForObject(query, Integer.class, matricula);
+        return count != null && count > 0;
+    }
+
     public Integer obtenerPatronAsignado(String matricula, LocalDate fecha) {
         try {
-            String query = sqlQueries.getProperty("reservas.obtener.patron.asignado");
-            if (query == null) {
-                query = "SELECT id_patron_asignado FROM Embarcaciones WHERE matricula = ?";
-            }
-
-            List<Integer> resultados = jdbcTemplate.query(query,
-                    new Object[] { matricula },
-                    (rs, rowNum) -> {
-                        Integer idPatron = rs.getInt("id_patron_asignado");
-                        return rs.wasNull() ? null : idPatron;
-                    });
-
-            Integer patron = resultados.isEmpty() ? null : resultados.get(0);
-            System.out.println("Patrón asignado a " + matricula + ": " + patron);
-            return patron;
+            return ejecutarObtenerPatronAsignado(matricula);
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo patrón asignado para embarcación: " + matricula);
-            excepcion.printStackTrace();
-            return null;
+            throw excepcion;
         }
     }
 
-    /**
-     * Obtiene las embarcaciones disponibles con patrón en una fecha específica
-     * 
-     * @param fecha Fecha para la que se consulta disponibilidad
-     * @return Lista de matrículas de embarcaciones disponibles
-     */
+    private Integer ejecutarObtenerPatronAsignado(String matricula) {
+        verificarQueriesSQL();
+        String query = sqlQueries.getProperty("reservas.obtener.patron.asignado");
+        if (query == null) {
+            query = "SELECT id_patron_asignado FROM Embarcaciones WHERE matricula = ?";
+        }
+        List<Integer> resultados = jdbcTemplate.query(query, new Object[] { matricula }, (rs, rowNum) -> {
+            Integer idPatron = rs.getInt("id_patron_asignado");
+            return rs.wasNull() ? null : idPatron;
+        });
+        return resultados.isEmpty() ? null : resultados.get(0);
+    }
+
     public List<String> obtenerEmbarcacionesDisponibles(LocalDate fecha) {
         try {
-            String query = sqlQueries.getProperty("reservas.obtener.embarcaciones.disponibles");
-            if (query == null) {
-                query = "SELECT e.matricula FROM Embarcaciones e " +
-                        "WHERE e.id_patron_asignado IS NOT NULL " +
-                        "AND e.matricula NOT IN (" +
-                        "   SELECT r.matricula_embarcacion FROM Reserva r " +
-                        "   WHERE r.fecha_reserva = ?" +
-                        ")";
-            }
-
-            return jdbcTemplate.query(query,
-                    new Object[] { fecha },
-                    (rs, rowNum) -> rs.getString("matricula"));
+            return ejecutarObtenerEmbarcacionesDisponibles(fecha);
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo embarcaciones disponibles para fecha: " + fecha);
-            excepcion.printStackTrace();
-            return List.of();
+            throw excepcion;
         }
     }
 
-    /**
-     * Obtiene la capacidad de una embarcación
-     * 
-     * @param matricula Matrícula de la embarcación
-     * @return Número de plazas de la embarcación, 0 si hay error
-     */
+    private List<String> ejecutarObtenerEmbarcacionesDisponibles(LocalDate fecha) {
+        verificarQueriesSQL();
+        String query = sqlQueries.getProperty("reservas.obtener.embarcaciones.disponibles");
+        if (query == null) {
+            query = "SELECT e.matricula FROM Embarcaciones e " +
+                    "WHERE e.id_patron_asignado IS NOT NULL " +
+                    "AND e.matricula NOT IN (" +
+                    "   SELECT r.matricula_embarcacion FROM Reserva r " +
+                    "   WHERE r.fecha_reserva = ?" +
+                    ")";
+        }
+        return jdbcTemplate.query(query, new Object[] { fecha }, (rs, rowNum) -> rs.getString("matricula"));
+    }
+
     public int obtenerCapacidadEmbarcacion(String matricula) {
         try {
-            String query = "SELECT numero_plazas FROM Embarcaciones WHERE matricula = ?";
-            Integer capacidad = jdbcTemplate.queryForObject(query, Integer.class, matricula);
-            int capacidadFinal = capacidad != null ? capacidad : 0;
-            System.out.println("Capacidad de " + matricula + ": " + capacidadFinal + " plazas");
-            return capacidadFinal;
+            return ejecutarObtenerCapacidadEmbarcacion(matricula);
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo capacidad de embarcación: " + matricula);
-            excepcion.printStackTrace();
-            return 0;
+            throw excepcion;
         }
     }
 
-    /**
-     * Obtiene todas las reservas
-     * 
-     * @return Lista de todas las reservas
-     */
+    private int ejecutarObtenerCapacidadEmbarcacion(String matricula) {
+        String query = "SELECT numero_plazas FROM Embarcaciones WHERE matricula = ?";
+        Integer capacidad = jdbcTemplate.queryForObject(query, Integer.class, matricula);
+        return capacidad != null ? capacidad : 0;
+    }
+
     public List<Reserva> obtenerTodasLasReservas() {
         try {
-            String query = sqlQueries.getProperty("reservas.obtener.todas");
-            if (query == null) {
-                query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
-                        "proposito_actividad, precio_total, matricula_embarcacion, " +
-                        "fecha_reserva, id_empleado FROM Reserva ORDER BY fecha_reserva DESC";
-            }
-
-            return jdbcTemplate.query(query, new ReservaRowMapper());
+            return ejecutarObtenerTodasLasReservas();
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo todas las reservas");
-            excepcion.printStackTrace();
-            return List.of();
+            throw excepcion;
         }
     }
 
-    /**
-     * Obtiene reservas por socio
-     * 
-     * @param idSocio ID del socio
-     * @return Lista de reservas del socio
-     */
+    private List<Reserva> ejecutarObtenerTodasLasReservas() {
+        verificarQueriesSQL();
+        String query = sqlQueries.getProperty("reservas.obtener.todas");
+        if (query == null) {
+            query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
+                    "proposito_actividad, precio_total, matricula_embarcacion, " +
+                    "fecha_reserva, id_empleado FROM Reserva ORDER BY fecha_reserva DESC";
+        }
+        return jdbcTemplate.query(query, new ReservaRowMapper());
+    }
+
     public List<Reserva> obtenerReservasPorSocio(Integer idSocio) {
         try {
-            String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
-                    "proposito_actividad, precio_total, matricula_embarcacion, " +
-                    "fecha_reserva, id_empleado FROM Reserva WHERE id_socio_solicitante = ? ORDER BY fecha_reserva DESC";
-            return jdbcTemplate.query(query, new Object[] { idSocio }, new ReservaRowMapper());
+            return ejecutarObtenerReservasPorSocio(idSocio);
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo reservas para socio: " + idSocio);
-            excepcion.printStackTrace();
-            return List.of();
+            throw excepcion;
         }
     }
 
-    /**
-     * Verifica si un socio tiene título de patrón
-     * 
-     * @param idSocio ID del socio
-     * @return true si el socio tiene título de patrón, false en caso contrario
-     */
+    private List<Reserva> ejecutarObtenerReservasPorSocio(Integer idSocio) {
+        String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
+                "proposito_actividad, precio_total, matricula_embarcacion, " +
+                "fecha_reserva, id_empleado FROM Reserva WHERE id_socio_solicitante = ? ORDER BY fecha_reserva DESC";
+        return jdbcTemplate.query(query, new Object[] { idSocio }, new ReservaRowMapper());
+    }
+
     public boolean socioTieneTituloPatron(Integer idSocio) {
         try {
-            String query = "SELECT tiene_titulo_patron FROM Socios WHERE id_socio = ?";
-            Boolean tieneTitulo = jdbcTemplate.queryForObject(query, Boolean.class, idSocio);
-            return tieneTitulo != null && tieneTitulo;
+            return ejecutarSocioTieneTituloPatron(idSocio);
         } catch (DataAccessException excepcion) {
             System.err.println("Error verificando título de patrón para socio: " + idSocio);
-            excepcion.printStackTrace();
-            return false;
+            throw excepcion;
         }
     }
 
-    /**
-     * Obtiene las reservas futuras a partir de una fecha dada
-     * 
-     * @param fecha Fecha a partir de la cual se buscan reservas futuras
-     * @return Lista de reservas futuras ordenadas por fecha
-     */
+    private boolean ejecutarSocioTieneTituloPatron(Integer idSocio) {
+        String query = "SELECT tiene_titulo_patron FROM Socios WHERE id_socio = ?";
+        Boolean tieneTitulo = jdbcTemplate.queryForObject(query, Boolean.class, idSocio);
+        return tieneTitulo != null && tieneTitulo;
+    }
+
     public List<Reserva> obtenerReservasFuturas(LocalDate fecha) {
         try {
-            String query = sqlQueries.getProperty("reservas.obtener.futuras");
-            if (query == null) {
-                query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
-                        "proposito_actividad, precio_total, matricula_embarcacion, " +
-                        "fecha_reserva, id_empleado FROM Reserva WHERE fecha_reserva >= ? ORDER BY fecha_reserva ASC";
-            }
-
-            return jdbcTemplate.query(query, new Object[] { fecha }, new ReservaRowMapper());
+            return ejecutarObtenerReservasFuturas(fecha);
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo reservas futuras desde fecha: " + fecha);
-            excepcion.printStackTrace();
-            return List.of();
+            throw excepcion;
         }
     }
 
-    /**
-     * Obtiene una reserva por ID
-     * 
-     * @param idReserva ID de la reserva a buscar
-     * @return Objeto Reserva encontrado, null si no existe
-     */
+    private List<Reserva> ejecutarObtenerReservasFuturas(LocalDate fecha) {
+        verificarQueriesSQL();
+        String query = sqlQueries.getProperty("reservas.obtener.futuras");
+        if (query == null) {
+            query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
+                    "proposito_actividad, precio_total, matricula_embarcacion, " +
+                    "fecha_reserva, id_empleado FROM Reserva WHERE fecha_reserva >= ? ORDER BY fecha_reserva ASC";
+        }
+        return jdbcTemplate.query(query, new Object[] { fecha }, new ReservaRowMapper());
+    }
+
     public Reserva obtenerReservaPorId(Integer idReserva) {
         try {
-            String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
-                    "proposito_actividad, precio_total, matricula_embarcacion, " +
-                    "fecha_reserva, id_empleado FROM Reserva WHERE id_reserva = ?";
-            List<Reserva> resultados = jdbcTemplate.query(query, new Object[] { idReserva }, new ReservaRowMapper());
-            return resultados.isEmpty() ? null : resultados.get(0);
+            return ejecutarObtenerReservaPorId(idReserva);
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo reserva por ID: " + idReserva);
-            excepcion.printStackTrace();
-            return null;
+            throw excepcion;
         }
     }
 
-    /**
-     * RowMapper para la entidad Reserva - CORREGIDO (usa fecha_reserva)
-     */
+    private Reserva ejecutarObtenerReservaPorId(Integer idReserva) {
+        String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
+                "proposito_actividad, precio_total, matricula_embarcacion, " +
+                "fecha_reserva, id_empleado FROM Reserva WHERE id_reserva = ?";
+        List<Reserva> resultados = jdbcTemplate.query(query, new Object[] { idReserva }, new ReservaRowMapper());
+        return resultados.isEmpty() ? null : resultados.get(0);
+    }
+
     private static class ReservaRowMapper implements RowMapper<Reserva> {
-        /**
-         * Mapea un ResultSet a un objeto Reserva
-         * 
-         * @param rs     ResultSet con los datos de la base de datos
-         * @param rowNum Número de fila
-         * @return Objeto Reserva mapeado
-         * @throws SQLException Si ocurre un error al acceder a los datos
-         */
         @Override
         public Reserva mapRow(ResultSet rs, int rowNum) throws SQLException {
             Reserva reserva = new Reserva();
@@ -361,81 +289,69 @@ public class ReservaRepository extends AbstractRepository {
         }
     }
 
-    /**
-     * Elimina una reserva por ID
-     * 
-     * @param idReserva ID de la reserva a eliminar
-     * @return true si la eliminación fue exitosa, false en caso contrario
-     */
     public boolean eliminarReserva(Integer idReserva) {
         try {
-            String query = "DELETE FROM Reserva WHERE id_reserva = ?";
-            int filasAfectadas = jdbcTemplate.update(query, idReserva);
-            return filasAfectadas > 0;
+            return ejecutarEliminarReserva(idReserva);
         } catch (DataAccessException excepcion) {
             System.err.println("Error eliminando reserva: " + idReserva);
-            excepcion.printStackTrace();
-            return false;
+            throw excepcion;
         }
     }
 
-    /**
-     * Método adicional: Verifica si un socio es mayor de edad
-     * 
-     * @param idSocio ID del socio
-     * @return true si el socio es mayor de edad, false en caso contrario
-     */
+    private boolean ejecutarEliminarReserva(Integer idReserva) {
+        String query = "DELETE FROM Reserva WHERE id_reserva = ?";
+        int filasAfectadas = jdbcTemplate.update(query, idReserva);
+        return filasAfectadas > 0;
+    }
+
     public boolean esSocioMayorDeEdad(Integer idSocio) {
         try {
-            String query = "SELECT fecha_nacimiento FROM Socios WHERE id_socio = ?";
-            LocalDate fechaNacimiento = jdbcTemplate.queryForObject(query, LocalDate.class, idSocio);
-            if (fechaNacimiento != null) {
-                LocalDate hoy = LocalDate.now();
-                return fechaNacimiento.plusYears(18).isBefore(hoy) || fechaNacimiento.plusYears(18).isEqual(hoy);
-            }
-            return false;
+            return ejecutarEsSocioMayorDeEdad(idSocio);
         } catch (DataAccessException excepcion) {
             System.err.println("Error verificando edad del socio: " + idSocio);
-            excepcion.printStackTrace();
-            return false;
+            throw excepcion;
         }
     }
 
-    /**
-     * Obtiene las reservas por embarcación
-     * 
-     * @param matricula Matrícula de la embarcación
-     * @return Lista de reservas de la embarcación
-     */
+    private boolean ejecutarEsSocioMayorDeEdad(Integer idSocio) {
+        String query = "SELECT fecha_nacimiento FROM Socios WHERE id_socio = ?";
+        LocalDate fechaNacimiento = jdbcTemplate.queryForObject(query, LocalDate.class, idSocio);
+        if (fechaNacimiento != null) {
+            LocalDate hoy = LocalDate.now();
+            return fechaNacimiento.plusYears(18).isBefore(hoy) || fechaNacimiento.plusYears(18).isEqual(hoy);
+        }
+        return false;
+    }
+
     public List<Reserva> obtenerReservasPorEmbarcacion(String matricula) {
         try {
-            String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
-                    "proposito_actividad, precio_total, matricula_embarcacion, " +
-                    "fecha_reserva, id_empleado FROM Reserva WHERE matricula_embarcacion = ? ORDER BY fecha_reserva DESC";
-            return jdbcTemplate.query(query, new Object[] { matricula }, new ReservaRowMapper());
+            return ejecutarObtenerReservasPorEmbarcacion(matricula);
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo reservas para embarcación: " + matricula);
-            excepcion.printStackTrace();
-            return List.of();
+            throw excepcion;
         }
     }
 
-    /**
-     * Obtiene las reservas por fecha
-     * 
-     * @param fecha Fecha para la que se consultan las reservas
-     * @return Lista de reservas para la fecha especificada
-     */
+    private List<Reserva> ejecutarObtenerReservasPorEmbarcacion(String matricula) {
+        String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
+                "proposito_actividad, precio_total, matricula_embarcacion, " +
+                "fecha_reserva, id_empleado FROM Reserva WHERE matricula_embarcacion = ? ORDER BY fecha_reserva DESC";
+        return jdbcTemplate.query(query, new Object[] { matricula }, new ReservaRowMapper());
+    }
+
     public List<Reserva> obtenerReservasPorFecha(LocalDate fecha) {
         try {
-            String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
-                    "proposito_actividad, precio_total, matricula_embarcacion, " +
-                    "fecha_reserva, id_empleado FROM Reserva WHERE fecha_reserva = ? ORDER BY id_reserva DESC";
-            return jdbcTemplate.query(query, new Object[] { fecha }, new ReservaRowMapper());
+            return ejecutarObtenerReservasPorFecha(fecha);
         } catch (DataAccessException excepcion) {
             System.err.println("Error obteniendo reservas para fecha: " + fecha);
-            excepcion.printStackTrace();
-            return List.of();
+            throw excepcion;
         }
+    }
+
+    private List<Reserva> ejecutarObtenerReservasPorFecha(LocalDate fecha) {
+        String query = "SELECT id_reserva, id_socio_solicitante, plazas_solicitadas, " +
+                "proposito_actividad, precio_total, matricula_embarcacion, " +
+                "fecha_reserva, id_empleado FROM Reserva WHERE fecha_reserva = ? ORDER BY id_reserva DESC";
+        return jdbcTemplate.query(query, new Object[] { fecha }, new ReservaRowMapper());
     }
 }
