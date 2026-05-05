@@ -54,40 +54,14 @@ public class AsignarPatronController {
     public String asignarPatron(@RequestParam String matricula,
             @RequestParam int idEmpleado,
             Model model) {
-        System.out.println("🔍 Iniciando asignación para matrícula: " + matricula + ", empleado: " + idEmpleado);
 
         Integer idPatronActual = asignacionRepository.obtenerPatronActual(matricula);
-        System.out.println("🔍 ID Patrón Actual encontrado: " + idPatronActual);
 
         if (idPatronActual != null) {
-            System.out.println("✅ Embarcación tiene patrón actual, mostrando confirmación...");
-
-            Patron patronActual = patronRepository.obtenerPatronPorId(idPatronActual);
-            Patron nuevoPatron = patronRepository.obtenerPatronPorId(idEmpleado);
-            Embarcacion embarcacionEncontrada = embarcacionRepository.buscarPorMatricula(matricula);
-
-            System.out.println("🔍 Patrón Actual: " + (patronActual != null ? patronActual.getNombre() : "null"));
-            System.out.println("🔍 Nuevo Patrón: " + (nuevoPatron != null ? nuevoPatron.getNombre() : "null"));
-            System.out.println("🔍 Embarcación: " + (embarcacionEncontrada != null ? embarcacionEncontrada.getNombre() : "null"));
-
-            model.addAttribute("matricula", matricula);
-            model.addAttribute("idEmpleadoNuevo", idEmpleado);
-            model.addAttribute("patronActual", patronActual);
-            model.addAttribute("nuevoPatron", nuevoPatron);
-            model.addAttribute("embarcacion", embarcacionEncontrada);
-
-            return "ConfirmarReemplazoPatron";
+            return mostrarConfirmacionReemplazo(matricula, idPatronActual, idEmpleado, model);
         }
 
-        System.out.println("🔍 Embarcación NO tiene patrón actual, asignando directamente...");
-
-        if (asignacionRepository.asignarPatron(matricula, idEmpleado)) {
-            model.addAttribute("mensaje", "✅ Patrón asignado correctamente a la embarcación.");
-            return "AsignarPatronSuccess";
-        } else {
-            model.addAttribute("mensaje", "❌ Error al asignar patrón.");
-            return "AsignarPatronFail";
-        }
+        return ejecutarAsignacionDirecta(matricula, idEmpleado, model);
     }
 
     /**
@@ -102,36 +76,69 @@ public class AsignarPatronController {
     public String confirmarReemplazo(@RequestParam String matricula,
             @RequestParam int idEmpleadoNuevo,
             Model model) {
-        System.out.println(
-                "🔍 Confirmando reemplazo para matrícula: " + matricula + ", nuevo empleado: " + idEmpleadoNuevo);
 
-        Integer idPatronActual = asignacionRepository.obtenerPatronActual(matricula);
-        Patron patronActual = null;
-        if (idPatronActual != null) {
-            patronActual = patronRepository.obtenerPatronPorId(idPatronActual);
-        }
-
+        Patron patronActual = obtenerPatronActualDeEmbarcacion(matricula);
         Patron nuevoPatron = patronRepository.obtenerPatronPorId(idEmpleadoNuevo);
-        Embarcacion embarcacionEncontrada = embarcacionRepository.buscarPorMatricula(matricula);
+        Embarcacion embarcacion = embarcacionRepository.buscarPorMatricula(matricula);
 
         boolean asignacionExitosa = asignacionRepository.asignarPatron(matricula, idEmpleadoNuevo);
 
-        if (asignacionExitosa) {
-            StringBuilder mensaje = new StringBuilder();
-            mensaje.append("✅ Patrón ").append(nuevoPatron.getNombre()).append(" ").append(nuevoPatron.getApellidos())
-                    .append(" asignado correctamente a la embarcación ").append(embarcacionEncontrada.getNombre()).append(".");
-
-            if (patronActual != null) {
-                mensaje.append("\n\n🔄 Se ha liberado al patrón anterior: ")
-                        .append(patronActual.getNombre()).append(" ").append(patronActual.getApellidos())
-                        .append("\n📝 Este patrón ahora está disponible para nuevas asignaciones.");
-            }
-
-            model.addAttribute("mensaje", mensaje.toString());
-            return "AsignarPatronSuccess";
-        } else {
+        if (!asignacionExitosa) {
             model.addAttribute("mensaje", "❌ Error al asignar nuevo patrón.");
             return "AsignarPatronFail";
         }
+
+        String mensaje = construirMensajeReemplazo(nuevoPatron, embarcacion, patronActual);
+        model.addAttribute("mensaje", mensaje);
+        return "AsignarPatronSuccess";
+    }
+
+    // ========== Métodos privados ==========
+
+    private String mostrarConfirmacionReemplazo(String matricula, int idPatronActual,
+            int idEmpleadoNuevo, Model model) {
+        Patron patronActual = patronRepository.obtenerPatronPorId(idPatronActual);
+        Patron nuevoPatron = patronRepository.obtenerPatronPorId(idEmpleadoNuevo);
+        Embarcacion embarcacion = embarcacionRepository.buscarPorMatricula(matricula);
+
+        model.addAttribute("matricula", matricula);
+        model.addAttribute("idEmpleadoNuevo", idEmpleadoNuevo);
+        model.addAttribute("patronActual", patronActual);
+        model.addAttribute("nuevoPatron", nuevoPatron);
+        model.addAttribute("embarcacion", embarcacion);
+
+        return "ConfirmarReemplazoPatron";
+    }
+
+    private String ejecutarAsignacionDirecta(String matricula, int idEmpleado, Model model) {
+        if (asignacionRepository.asignarPatron(matricula, idEmpleado)) {
+            model.addAttribute("mensaje", "✅ Patrón asignado correctamente a la embarcación.");
+            return "AsignarPatronSuccess";
+        }
+
+        model.addAttribute("mensaje", "❌ Error al asignar patrón.");
+        return "AsignarPatronFail";
+    }
+
+    private Patron obtenerPatronActualDeEmbarcacion(String matricula) {
+        Integer idPatronActual = asignacionRepository.obtenerPatronActual(matricula);
+        if (idPatronActual == null) {
+            return null;
+        }
+        return patronRepository.obtenerPatronPorId(idPatronActual);
+    }
+
+    private String construirMensajeReemplazo(Patron nuevoPatron, Embarcacion embarcacion, Patron patronActual) {
+        StringBuilder mensaje = new StringBuilder();
+        mensaje.append("✅ Patrón ").append(nuevoPatron.getNombre()).append(" ").append(nuevoPatron.getApellidos())
+                .append(" asignado correctamente a la embarcación ").append(embarcacion.getNombre()).append(".");
+
+        if (patronActual != null) {
+            mensaje.append("\n\n🔄 Se ha liberado al patrón anterior: ")
+                    .append(patronActual.getNombre()).append(" ").append(patronActual.getApellidos())
+                    .append("\n📝 Este patrón ahora está disponible para nuevas asignaciones.");
+        }
+
+        return mensaje.toString();
     }
 }

@@ -31,36 +31,49 @@ public class RegistrarTituloPatronController {
     @PostMapping("/registrarTituloPatron/otorgar")
     public ModelAndView otorgarTitulo(@RequestParam String dni) {
         Socio miembro = socioRepository.obtenerSocioPorDni(dni);
-        ModelAndView modelAndView;
-        boolean otorgadoConExito = false;
 
         if (miembro == null) {
-            modelAndView = new ModelAndView("registrarTituloPatronViewFail.html");
-            modelAndView.addObject("error", "Error: DNI no encontrado en la base de datos de socios.");
-            return modelAndView;
+            return construirVistaFallo("Error: DNI no encontrado en la base de datos de socios.");
         }
 
+        if (!esMiembroElegibleParaTitulo(miembro)) {
+            return construirVistaFallo(
+                    "Error: Solo los socios titulares y cónyuges son elegibles para obtener el título de patrón.");
+        }
+
+        return ejecutarOtorgamiento(miembro, dni);
+    }
+
+    // ========== Métodos privados ==========
+
+    private boolean esMiembroElegibleParaTitulo(Socio miembro) {
         String tipoMiembro = miembro.getTipoMiembro().toString();
+        return tipoMiembro.equals("TITULAR") || tipoMiembro.equals("CONYUGE");
+    }
 
-        if (tipoMiembro.equals("TITULAR") || tipoMiembro.equals("CONYUGE")) {
-            
-            otorgadoConExito = socioRepository.actualizarTituloPatron(dni, true);
-            
-            if (otorgadoConExito) {
-                miembro.setTieneTituloPatron(true);
-                modelAndView = new ModelAndView("registrarTituloPatronViewSuccess.html");
-                modelAndView.addObject("mensaje", "Título de patrón otorgado a " + miembro.getNombre() + " " + miembro.getApellidos() + ".");
-                modelAndView.addObject("socio", miembro);
-            } else {
-                modelAndView = new ModelAndView("registrarTituloPatronViewFail.html");
-                modelAndView.addObject("error", "Error de BD al actualizar el título de patrón para el DNI " + dni + ".");
-            }
-            
-        } else {
-            modelAndView = new ModelAndView("registrarTituloPatronViewFail.html");
-            modelAndView.addObject("error", "Error: Solo los socios titulares y cónyuges son elegibles para obtener el título de patrón.");
+    private ModelAndView ejecutarOtorgamiento(Socio miembro, String dni) {
+        boolean otorgadoConExito = socioRepository.actualizarTituloPatron(dni, true);
+
+        if (!otorgadoConExito) {
+            return construirVistaFallo(
+                    "Error de BD al actualizar el título de patrón para el DNI " + dni + ".");
         }
 
+        miembro.setTieneTituloPatron(true);
+        return construirVistaExito(miembro);
+    }
+
+    private ModelAndView construirVistaFallo(String mensajeError) {
+        ModelAndView modelAndView = new ModelAndView("registrarTituloPatronViewFail.html");
+        modelAndView.addObject("error", mensajeError);
+        return modelAndView;
+    }
+
+    private ModelAndView construirVistaExito(Socio miembro) {
+        ModelAndView modelAndView = new ModelAndView("registrarTituloPatronViewSuccess.html");
+        modelAndView.addObject("mensaje",
+                "Título de patrón otorgado a " + miembro.getNombre() + " " + miembro.getApellidos() + ".");
+        modelAndView.addObject("socio", miembro);
         return modelAndView;
     }
 }

@@ -42,28 +42,18 @@ public class AmpliacionFamiliarController {
     @PostMapping("/ampliarInscripcion/buscar")
     public ModelAndView buscarTitularParaAmpliacion(@RequestParam int titularId) {
         Socio titular = socioRepository.obtenerSocioPorId(titularId);
-        ModelAndView modelAndView = new ModelAndView();
 
         if (titular == null || titular.getTipoMiembro() != TipoMiembro.TITULAR) {
-            modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-            modelAndView.addObject("error", "Socio no encontrado o no es titular de una inscripción.");
-            return modelAndView;
+            return construirVistaFallo("Socio no encontrado o no es titular de una inscripción.");
         }
 
         Inscripcion inscripcion = inscripcionRepository.obtenerInscripcionPorId(titular.getInscripcionId());
 
         if (inscripcion == null) {
-            modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-            modelAndView.addObject("error", "No se encontró una inscripción válida para el titular.");
-            return modelAndView;
+            return construirVistaFallo("No se encontró una inscripción válida para el titular.");
         }
 
-        modelAndView.setViewName("ampliacionFamiliarView.html");
-        modelAndView.addObject("titular", titular);
-        modelAndView.addObject("inscripcion", inscripcion);
-        modelAndView.addObject("nuevoAdulto", new Socio()); 
-
-        return modelAndView;
+        return construirVistaFormularioAmpliacion(titular, inscripcion);
     }
 
     @PostMapping("/ampliarInscripcion/procesar")
@@ -77,14 +67,11 @@ public class AmpliacionFamiliarController {
             @RequestParam(name = "hijos[0].apellidos", required = false) List<String> hijosApellidosList,
             @RequestParam(name = "hijos[0].fechaNacimiento", required = false) List<String> hijosFechaNacimientoList) {
 
-        ModelAndView modelAndView = new ModelAndView("ampliacionFamiliarViewSuccess.html");
         Inscripcion inscripcion = inscripcionRepository.obtenerInscripcionPorId(inscripcionId);
         Socio titular = socioRepository.obtenerSocioPorId(titularId);
 
         if (inscripcion == null || titular == null) {
-            modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-            modelAndView.addObject("error", "Error: No se encontró la inscripción o el titular.");
-            return modelAndView;
+            return construirVistaFallo("Error: No se encontró la inscripción o el titular.");
         }
 
         double cuotaAnterior = inscripcion.getCuotaAnual();
@@ -92,116 +79,200 @@ public class AmpliacionFamiliarController {
         int adultosAnadidos = 0;
         int totalHijosAnadidos = 0;
 
-        boolean existeConyugeData = dniNuevoAdulto != null && !dniNuevoAdulto.trim().isEmpty();
-
-        if (existeConyugeData) {
-            if (socioRepository.existeSocioPorDni(dniNuevoAdulto)) {
-                modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-                modelAndView.addObject("error", "Error: El DNI del cónyuge ya está registrado en el club.");
-                return modelAndView;
-            }
-            if (nuevoAdulto.getFechaNacimiento() == null || !nuevoAdulto.esMayorDeEdad()) {
-                modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-                modelAndView.addObject("error", "Error: El cónyuge debe ser mayor de edad y se requiere la fecha de nacimiento.");
-                return modelAndView;
-            }
-
-            nuevoAdulto.setDni(dniNuevoAdulto); 
-            nuevoAdulto.setIdSocioTitularFk(titularId);
-            nuevoAdulto.setInscripcionId(inscripcionId);
-            nuevoAdulto.setFechaInscripcion(LocalDate.now());
-            nuevoAdulto.setTipoMiembro(TipoMiembro.CONYUGE); 
-            nuevoAdulto.setTieneTituloPatron(false); 
-            nuevoAdulto.setDireccion(titular.getDireccion()); 
-
-            if (socioRepository.insertarSocioYRetornarId(nuevoAdulto, inscripcionId) > 0) {
-                adultosAnadidos = 1;
-                if (inscripcion.getTipoInscripcion() == TipoInscripcion.INDIVIDUAL) {
-                   nuevaCuota += CUOTA_SEGUNDO_ADULTO;
-                }
-            } else {
-                modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-                modelAndView.addObject("error", "Error CRÍTICO al guardar los datos del cónyuge en la BD.");
-                return modelAndView;
-            }
+        ModelAndView errorConyuge = validarYRegistrarConyuge(dniNuevoAdulto, nuevoAdulto, titular, inscripcion);
+        if (errorConyuge != null) {
+            return errorConyuge;
         }
 
-        String dniHijo = (hijosDniList != null && !hijosDniList.isEmpty()) ? hijosDniList.get(0).trim() : "";
-        
-        if (!dniHijo.isEmpty()) {
-            
-            if (socioRepository.existeSocioPorDni(dniHijo)) {
-                modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-                modelAndView.addObject("error", "Error: El DNI del hijo ya está registrado en el club.");
-                return modelAndView;
-            }
-            
-            if (hijosNombreList == null || hijosNombreList.isEmpty() || hijosNombreList.get(0).trim().isEmpty() ||
-                hijosApellidosList == null || hijosApellidosList.isEmpty() || hijosApellidosList.get(0).trim().isEmpty() ||
-                hijosFechaNacimientoList == null || hijosFechaNacimientoList.isEmpty() || hijosFechaNacimientoList.get(0).trim().isEmpty()) {
-                 modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-                 modelAndView.addObject("error", "Error: Faltan datos obligatorios (Nombre/Apellidos/Fecha de Nacimiento) para el hijo.");
-                 return modelAndView;
-            }
-
-            Socio hijo = new Socio();
-            hijo.setDni(dniHijo);
-            hijo.setNombre(hijosNombreList.get(0).trim());
-            hijo.setApellidos(hijosApellidosList.get(0).trim());
-            
-            try {
-                hijo.setFechaNacimiento(LocalDate.parse(hijosFechaNacimientoList.get(0)));
-            } catch (Exception excepcion) {
-                modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-                modelAndView.addObject("error", "Error: La Fecha de Nacimiento del hijo no es válida.");
-                return modelAndView;
-            }
-            
-            hijo.setIdSocioTitularFk(titularId);
-            hijo.setInscripcionId(inscripcionId);
-            hijo.setFechaInscripcion(LocalDate.now());
-            hijo.setTipoMiembro(TipoMiembro.HIJO); 
-            hijo.setTieneTituloPatron(false); 
-            hijo.setDireccion(titular.getDireccion());
-
-            if (socioRepository.insertarSocioYRetornarId(hijo, inscripcionId) > 0) {
-                totalHijosAnadidos = 1;
-                nuevaCuota += CUOTA_HIJO;
-            } else {
-                modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-                modelAndView.addObject("error", "Error al guardar los datos del hijo en la BD.");
-                return modelAndView;
-            }
-        }
-
-        if (adultosAnadidos > 0 || totalHijosAnadidos > 0) {
+        if (existenDatosConyuge(dniNuevoAdulto)) {
+            adultosAnadidos = 1;
             if (inscripcion.getTipoInscripcion() == TipoInscripcion.INDIVIDUAL) {
-                inscripcion.setTipoInscripcion(TipoInscripcion.FAMILIAR);
+                nuevaCuota += CUOTA_SEGUNDO_ADULTO;
             }
-            
-            inscripcion.setCuotaAnual(nuevaCuota);
-        } else {
-            modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-            modelAndView.addObject("error", "No se añadió ningún miembro para justificar la ampliación a familiar.");
-            return modelAndView;
         }
 
-        boolean actualizadoConExito = inscripcionRepository.actualizarInscripcion(inscripcion);
-
-        if (actualizadoConExito) {
-            int totalMiembrosNuevos = adultosAnadidos + totalHijosAnadidos;
-
-            modelAndView.addObject("titularNombre", titular.getNombre() + " " + titular.getApellidos());
-            modelAndView.addObject("cuotaAnterior", cuotaAnterior);
-            modelAndView.addObject("cuotaNueva", nuevaCuota);
-            modelAndView.addObject("miembrosAnadidos", totalMiembrosNuevos);
-            modelAndView.addObject("mensaje",
-                    "La inscripción familiar se ha completado. Miembros añadidos: " + totalMiembrosNuevos);
-        } else {
-            modelAndView.setViewName("ampliacionFamiliarViewFail.html");
-            modelAndView.addObject("error", "Error al actualizar el tipo de inscripción y la cuota en la BD.");
+        ModelAndView errorHijo = validarYRegistrarHijo(
+                hijosDniList, hijosNombreList, hijosApellidosList, hijosFechaNacimientoList,
+                titular, inscripcionId);
+        if (errorHijo != null) {
+            return errorHijo;
         }
 
+        if (existenDatosHijo(hijosDniList)) {
+            totalHijosAnadidos = 1;
+            nuevaCuota += CUOTA_HIJO;
+        }
+
+        if (adultosAnadidos == 0 && totalHijosAnadidos == 0) {
+            return construirVistaFallo("No se añadió ningún miembro para justificar la ampliación a familiar.");
+        }
+
+        return finalizarAmpliacion(inscripcion, titular, cuotaAnterior, nuevaCuota,
+                adultosAnadidos, totalHijosAnadidos);
+    }
+
+    // ========== Métodos privados: Validación y registro de cónyuge ==========
+
+    private ModelAndView validarYRegistrarConyuge(String dniNuevoAdulto, Socio nuevoAdulto,
+            Socio titular, Inscripcion inscripcion) {
+        if (!existenDatosConyuge(dniNuevoAdulto)) {
+            return null;
+        }
+
+        if (socioRepository.existeSocioPorDni(dniNuevoAdulto)) {
+            return construirVistaFallo("Error: El DNI del cónyuge ya está registrado en el club.");
+        }
+
+        if (nuevoAdulto.getFechaNacimiento() == null || !nuevoAdulto.esMayorDeEdad()) {
+            return construirVistaFallo(
+                    "Error: El cónyuge debe ser mayor de edad y se requiere la fecha de nacimiento.");
+        }
+
+        configurarDatosConyuge(nuevoAdulto, dniNuevoAdulto, titular, inscripcion);
+
+        if (socioRepository.insertarSocioYRetornarId(nuevoAdulto, inscripcion.getId()) <= 0) {
+            return construirVistaFallo("Error CRÍTICO al guardar los datos del cónyuge en la BD.");
+        }
+
+        return null;
+    }
+
+    private void configurarDatosConyuge(Socio nuevoAdulto, String dni, Socio titular, Inscripcion inscripcion) {
+        nuevoAdulto.setDni(dni);
+        nuevoAdulto.setIdSocioTitularFk(titular.getId());
+        nuevoAdulto.setInscripcionId(inscripcion.getId());
+        nuevoAdulto.setFechaInscripcion(LocalDate.now());
+        nuevoAdulto.setTipoMiembro(TipoMiembro.CONYUGE);
+        nuevoAdulto.setTieneTituloPatron(false);
+        nuevoAdulto.setDireccion(titular.getDireccion());
+    }
+
+    // ========== Métodos privados: Validación y registro de hijo ==========
+
+    private ModelAndView validarYRegistrarHijo(List<String> hijosDniList, List<String> hijosNombreList,
+            List<String> hijosApellidosList, List<String> hijosFechaNacimientoList,
+            Socio titular, int inscripcionId) {
+        String dniHijo = extraerPrimerElemento(hijosDniList);
+        if (dniHijo.isEmpty()) {
+            return null;
+        }
+
+        if (socioRepository.existeSocioPorDni(dniHijo)) {
+            return construirVistaFallo("Error: El DNI del hijo ya está registrado en el club.");
+        }
+
+        if (!datosHijoCompletos(hijosNombreList, hijosApellidosList, hijosFechaNacimientoList)) {
+            return construirVistaFallo(
+                    "Error: Faltan datos obligatorios (Nombre/Apellidos/Fecha de Nacimiento) para el hijo.");
+        }
+
+        Socio hijo = construirSocioHijo(dniHijo, hijosNombreList, hijosApellidosList,
+                hijosFechaNacimientoList, titular, inscripcionId);
+        if (hijo == null) {
+            return construirVistaFallo("Error: La Fecha de Nacimiento del hijo no es válida.");
+        }
+
+        if (socioRepository.insertarSocioYRetornarId(hijo, inscripcionId) <= 0) {
+            return construirVistaFallo("Error al guardar los datos del hijo en la BD.");
+        }
+
+        return null;
+    }
+
+    private Socio construirSocioHijo(String dniHijo, List<String> hijosNombreList,
+            List<String> hijosApellidosList, List<String> hijosFechaNacimientoList,
+            Socio titular, int inscripcionId) {
+        Socio hijo = new Socio();
+        hijo.setDni(dniHijo);
+        hijo.setNombre(hijosNombreList.get(0).trim());
+        hijo.setApellidos(hijosApellidosList.get(0).trim());
+
+        try {
+            hijo.setFechaNacimiento(LocalDate.parse(hijosFechaNacimientoList.get(0)));
+        } catch (Exception excepcion) {
+            return null;
+        }
+
+        hijo.setIdSocioTitularFk(titular.getId());
+        hijo.setInscripcionId(inscripcionId);
+        hijo.setFechaInscripcion(LocalDate.now());
+        hijo.setTipoMiembro(TipoMiembro.HIJO);
+        hijo.setTieneTituloPatron(false);
+        hijo.setDireccion(titular.getDireccion());
+        return hijo;
+    }
+
+    // ========== Métodos privados: Finalización de ampliación ==========
+
+    private ModelAndView finalizarAmpliacion(Inscripcion inscripcion, Socio titular,
+            double cuotaAnterior, double nuevaCuota, int adultosAnadidos, int hijosAnadidos) {
+        actualizarTipoInscripcion(inscripcion);
+        inscripcion.setCuotaAnual(nuevaCuota);
+
+        if (!inscripcionRepository.actualizarInscripcion(inscripcion)) {
+            return construirVistaFallo("Error al actualizar el tipo de inscripción y la cuota en la BD.");
+        }
+
+        return construirVistaExitoAmpliacion(titular, cuotaAnterior, nuevaCuota,
+                adultosAnadidos + hijosAnadidos);
+    }
+
+    private void actualizarTipoInscripcion(Inscripcion inscripcion) {
+        if (inscripcion.getTipoInscripcion() == TipoInscripcion.INDIVIDUAL) {
+            inscripcion.setTipoInscripcion(TipoInscripcion.FAMILIAR);
+        }
+    }
+
+    // ========== Métodos privados: Utilidades ==========
+
+    private boolean existenDatosConyuge(String dniNuevoAdulto) {
+        return dniNuevoAdulto != null && !dniNuevoAdulto.trim().isEmpty();
+    }
+
+    private boolean existenDatosHijo(List<String> hijosDniList) {
+        return !extraerPrimerElemento(hijosDniList).isEmpty();
+    }
+
+    private String extraerPrimerElemento(List<String> lista) {
+        if (lista == null || lista.isEmpty()) {
+            return "";
+        }
+        return lista.get(0).trim();
+    }
+
+    private boolean datosHijoCompletos(List<String> nombres, List<String> apellidos, List<String> fechas) {
+        return tieneContenido(nombres) && tieneContenido(apellidos) && tieneContenido(fechas);
+    }
+
+    private boolean tieneContenido(List<String> lista) {
+        return lista != null && !lista.isEmpty() && !lista.get(0).trim().isEmpty();
+    }
+
+    // ========== Métodos privados: Construcción de vistas ==========
+
+    private ModelAndView construirVistaFallo(String mensajeError) {
+        ModelAndView modelAndView = new ModelAndView("ampliacionFamiliarViewFail.html");
+        modelAndView.addObject("error", mensajeError);
+        return modelAndView;
+    }
+
+    private ModelAndView construirVistaFormularioAmpliacion(Socio titular, Inscripcion inscripcion) {
+        ModelAndView modelAndView = new ModelAndView("ampliacionFamiliarView.html");
+        modelAndView.addObject("titular", titular);
+        modelAndView.addObject("inscripcion", inscripcion);
+        modelAndView.addObject("nuevoAdulto", new Socio());
+        return modelAndView;
+    }
+
+    private ModelAndView construirVistaExitoAmpliacion(Socio titular, double cuotaAnterior,
+            double nuevaCuota, int totalMiembrosNuevos) {
+        ModelAndView modelAndView = new ModelAndView("ampliacionFamiliarViewSuccess.html");
+        modelAndView.addObject("titularNombre", titular.getNombre() + " " + titular.getApellidos());
+        modelAndView.addObject("cuotaAnterior", cuotaAnterior);
+        modelAndView.addObject("cuotaNueva", nuevaCuota);
+        modelAndView.addObject("miembrosAnadidos", totalMiembrosNuevos);
+        modelAndView.addObject("mensaje",
+                "La inscripción familiar se ha completado. Miembros añadidos: " + totalMiembrosNuevos);
         return modelAndView;
     }
 }

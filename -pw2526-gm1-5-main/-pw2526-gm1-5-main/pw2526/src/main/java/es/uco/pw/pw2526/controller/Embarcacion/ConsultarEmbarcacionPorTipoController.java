@@ -51,10 +51,7 @@ public class ConsultarEmbarcacionPorTipoController {
      */
     @PostMapping
     public String consultarPorTipo(@RequestParam TipoEmbarcacion tipo, Model model) {
-        System.out.println("🔍 INICIANDO CONSULTA POR TIPO: " + tipo);
-
         List<Embarcacion> embarcaciones = embarcacionRepository.buscarPorTipo(tipo);
-        System.out.println("✅ EMBARCACIONES ENCONTRADAS: " + embarcaciones.size());
 
         Map<String, String> patronesAsignados = new HashMap<>();
         Map<String, List<String>> detallesPatron = new HashMap<>();
@@ -62,42 +59,83 @@ public class ConsultarEmbarcacionPorTipoController {
         Map<String, List<String>> estadosAsignacion = new HashMap<>();
 
         for (Embarcacion embarcacion : embarcaciones) {
-            String matricula = embarcacion.getMatricula();
-            System.out.println("🔍 Procesando embarcación: " + matricula + " - " + embarcacion.getNombre());
-
-            detallesPatron.put(matricula, new ArrayList<>());
-            fechasAsignacion.put(matricula, new ArrayList<>());
-            estadosAsignacion.put(matricula, new ArrayList<>());
-
-            Integer idPatron = embarcacion.getIdPatronAsignado();
-
-            if (idPatron != null) {
-                Patron patronActual = patronRepository.obtenerPatronPorId(idPatron);
-
-                if (patronActual != null) {
-                    patronesAsignados.put(matricula, "SÍ");
-                    detallesPatron.get(matricula).add(patronActual.getNombre() + " " + patronActual.getApellidos()
-                            + " (ID: " + patronActual.getId() + ")");
-
-                    fechasAsignacion.get(matricula).add("Asignación actual");
-                    estadosAsignacion.get(matricula).add("ACTIVA");
-                    System.out.println("✅ Patrón asignado: " + detallesPatron.get(matricula).get(0));
-                } else {
-                    patronesAsignados.put(matricula, "NO");
-                    detallesPatron.get(matricula).add("ERROR: Patrón ID " + idPatron + " no encontrado.");
-                    fechasAsignacion.get(matricula).add("-");
-                    estadosAsignacion.get(matricula).add("INACTIVA/ERROR");
-                    System.out.println("❌ Patrón asignado con ID inválido.");
-                }
-            } else {
-                patronesAsignados.put(matricula, "NO");
-                detallesPatron.get(matricula).add("Sin patrón asignado");
-                fechasAsignacion.get(matricula).add("-");
-                estadosAsignacion.get(matricula).add("-");
-                System.out.println("❌ Sin patrón asignado");
-            }
+            cargarInformacionPatron(embarcacion, patronesAsignados, detallesPatron,
+                    fechasAsignacion, estadosAsignacion);
         }
 
+        agregarAtributosAlModelo(model, embarcaciones, tipo, patronesAsignados,
+                detallesPatron, fechasAsignacion, estadosAsignacion);
+
+        return "ConsultarEmbarcacionPorTipoView";
+    }
+
+    // ========== Métodos privados ==========
+
+    private void cargarInformacionPatron(Embarcacion embarcacion,
+            Map<String, String> patronesAsignados, Map<String, List<String>> detallesPatron,
+            Map<String, List<String>> fechasAsignacion, Map<String, List<String>> estadosAsignacion) {
+
+        String matricula = embarcacion.getMatricula();
+        inicializarMapasParaMatricula(matricula, detallesPatron, fechasAsignacion, estadosAsignacion);
+
+        Integer idPatron = embarcacion.getIdPatronAsignado();
+
+        if (idPatron == null) {
+            registrarSinPatron(matricula, patronesAsignados, detallesPatron, fechasAsignacion, estadosAsignacion);
+            return;
+        }
+
+        Patron patronActual = patronRepository.obtenerPatronPorId(idPatron);
+
+        if (patronActual == null) {
+            registrarPatronInvalido(matricula, idPatron, patronesAsignados, detallesPatron,
+                    fechasAsignacion, estadosAsignacion);
+            return;
+        }
+
+        registrarPatronActivo(matricula, patronActual, patronesAsignados, detallesPatron,
+                fechasAsignacion, estadosAsignacion);
+    }
+
+    private void inicializarMapasParaMatricula(String matricula, Map<String, List<String>> detallesPatron,
+            Map<String, List<String>> fechasAsignacion, Map<String, List<String>> estadosAsignacion) {
+        detallesPatron.put(matricula, new ArrayList<>());
+        fechasAsignacion.put(matricula, new ArrayList<>());
+        estadosAsignacion.put(matricula, new ArrayList<>());
+    }
+
+    private void registrarSinPatron(String matricula, Map<String, String> patronesAsignados,
+            Map<String, List<String>> detallesPatron, Map<String, List<String>> fechasAsignacion,
+            Map<String, List<String>> estadosAsignacion) {
+        patronesAsignados.put(matricula, "NO");
+        detallesPatron.get(matricula).add("Sin patrón asignado");
+        fechasAsignacion.get(matricula).add("-");
+        estadosAsignacion.get(matricula).add("-");
+    }
+
+    private void registrarPatronInvalido(String matricula, int idPatron,
+            Map<String, String> patronesAsignados, Map<String, List<String>> detallesPatron,
+            Map<String, List<String>> fechasAsignacion, Map<String, List<String>> estadosAsignacion) {
+        patronesAsignados.put(matricula, "NO");
+        detallesPatron.get(matricula).add("ERROR: Patrón ID " + idPatron + " no encontrado.");
+        fechasAsignacion.get(matricula).add("-");
+        estadosAsignacion.get(matricula).add("INACTIVA/ERROR");
+    }
+
+    private void registrarPatronActivo(String matricula, Patron patron,
+            Map<String, String> patronesAsignados, Map<String, List<String>> detallesPatron,
+            Map<String, List<String>> fechasAsignacion, Map<String, List<String>> estadosAsignacion) {
+        patronesAsignados.put(matricula, "SÍ");
+        detallesPatron.get(matricula).add(
+                patron.getNombre() + " " + patron.getApellidos() + " (ID: " + patron.getId() + ")");
+        fechasAsignacion.get(matricula).add("Asignación actual");
+        estadosAsignacion.get(matricula).add("ACTIVA");
+    }
+
+    private void agregarAtributosAlModelo(Model model, List<Embarcacion> embarcaciones,
+            TipoEmbarcacion tipo, Map<String, String> patronesAsignados,
+            Map<String, List<String>> detallesPatron, Map<String, List<String>> fechasAsignacion,
+            Map<String, List<String>> estadosAsignacion) {
         model.addAttribute("embarcaciones", embarcaciones);
         model.addAttribute("patronesAsignados", patronesAsignados);
         model.addAttribute("detallesPatron", detallesPatron);
@@ -105,8 +143,5 @@ public class ConsultarEmbarcacionPorTipoController {
         model.addAttribute("estadosAsignacion", estadosAsignacion);
         model.addAttribute("tipoSeleccionado", tipo);
         model.addAttribute("tiposEmbarcacion", TipoEmbarcacion.values());
-
-        System.out.println("🏁 FINALIZANDO CONSULTA - Enviando " + embarcaciones.size() + " embarcaciones a la vista");
-        return "ConsultarEmbarcacionPorTipoView";
     }
 }

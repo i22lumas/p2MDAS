@@ -36,57 +36,63 @@ public class AddSocioController {
 
     @PostMapping("/addSocio")
     public ModelAndView insertarSocio(@ModelAttribute Socio nuevoSocio) {
-        ModelAndView modelAndView;
-
         if (socioRepository.existeSocioPorDni(nuevoSocio.getDni())) {
-            modelAndView = new ModelAndView("addSocioViewFail.html");
-            modelAndView.addObject("error", "El DNI " + nuevoSocio.getDni() + " ya está registrado.");
-        } else if (!nuevoSocio.esMayorDeEdad()) {
-             modelAndView = new ModelAndView("addSocioViewFail.html");
-             modelAndView.addObject("error", "El socio debe ser mayor de edad para la inscripción.");
-        } else {
-            
-            nuevoSocio.setFechaInscripcion(LocalDate.now()); 
-            nuevoSocio.setTipoMiembro(TipoMiembro.TITULAR); 
-            
-            Inscripcion nuevaInscripcion = new Inscripcion();
-            nuevaInscripcion.setTipoInscripcion(TipoInscripcion.INDIVIDUAL);
-            nuevaInscripcion.setCuotaAnual(CUOTA_ADULTO_INDIVIDUAL);
-            
-            int inscripcionId = inscripcionRepository.insertarInscripcion(nuevaInscripcion);
-            
-            if (inscripcionId > 0) {
-                
-                nuevoSocio.setInscripcionId(inscripcionId);
-                nuevoSocio.setIdSocioTitularFk(null); 
-
-                int idSocioCreado = socioRepository.insertarSocioYRetornarId(nuevoSocio, inscripcionId); 
-                
-                if (idSocioCreado > 0) {
-                    
-                    nuevoSocio.setIdSocioTitularFk(idSocioCreado); 
-                    
-                    boolean fkActualizada = socioRepository.actualizarIdSocioTitular(idSocioCreado, idSocioCreado);
-                    
-                    boolean titularActualizado = inscripcionRepository.actualizarSocioTitular(inscripcionId, idSocioCreado);
-                    
-                    if (titularActualizado && fkActualizada) {
-                        modelAndView = new ModelAndView("addSocioViewSuccess.html");
-                    } else {
-                        modelAndView = new ModelAndView("addSocioViewFail.html");
-                        modelAndView.addObject("error", "Error crítico: Socio creado, pero no se pudo actualizar el ID del titular en la inscripción o su propia FK.");
-                    }
-                } else {
-                    modelAndView = new ModelAndView("addSocioViewFail.html");
-                    modelAndView.addObject("error", "Error interno al guardar los datos del socio. Inscripción creada.");
-                }
-            } else {
-                 modelAndView = new ModelAndView("addSocioViewFail.html");
-                 modelAndView.addObject("error", "Error creando la inscripción inicial en la BD.");
-            }
+            return construirVistaFallo("El DNI " + nuevoSocio.getDni() + " ya está registrado.");
         }
 
-        modelAndView.addObject("Socio", nuevoSocio);
+        if (!nuevoSocio.esMayorDeEdad()) {
+            return construirVistaFallo("El socio debe ser mayor de edad para la inscripción.");
+        }
+
+        configurarSocioTitular(nuevoSocio);
+
+        int inscripcionId = crearInscripcionInicial();
+        if (inscripcionId <= 0) {
+            return construirVistaFallo("Error creando la inscripción inicial en la BD.");
+        }
+
+        nuevoSocio.setInscripcionId(inscripcionId);
+        nuevoSocio.setIdSocioTitularFk(null);
+
+        int idSocioCreado = socioRepository.insertarSocioYRetornarId(nuevoSocio, inscripcionId);
+        if (idSocioCreado <= 0) {
+            return construirVistaFallo("Error interno al guardar los datos del socio. Inscripción creada.");
+        }
+
+        ModelAndView resultado = vincularSocioConInscripcion(idSocioCreado, inscripcionId);
+        resultado.addObject("Socio", nuevoSocio);
+        return resultado;
+    }
+
+    // ========== Métodos privados ==========
+
+    private void configurarSocioTitular(Socio nuevoSocio) {
+        nuevoSocio.setFechaInscripcion(LocalDate.now());
+        nuevoSocio.setTipoMiembro(TipoMiembro.TITULAR);
+    }
+
+    private int crearInscripcionInicial() {
+        Inscripcion nuevaInscripcion = new Inscripcion();
+        nuevaInscripcion.setTipoInscripcion(TipoInscripcion.INDIVIDUAL);
+        nuevaInscripcion.setCuotaAnual(CUOTA_ADULTO_INDIVIDUAL);
+        return inscripcionRepository.insertarInscripcion(nuevaInscripcion);
+    }
+
+    private ModelAndView vincularSocioConInscripcion(int idSocioCreado, int inscripcionId) {
+        boolean fkActualizada = socioRepository.actualizarIdSocioTitular(idSocioCreado, idSocioCreado);
+        boolean titularActualizado = inscripcionRepository.actualizarSocioTitular(inscripcionId, idSocioCreado);
+
+        if (titularActualizado && fkActualizada) {
+            return new ModelAndView("addSocioViewSuccess.html");
+        }
+
+        return construirVistaFallo(
+                "Error crítico: Socio creado, pero no se pudo actualizar el ID del titular en la inscripción o su propia FK.");
+    }
+
+    private ModelAndView construirVistaFallo(String mensajeError) {
+        ModelAndView modelAndView = new ModelAndView("addSocioViewFail.html");
+        modelAndView.addObject("error", mensajeError);
         return modelAndView;
     }
 }

@@ -66,107 +66,17 @@ public class ReservaController {
      */
     @PostMapping("/reservarEmbarcacion")
     public ModelAndView procesarReserva(@ModelAttribute Reserva nuevaReserva) {
-        ModelAndView model = new ModelAndView();
-
-        System.out.println("=== INICIO PROCESAR RESERVA ===");
-        System.out.println("Socio solicitante: " + nuevaReserva.getIdSocioSolicitante());
-        System.out.println("Matrícula: " + nuevaReserva.getMatriculaEmbarcacion());
-        System.out.println("Fecha actividad: " + nuevaReserva.getFechaActividad());
-        System.out.println("Plazas solicitadas: " + nuevaReserva.getPlazasSolicitadas());
-
-        if (nuevaReserva.getPlazasSolicitadas() == null || nuevaReserva.getPlazasSolicitadas() <= 0) {
-            model.setViewName("reservaViewFail.html");
-            model.addObject("mensaje", "El número de plazas debe ser mayor a 0.");
-            return model;
+        ModelAndView errorValidacion = validarDatosReserva(nuevaReserva);
+        if (errorValidacion != null) {
+            return errorValidacion;
         }
 
-        if (nuevaReserva.getFechaActividad() == null || nuevaReserva.getFechaActividad().isBefore(LocalDate.now())) {
-            model.setViewName("reservaViewFail.html");
-            model.addObject("mensaje", "La fecha de la actividad no puede ser anterior a hoy.");
-            return model;
+        ModelAndView errorRequisitos = verificarRequisitosPreviosReserva(nuevaReserva);
+        if (errorRequisitos != null) {
+            return errorRequisitos;
         }
 
-        if (nuevaReserva.getIdSocioSolicitante() == null) {
-            model.setViewName("reservaViewFail.html");
-            model.addObject("mensaje", "Debe seleccionar un socio solicitante.");
-            return model;
-        }
-
-        if (nuevaReserva.getMatriculaEmbarcacion() == null || nuevaReserva.getMatriculaEmbarcacion().isEmpty()) {
-            model.setViewName("reservaViewFail.html");
-            model.addObject("mensaje", "Debe seleccionar una embarcación.");
-            return model;
-        }
-
-        boolean tienePatron = reservaRepository.tienePatronAsignado(
-                nuevaReserva.getMatriculaEmbarcacion(),
-                nuevaReserva.getFechaActividad());
-
-        if (!tienePatron) {
-            model.setViewName("reservaViewFail.html");
-            model.addObject("mensaje", "La embarcación seleccionada no tiene patrón asignado para la fecha elegida.");
-            return model;
-        }
-
-        boolean estaDisponible = reservaRepository.estaDisponible(
-                nuevaReserva.getMatriculaEmbarcacion(),
-                nuevaReserva.getFechaActividad(),
-                nuevaReserva.getFechaActividad());
-
-        if (!estaDisponible) {
-            model.setViewName("reservaViewFail.html");
-            model.addObject("mensaje",
-                    "La embarcación seleccionada no está disponible para la fecha elegida (ya está reservada o alquilada).");
-            return model;
-        }
-
-        int capacidad = reservaRepository.obtenerCapacidadEmbarcacion(nuevaReserva.getMatriculaEmbarcacion());
-        int capacidadDisponible = capacidad - 1;
-
-        if (nuevaReserva.getPlazasSolicitadas() > capacidadDisponible) {
-            model.setViewName("reservaViewFail.html");
-            model.addObject("mensaje",
-                    "La embarcación seleccionada no tiene capacidad suficiente. Capacidad máxima para socios: "
-                            + capacidadDisponible + " plazas (capacidad total: " + capacidad
-                            + " incluyendo al patrón).");
-            return model;
-        }
-
-        Integer idPatron = reservaRepository.obtenerPatronAsignado(
-                nuevaReserva.getMatriculaEmbarcacion(),
-                nuevaReserva.getFechaActividad());
-
-        if (idPatron == null) {
-            model.setViewName("reservaViewFail.html");
-            model.addObject("mensaje", "No se pudo determinar el patrón asignado a la embarcación.");
-            return model;
-        }
-
-        nuevaReserva.setIdPatron(idPatron);
-
-        int totalPersonas = nuevaReserva.getPlazasSolicitadas() + 1;
-        double precioTotal = totalPersonas * 40.0;
-        nuevaReserva.setPrecioTotal(precioTotal);
-
-        System.out.println("Precio calculado: " + precioTotal + "€ (" + totalPersonas + " personas × 40€)");
-
-        boolean insertadoConExito = reservaRepository.insertarReserva(nuevaReserva);
-
-        System.out.println("Inserción exitosa: " + insertadoConExito);
-        System.out.println("=== FIN PROCESAR RESERVA ===");
-
-        if (insertadoConExito) {
-            model.setViewName("reservaViewSuccess.html");
-            model.addObject("mensaje", "Reserva realizada con éxito.");
-            model.addObject("reserva", nuevaReserva);
-            model.addObject("precioPorPersona", 40.0);
-            model.addObject("totalPersonas", totalPersonas);
-        } else {
-            model.setViewName("reservaViewFail.html");
-            model.addObject("mensaje", "Error al realizar la reserva. Por favor, inténtelo de nuevo.");
-        }
-
-        return model;
+        return ejecutarReserva(nuevaReserva);
     }
 
     /**
@@ -179,6 +89,132 @@ public class ReservaController {
         List<Reserva> reservas = reservaRepository.obtenerTodasLasReservas();
         ModelAndView model = new ModelAndView("verReservasView.html");
         model.addObject("reservas", reservas);
+        return model;
+    }
+
+    // ========== Métodos privados: Validación de datos de entrada ==========
+
+    private ModelAndView validarDatosReserva(Reserva nuevaReserva) {
+        if (nuevaReserva.getPlazasSolicitadas() == null || nuevaReserva.getPlazasSolicitadas() <= 0) {
+            return construirVistaFallo("El número de plazas debe ser mayor a 0.");
+        }
+
+        if (nuevaReserva.getFechaActividad() == null || nuevaReserva.getFechaActividad().isBefore(LocalDate.now())) {
+            return construirVistaFallo("La fecha de la actividad no puede ser anterior a hoy.");
+        }
+
+        if (nuevaReserva.getIdSocioSolicitante() == null) {
+            return construirVistaFallo("Debe seleccionar un socio solicitante.");
+        }
+
+        if (nuevaReserva.getMatriculaEmbarcacion() == null || nuevaReserva.getMatriculaEmbarcacion().isEmpty()) {
+            return construirVistaFallo("Debe seleccionar una embarcación.");
+        }
+
+        return null;
+    }
+
+    // ========== Métodos privados: Verificación de requisitos ==========
+
+    private ModelAndView verificarRequisitosPreviosReserva(Reserva nuevaReserva) {
+        ModelAndView errorPatron = verificarPatronAsignado(nuevaReserva);
+        if (errorPatron != null) {
+            return errorPatron;
+        }
+
+        if (!estaDisponibleParaReserva(nuevaReserva)) {
+            return construirVistaFallo(
+                    "La embarcación seleccionada no está disponible para la fecha elegida (ya está reservada o alquilada).");
+        }
+
+        ModelAndView errorCapacidad = verificarCapacidadEmbarcacion(nuevaReserva);
+        if (errorCapacidad != null) {
+            return errorCapacidad;
+        }
+
+        return null;
+    }
+
+    private ModelAndView verificarPatronAsignado(Reserva nuevaReserva) {
+        boolean tienePatron = reservaRepository.tienePatronAsignado(
+                nuevaReserva.getMatriculaEmbarcacion(),
+                nuevaReserva.getFechaActividad());
+
+        if (!tienePatron) {
+            return construirVistaFallo("La embarcación seleccionada no tiene patrón asignado para la fecha elegida.");
+        }
+
+        return null;
+    }
+
+    private boolean estaDisponibleParaReserva(Reserva nuevaReserva) {
+        return reservaRepository.estaDisponible(
+                nuevaReserva.getMatriculaEmbarcacion(),
+                nuevaReserva.getFechaActividad(),
+                nuevaReserva.getFechaActividad());
+    }
+
+    private ModelAndView verificarCapacidadEmbarcacion(Reserva nuevaReserva) {
+        int capacidad = reservaRepository.obtenerCapacidadEmbarcacion(nuevaReserva.getMatriculaEmbarcacion());
+        int capacidadDisponible = capacidad - 1;
+
+        if (nuevaReserva.getPlazasSolicitadas() > capacidadDisponible) {
+            return construirVistaFallo(
+                    "La embarcación seleccionada no tiene capacidad suficiente. Capacidad máxima para socios: "
+                            + capacidadDisponible + " plazas (capacidad total: " + capacidad
+                            + " incluyendo al patrón).");
+        }
+
+        return null;
+    }
+
+    // ========== Métodos privados: Ejecución de la reserva ==========
+
+    private ModelAndView ejecutarReserva(Reserva nuevaReserva) {
+        Integer idPatron = obtenerPatronParaReserva(nuevaReserva);
+        if (idPatron == null) {
+            return construirVistaFallo("No se pudo determinar el patrón asignado a la embarcación.");
+        }
+
+        nuevaReserva.setIdPatron(idPatron);
+        calcularPrecioReserva(nuevaReserva);
+
+        boolean insertadoConExito = reservaRepository.insertarReserva(nuevaReserva);
+
+        if (!insertadoConExito) {
+            return construirVistaFallo("Error al realizar la reserva. Por favor, inténtelo de nuevo.");
+        }
+
+        return construirVistaExitoReserva(nuevaReserva);
+    }
+
+    private Integer obtenerPatronParaReserva(Reserva nuevaReserva) {
+        return reservaRepository.obtenerPatronAsignado(
+                nuevaReserva.getMatriculaEmbarcacion(),
+                nuevaReserva.getFechaActividad());
+    }
+
+    private void calcularPrecioReserva(Reserva nuevaReserva) {
+        int totalPersonas = nuevaReserva.getPlazasSolicitadas() + 1;
+        double precioTotal = totalPersonas * 40.0;
+        nuevaReserva.setPrecioTotal(precioTotal);
+    }
+
+    // ========== Métodos privados: Construcción de vistas ==========
+
+    private ModelAndView construirVistaFallo(String mensaje) {
+        ModelAndView model = new ModelAndView("reservaViewFail.html");
+        model.addObject("mensaje", mensaje);
+        return model;
+    }
+
+    private ModelAndView construirVistaExitoReserva(Reserva nuevaReserva) {
+        int totalPersonas = nuevaReserva.getPlazasSolicitadas() + 1;
+        ModelAndView model = new ModelAndView("reservaViewSuccess.html");
+        model.addObject("mensaje", "Reserva realizada con éxito.");
+        model.addObject("reserva", nuevaReserva);
+        model.addObject("precioPorPersona", 40.0);
+        model.addObject("totalPersonas", totalPersonas);
         return model;
     }
 }
