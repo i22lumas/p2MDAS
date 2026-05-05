@@ -16,15 +16,12 @@ public class ListarInscripcionesController {
 
     private final InscripcionRepository inscripcionRepository;
 
-
     public ListarInscripcionesController(InscripcionRepository inscripcionRepository) {
         this.inscripcionRepository = inscripcionRepository;
     }
 
-
     @GetMapping
     public String listarInscripciones(Model model) {
-
         List<Map<String, Object>> detalles = inscripcionRepository.obtenerDetallesInscripciones();
 
         model.addAttribute("detallesInscripcion", detalles);

@@ -90,7 +90,6 @@ public class InscripcionRepository extends AbstractRepository {
         }
     }
 
-
     public boolean actualizarInscripcion(Inscripcion inscripcion) {
         try {
             if (this.sqlQueries == null)

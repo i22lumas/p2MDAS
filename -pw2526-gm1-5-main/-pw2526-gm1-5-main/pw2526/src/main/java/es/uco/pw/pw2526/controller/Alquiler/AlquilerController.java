@@ -45,7 +45,6 @@ public class AlquilerController {
     public ModelAndView buscarEmbarcacionesDisponibles(
             @RequestParam LocalDate fechaInicio,
             @RequestParam LocalDate fechaFin) {
-
         ModelAndView model = new ModelAndView("buscarEmbarcacionesDisponibles.html");
 
         System.out.println("=== INICIO BÚSQUEDA DISPONIBILIDAD ===");

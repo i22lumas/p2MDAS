@@ -18,7 +18,6 @@ public class Patron {
         this.dni = "";
         this.fechaNacimiento = LocalDate.of(1899, 11, 19);
         this.fechaExpedicionTitulo = LocalDate.of(1899, 11, 19);
-
     }
 
     public Patron(int id, String nombre) {

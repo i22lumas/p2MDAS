@@ -30,7 +30,6 @@ public class Inscripcion {
         this.fechaCreacion = fechaCreacion;
     }
 
-  
     public boolean esIndividual() {
         return this.tipoInscripcion == TipoInscripcion.INDIVIDUAL;
     }

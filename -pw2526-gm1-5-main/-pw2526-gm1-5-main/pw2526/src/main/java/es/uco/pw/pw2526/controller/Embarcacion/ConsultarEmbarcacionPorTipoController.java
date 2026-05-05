@@ -83,7 +83,6 @@ public class ConsultarEmbarcacionPorTipoController {
                     estadosAsignacion.get(matricula).add("ACTIVA");
                     System.out.println("✅ Patrón asignado: " + detallesPatron.get(matricula).get(0));
                 } else {
-
                     patronesAsignados.put(matricula, "NO");
                     detallesPatron.get(matricula).add("ERROR: Patrón ID " + idPatron + " no encontrado.");
                     fechasAsignacion.get(matricula).add("-");

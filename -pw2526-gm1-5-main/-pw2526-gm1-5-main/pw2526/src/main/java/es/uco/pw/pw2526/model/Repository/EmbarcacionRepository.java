@@ -15,7 +15,6 @@ import es.uco.pw.pw2526.model.domain.embarcacion.TipoEmbarcacion;
 @Repository
 public class EmbarcacionRepository extends AbstractRepository {
 
-
     public EmbarcacionRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -37,7 +36,6 @@ public class EmbarcacionRepository extends AbstractRepository {
                         embarcacion.setTipo(TipoEmbarcacion.valueOf(rs.getString("tipo_embarcacion")));
                         embarcacion.setNumeroPlazas(rs.getInt("numero_plazas"));
                         embarcacion.setEsloraEnMetros(parseDimensiones(rs.getString("dimensiones")));
-
 
                         Integer idPatron = rs.getInt("id_patron_asignado");
                         if (!rs.wasNull()) {
@@ -336,7 +334,6 @@ public class EmbarcacionRepository extends AbstractRepository {
                 System.err.println("La embarcación con matrícula " + matricula + " no existe");
                 return false;
             }
-
 
             String checkAlquileresQuery = "SELECT COUNT(*) FROM Alquiler WHERE matricula_embarcacion = ?";
             String checkReservasQuery = "SELECT COUNT(*) FROM Reserva WHERE matricula_embarcacion = ?";

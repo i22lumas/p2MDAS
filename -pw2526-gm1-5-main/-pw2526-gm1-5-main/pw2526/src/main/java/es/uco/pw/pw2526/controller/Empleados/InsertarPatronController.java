@@ -14,13 +14,11 @@ public class InsertarPatronController {
 
     private final PatronRepository patronRepository;
 
-
     public InsertarPatronController(PatronRepository patronRepository) {
         this.patronRepository = patronRepository;
         String sqlQueriesFileName = "./src/main/resources/db/sql.properties";
         this.patronRepository.setSQLQueriesFileName(sqlQueriesFileName);
     }
-
 
     @GetMapping("/addEmpleados")
     public ModelAndView mostrarFormularioAnadirPatron() {
@@ -28,7 +26,6 @@ public class InsertarPatronController {
         modelAndView.addObject("newEmpleados", new Patron());
         return modelAndView;
     }
-
 
     @PostMapping("/addEmpleados")
     public ModelAndView insertarPatron(@ModelAttribute Patron nuevoPatron) {

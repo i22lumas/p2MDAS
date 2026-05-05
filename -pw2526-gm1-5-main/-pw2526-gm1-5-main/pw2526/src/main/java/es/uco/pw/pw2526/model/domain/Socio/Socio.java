@@ -34,7 +34,6 @@ public class Socio {
         this.inscripcionId = -1;
         this.idSocioTitularFk = null;
     }
-    
 
     public Socio(int id, String dni, String nombre, String apellidos, LocalDate fechaNacimiento, String direccion, LocalDate fechaInscripcion, boolean tieneTituloPatron, TipoMiembro tipoMiembro, int inscripcionId, Integer idSocioTitularFk) {
         this.id = id;
@@ -49,7 +48,6 @@ public class Socio {
         this.inscripcionId = inscripcionId;
         this.idSocioTitularFk = idSocioTitularFk;
     }
-
 
     public boolean esMayorDeEdad() {
         if (this.fechaNacimiento == null) {
@@ -70,7 +68,6 @@ public class Socio {
     public boolean estaVinculadoAInscripcion() {
         return this.inscripcionId != -1;
     }
-
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }

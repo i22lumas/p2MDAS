@@ -36,7 +36,6 @@ public class Reserva {
         this.idPatron = idPatron;
     }
 
-
     public Integer getIdReserva() {
         return idReserva;
     }

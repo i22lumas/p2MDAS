@@ -91,7 +91,6 @@ public class AmpliacionFamiliarController {
         double nuevaCuota = cuotaAnterior;
         int adultosAnadidos = 0;
         int totalHijosAnadidos = 0;
-        
 
         boolean existeConyugeData = dniNuevoAdulto != null && !dniNuevoAdulto.trim().isEmpty();
 
@@ -106,7 +105,6 @@ public class AmpliacionFamiliarController {
                 modelAndView.addObject("error", "Error: El cónyuge debe ser mayor de edad y se requiere la fecha de nacimiento.");
                 return modelAndView;
             }
-
 
             nuevoAdulto.setDni(dniNuevoAdulto); 
             nuevoAdulto.setIdSocioTitularFk(titularId);
@@ -128,8 +126,6 @@ public class AmpliacionFamiliarController {
             }
         }
 
-
-        
         String dniHijo = (hijosDniList != null && !hijosDniList.isEmpty()) ? hijosDniList.get(0).trim() : "";
         
         if (!dniHijo.isEmpty()) {
@@ -177,8 +173,6 @@ public class AmpliacionFamiliarController {
                 return modelAndView;
             }
         }
-
-
 
         if (adultosAnadidos > 0 || totalHijosAnadidos > 0) {
             if (inscripcion.getTipoInscripcion() == TipoInscripcion.INDIVIDUAL) {

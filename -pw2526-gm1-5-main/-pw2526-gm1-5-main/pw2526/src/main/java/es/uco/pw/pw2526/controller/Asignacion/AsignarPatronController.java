@@ -54,9 +54,7 @@ public class AsignarPatronController {
     public String asignarPatron(@RequestParam String matricula,
             @RequestParam int idEmpleado,
             Model model) {
-
         System.out.println("🔍 Iniciando asignación para matrícula: " + matricula + ", empleado: " + idEmpleado);
-
 
         Integer idPatronActual = asignacionRepository.obtenerPatronActual(matricula);
         System.out.println("🔍 ID Patrón Actual encontrado: " + idPatronActual);
@@ -83,7 +81,6 @@ public class AsignarPatronController {
 
         System.out.println("🔍 Embarcación NO tiene patrón actual, asignando directamente...");
 
-
         if (asignacionRepository.asignarPatron(matricula, idEmpleado)) {
             model.addAttribute("mensaje", "✅ Patrón asignado correctamente a la embarcación.");
             return "AsignarPatronSuccess";
@@ -105,7 +102,6 @@ public class AsignarPatronController {
     public String confirmarReemplazo(@RequestParam String matricula,
             @RequestParam int idEmpleadoNuevo,
             Model model) {
-
         System.out.println(
                 "🔍 Confirmando reemplazo para matrícula: " + matricula + ", nuevo empleado: " + idEmpleadoNuevo);
 

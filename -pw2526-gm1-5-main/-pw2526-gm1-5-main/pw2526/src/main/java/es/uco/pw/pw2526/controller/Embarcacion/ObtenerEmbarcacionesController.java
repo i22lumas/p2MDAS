@@ -14,12 +14,10 @@ public class ObtenerEmbarcacionesController {
 
     private EmbarcacionRepository embarcacionRepository;
 
-
     public ObtenerEmbarcacionesController(EmbarcacionRepository embarcacionRepository) {
         this.embarcacionRepository = embarcacionRepository;
         this.embarcacionRepository.setSQLQueriesFileName("./src/main/resources/db/sql.properties");
     }
-
 
     @GetMapping("/verEmbarcaciones")
     public ModelAndView obtenerEmbarcaciones() {

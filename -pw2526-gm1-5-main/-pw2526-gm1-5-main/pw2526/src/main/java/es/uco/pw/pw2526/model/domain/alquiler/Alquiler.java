@@ -107,7 +107,6 @@ public class Alquiler {
         this.dnisTripulantes.add(dni);
     }
 
-
     public String obtenerTripulantesComoString() {
         if (dnisTripulantes == null || dnisTripulantes.isEmpty()) {
             return dniSocioTitular;

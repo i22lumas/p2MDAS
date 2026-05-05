@@ -40,7 +40,6 @@ public class AlquilerRepository extends AbstractRepository {
                 System.out.println("Tripulantes: "
                         + (nuevoAlquiler.getDnisTripulantes() != null ? nuevoAlquiler.getDnisTripulantes().size() : 0));
 
-
                 var keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
 
                 int filasAfectadas = jdbcTemplate.update(connection -> {
@@ -57,7 +56,6 @@ public class AlquilerRepository extends AbstractRepository {
                 if (filasAfectadas > 0 && keyHolder.getKey() != null) {
                     int idAlquiler = keyHolder.getKey().intValue();
                     System.out.println("Alquiler insertado con ID: " + idAlquiler);
-
 
                     if (nuevoAlquiler.getDnisTripulantes() != null && !nuevoAlquiler.getDnisTripulantes().isEmpty()) {
                         insertarTripulantesAlquiler(idAlquiler, nuevoAlquiler.getDnisTripulantes());
@@ -124,7 +122,6 @@ public class AlquilerRepository extends AbstractRepository {
         alquiler.setFechaFin(rs.getDate("fecha_fin").toLocalDate());
         alquiler.setPlazasSolicitadas(rs.getInt("plazas_solicitadas"));
         alquiler.setPrecioTotal(rs.getDouble("precio_total"));
-
 
         List<String> tripulantes = obtenerTripulantesPorAlquiler(rs.getInt("id_alquiler"));
         alquiler.setDnisTripulantes(tripulantes);
@@ -281,10 +278,6 @@ public class AlquilerRepository extends AbstractRepository {
             return 0;
         }
     }
-
-
-
-
 
     /**
      *  PATCH: Agregar socio no titular 

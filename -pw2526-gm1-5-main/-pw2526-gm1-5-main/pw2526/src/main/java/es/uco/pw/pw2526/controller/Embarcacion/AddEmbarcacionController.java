@@ -15,12 +15,10 @@ public class AddEmbarcacionController {
     private ModelAndView modelAndView = new ModelAndView();
     private EmbarcacionRepository embarcacionRepository;
 
-
     public AddEmbarcacionController(EmbarcacionRepository embarcacionRepository) {
         this.embarcacionRepository = embarcacionRepository;
         this.embarcacionRepository.setSQLQueriesFileName("./src/main/resources/db/sql.properties");
     }
-
 
     @GetMapping("/addEmbarcacion")
     public ModelAndView mostrarFormularioAnadirEmbarcacion() {
@@ -28,7 +26,6 @@ public class AddEmbarcacionController {
         this.modelAndView.addObject("nuevaEmbarcacion", new Embarcacion());
         return this.modelAndView;
     }
-
 
     @PostMapping("/addEmbarcacion")
     public ModelAndView insertarEmbarcacion(@ModelAttribute Embarcacion nuevaEmbarcacion) {
