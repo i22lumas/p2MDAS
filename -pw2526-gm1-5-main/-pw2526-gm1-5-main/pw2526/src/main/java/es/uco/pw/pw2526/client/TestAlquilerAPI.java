@@ -43,18 +43,26 @@ public class TestAlquilerAPI {
 
         verificarEstadoBD();
 
-        // ==================== PRUEBAS GET ====================
+        ejecutarPruebasGet();
+        ejecutarPruebasPost();
+        ejecutarPruebasPatch();
+        ejecutarPruebasDelete();
+        imprimirResultadosFinales();
+    }
+
+    // ==================== Orquestación de pruebas ====================
+
+    private static void ejecutarPruebasGet() {
         System.out.println("\n📋 ==================== PRUEBAS GET ====================\n");
         testGetAllAlquileres();
         testGetAlquileresFuturos();
         testGetAlquileresFuturosConFecha();
         testGetEmbarcacionesDisponiblesSinFechas();
         testGetEmbarcacionesDisponiblesFechasInvalidas();
+    }
 
-        // ==================== PRUEBAS POST ====================
+    private static void ejecutarPruebasPost() {
         System.out.println("\n📝 ==================== PRUEBAS POST ====================\n");
-
-        // Casos de error
         testPostAlquilerSinDatos();
         testPostAlquilerFechasPasadas();
         testPostAlquilerFechaFinAnterior();
@@ -62,21 +70,22 @@ public class TestAlquilerAPI {
         testPostAlquilerSocioInexistente();
         testPostAlquilerEmbarcacionInexistente();
         testPostAlquilerJSONMalFormado();
+    }
 
-        // ==================== PRUEBAS PATCH ====================
+    private static void ejecutarPruebasPatch() {
         System.out.println("\n🔧 ==================== PRUEBAS PATCH ====================\n");
-
         testPatchAgregarSocioAlquilerInexistente();
         testPatchQuitarSocioAlquilerInexistente();
         testPatchAgregarSocioSinParametro();
         testPatchQuitarSocioSinParametro();
+    }
 
-        // ==================== PRUEBAS DELETE ====================
+    private static void ejecutarPruebasDelete() {
         System.out.println("\n🗑️  ==================== PRUEBAS DELETE ====================\n");
-
         testDeleteAlquilerInexistente();
+    }
 
-        // ==================== RESULTADOS FINALES ====================
+    private static void imprimirResultadosFinales() {
         System.out.println("\n📊 ==================== RESULTADOS ====================\n");
         System.out.println("✅ Tests exitosos: " + testsExitosos);
         System.out.println("❌ Tests fallidos: " + testsFallidos);
@@ -91,7 +100,7 @@ public class TestAlquilerAPI {
         System.out.println("=".repeat(60));
     }
 
-
+    // ==================== Utilidades ====================
 
     private static void printTestHeader(String nombre) {
         System.out.println("\n" + (testCounter++) + ". " + nombre);
@@ -133,23 +142,28 @@ public class TestAlquilerAPI {
                     });
 
             System.out.println("📊 Total alquileres en BD: " + response.getBody().size());
-
-            if (!response.getBody().isEmpty()) {
-                System.out.println("📋 Muestra de alquileres:");
-                for (int i = 0; i < Math.min(response.getBody().size(), 3); i++) {
-                    Map<String, Object> alquiler = response.getBody().get(i);
-                    System.out.println("   - ID: " + alquiler.get("idAlquiler") +
-                            ", Embarcación: " + alquiler.get("matriculaEmbarcacion") +
-                            ", Fecha: " + alquiler.get("fechaInicio"));
-                }
-            }
+            imprimirMuestraAlquileres(response.getBody());
         } catch (Exception e) {
             System.out.println("⚠️  No se pudo verificar estado: " + e.getMessage());
         }
         System.out.println();
     }
 
+    private static void imprimirMuestraAlquileres(List<Map<String, Object>> alquileres) {
+        if (alquileres.isEmpty()) {
+            return;
+        }
 
+        System.out.println("📋 Muestra de alquileres:");
+        for (int i = 0; i < Math.min(alquileres.size(), 3); i++) {
+            Map<String, Object> alquiler = alquileres.get(i);
+            System.out.println("   - ID: " + alquiler.get("idAlquiler") +
+                    ", Embarcación: " + alquiler.get("matriculaEmbarcacion") +
+                    ", Fecha: " + alquiler.get("fechaInicio"));
+        }
+    }
+
+    // ==================== Pruebas GET ====================
 
     private static void testGetAllAlquileres() {
         printTestHeader("GET /api/alquileres - Obtener todos los alquileres");
@@ -248,31 +262,11 @@ public class TestAlquilerAPI {
         }
     }
 
-
+    // ==================== Pruebas POST ====================
 
     private static void testPostAlquilerSinDatos() {
         printTestHeader("POST /api/alquileres - Sin datos (error esperado)");
-
-        String alquilerJson = "{}";
-
-        HttpHeaders headers = getJsonHeaders();
-        HttpEntity<String> request = new HttpEntity<>(alquilerJson, headers);
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres",
-                    HttpMethod.POST,
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Debería fallar sin datos");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPostEsperandoError("{}");
     }
 
     private static void testPostAlquilerFechasPasadas() {
@@ -290,24 +284,7 @@ public class TestAlquilerAPI {
                 }
                 """;
 
-        HttpHeaders headers = getJsonHeaders();
-        HttpEntity<String> request = new HttpEntity<>(alquilerJson, headers);
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres",
-                    HttpMethod.POST,
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Fechas en pasado");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPostEsperandoError(alquilerJson);
     }
 
     private static void testPostAlquilerFechaFinAnterior() {
@@ -325,24 +302,7 @@ public class TestAlquilerAPI {
                 }
                 """;
 
-        HttpHeaders headers = getJsonHeaders();
-        HttpEntity<String> request = new HttpEntity<>(alquilerJson, headers);
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres",
-                    HttpMethod.POST,
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Fecha fin anterior");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPostEsperandoError(alquilerJson);
     }
 
     private static void testPostAlquilerSocioNoPatron() {
@@ -360,24 +320,7 @@ public class TestAlquilerAPI {
                 }
                 """;
 
-        HttpHeaders headers = getJsonHeaders();
-        HttpEntity<String> request = new HttpEntity<>(alquilerJson, headers);
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres",
-                    HttpMethod.POST,
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Socio no patrón");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPostEsperandoError(alquilerJson);
     }
 
     private static void testPostAlquilerSocioInexistente() {
@@ -395,24 +338,7 @@ public class TestAlquilerAPI {
                 }
                 """;
 
-        HttpHeaders headers = getJsonHeaders();
-        HttpEntity<String> request = new HttpEntity<>(alquilerJson, headers);
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres",
-                    HttpMethod.POST,
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Socio inexistente");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPostEsperandoError(alquilerJson);
     }
 
     private static void testPostAlquilerEmbarcacionInexistente() {
@@ -430,24 +356,7 @@ public class TestAlquilerAPI {
                 }
                 """;
 
-        HttpHeaders headers = getJsonHeaders();
-        HttpEntity<String> request = new HttpEntity<>(alquilerJson, headers);
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres",
-                    HttpMethod.POST,
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Embarcación inexistente");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPostEsperandoError(alquilerJson);
     }
 
     private static void testPostAlquilerJSONMalFormado() {
@@ -462,111 +371,34 @@ public class TestAlquilerAPI {
                     "fechaFin": "2024-12-03",
                     "plazasSolicitadas": 2
                     "precioTotal": 120.0
-        
+        """;
 
-        HttpHeaders headers = getJsonHeaders();
-        HttpEntity<String> request = new HttpEntity<>(alquilerJson, headers);
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres",
-                    HttpMethod.POST,
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - JSON mal formado");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPostEsperandoError(alquilerJson);
     }
 
-
+    // ==================== Pruebas PATCH ====================
 
     private static void testPatchAgregarSocioAlquilerInexistente() {
         printTestHeader("PATCH /api/alquileres/99999/agregar-socio - Alquiler inexistente");
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres/99999/agregar-socio?dniSocio=11111111A",
-                    HttpMethod.PATCH,
-                    new HttpEntity<>(getJsonHeaders()),
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Alquiler inexistente");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPatchEsperandoError(BASE_URL + "/api/alquileres/99999/agregar-socio?dniSocio=11111111A");
     }
 
     private static void testPatchQuitarSocioAlquilerInexistente() {
         printTestHeader("PATCH /api/alquileres/99999/quitar-socio - Alquiler inexistente");
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres/99999/quitar-socio?dniSocio=11111111A",
-                    HttpMethod.PATCH,
-                    new HttpEntity<>(getJsonHeaders()),
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Alquiler inexistente");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPatchEsperandoError(BASE_URL + "/api/alquileres/99999/quitar-socio?dniSocio=11111111A");
     }
 
     private static void testPatchAgregarSocioSinParametro() {
         printTestHeader("PATCH /api/alquileres/1/agregar-socio - Sin parámetro dniSocio");
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres/1/agregar-socio",
-                    HttpMethod.PATCH,
-                    new HttpEntity<>(getJsonHeaders()),
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Falta parámetro");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPatchEsperandoError(BASE_URL + "/api/alquileres/1/agregar-socio");
     }
 
     private static void testPatchQuitarSocioSinParametro() {
         printTestHeader("PATCH /api/alquileres/1/quitar-socio - Sin parámetro dniSocio");
-
-        try {
-            restTemplate.exchange(
-                    BASE_URL + "/api/alquileres/1/quitar-socio",
-                    HttpMethod.PATCH,
-                    new HttpEntity<>(getJsonHeaders()),
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Falta parámetro");
-            registroFallido();
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
-            registroExitoso();
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            registroFallido();
-        }
+        ejecutarPatchEsperandoError(BASE_URL + "/api/alquileres/1/quitar-socio");
     }
 
-
+    // ==================== Pruebas DELETE ====================
 
     private static void testDeleteAlquilerInexistente() {
         printTestHeader("DELETE /api/alquileres/99999 - Alquiler inexistente");
@@ -578,6 +410,46 @@ public class TestAlquilerAPI {
                     null,
                     String.class);
             System.out.println("❌ ERROR ESPERADO - Alquiler inexistente");
+            registroFallido();
+        } catch (HttpClientErrorException e) {
+            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
+            registroExitoso();
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            registroFallido();
+        }
+    }
+
+    // ==================== Métodos auxiliares de ejecución ====================
+
+    private static void ejecutarPostEsperandoError(String json) {
+        HttpEntity<String> request = new HttpEntity<>(json, getJsonHeaders());
+
+        try {
+            restTemplate.exchange(
+                    BASE_URL + "/api/alquileres",
+                    HttpMethod.POST,
+                    request,
+                    String.class);
+            System.out.println("❌ ERROR ESPERADO - Debería haber fallado");
+            registroFallido();
+        } catch (HttpClientErrorException e) {
+            System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
+            registroExitoso();
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            registroFallido();
+        }
+    }
+
+    private static void ejecutarPatchEsperandoError(String url) {
+        try {
+            restTemplate.exchange(
+                    url,
+                    HttpMethod.PATCH,
+                    new HttpEntity<>(getJsonHeaders()),
+                    String.class);
+            System.out.println("❌ ERROR ESPERADO - Debería haber fallado");
             registroFallido();
         } catch (HttpClientErrorException e) {
             System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");

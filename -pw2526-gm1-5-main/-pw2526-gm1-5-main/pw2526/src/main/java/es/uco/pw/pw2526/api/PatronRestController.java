@@ -16,8 +16,6 @@ public class PatronRestController {
     @Autowired
     private PatronRepository patronRepository;
 
-
-
     /**
      * 3. Obtener la lista completa de patrones (GET /api/patrones) [cite: 55]
      */
@@ -37,12 +35,10 @@ public class PatronRestController {
 
         if (creadoConExito) {
             return new ResponseEntity<>("Patrón creado correctamente", HttpStatus.CREATED);
-        } else {
-            return new ResponseEntity<>("Error creando patrón", HttpStatus.BAD_REQUEST);
         }
+
+        return new ResponseEntity<>("Error creando patrón", HttpStatus.BAD_REQUEST);
     }
-
-
 
     /**
      * 2. Actualizar los campos de información de un patrón, excepto el DNI (PATCH
@@ -58,35 +54,19 @@ public class PatronRestController {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
 
-
-        if (patronActualizaciones.getDni() != null && !patronActualizaciones.getDni().equals(patronActual.getDni())) {
+        if (esIntentoDeCambioDeDni(patronActual, patronActualizaciones)) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
 
-
-        if (patronActualizaciones.getNombre() != null && !patronActualizaciones.getNombre().isEmpty()) {
-            patronActual.setNombre(patronActualizaciones.getNombre());
-        }
-
-        if (patronActualizaciones.getApellidos() != null && !patronActualizaciones.getApellidos().isEmpty()) {
-            patronActual.setApellidos(patronActualizaciones.getApellidos());
-        }
-
-        if (patronActualizaciones.getFechaNacimiento() != null) {
-            patronActual.setFechaNacimiento(patronActualizaciones.getFechaNacimiento());
-        }
-
-        if (patronActualizaciones.getFechaExpedicionTitulo() != null) {
-            patronActual.setFechaExpedicionTitulo(patronActualizaciones.getFechaExpedicionTitulo());
-        }
+        aplicarCamposActualizacionPatron(patronActual, patronActualizaciones);
 
         boolean actualizadoConExito = patronRepository.actualizarPatron(patronActual);
 
         if (actualizadoConExito) {
             return new ResponseEntity<>(patronActual, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -106,13 +86,11 @@ public class PatronRestController {
 
         if (eliminadoConExito) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            // Error al eliminar (probablemente está asignado a una embarcación)
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
+
+        // Error al eliminar (probablemente está asignado a una embarcación)
+        return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
-
-
 
     /**
      * GET /api/patrones/{id}
@@ -123,9 +101,9 @@ public class PatronRestController {
         Patron patron = patronRepository.obtenerPatronPorId(id);
         if (patron != null) {
             return new ResponseEntity<>(patron, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
+
+        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
     }
 
     /**
@@ -136,5 +114,42 @@ public class PatronRestController {
     public ResponseEntity<List<Patron>> obtenerPatronesDisponibles() {
         List<Patron> patronesDisponibles = patronRepository.obtenerPatronesDisponibles();
         return new ResponseEntity<>(patronesDisponibles, HttpStatus.OK);
+    }
+
+    // ==================== Métodos auxiliares ====================
+
+    private boolean esIntentoDeCambioDeDni(Patron actual, Patron actualizaciones) {
+        return actualizaciones.getDni() != null && !actualizaciones.getDni().equals(actual.getDni());
+    }
+
+    private void aplicarCamposActualizacionPatron(Patron actual, Patron actualizaciones) {
+        aplicarNombrePatron(actual, actualizaciones);
+        aplicarApellidosPatron(actual, actualizaciones);
+        aplicarFechaNacimientoPatron(actual, actualizaciones);
+        aplicarFechaExpedicionTituloPatron(actual, actualizaciones);
+    }
+
+    private void aplicarNombrePatron(Patron actual, Patron actualizaciones) {
+        if (actualizaciones.getNombre() != null && !actualizaciones.getNombre().isEmpty()) {
+            actual.setNombre(actualizaciones.getNombre());
+        }
+    }
+
+    private void aplicarApellidosPatron(Patron actual, Patron actualizaciones) {
+        if (actualizaciones.getApellidos() != null && !actualizaciones.getApellidos().isEmpty()) {
+            actual.setApellidos(actualizaciones.getApellidos());
+        }
+    }
+
+    private void aplicarFechaNacimientoPatron(Patron actual, Patron actualizaciones) {
+        if (actualizaciones.getFechaNacimiento() != null) {
+            actual.setFechaNacimiento(actualizaciones.getFechaNacimiento());
+        }
+    }
+
+    private void aplicarFechaExpedicionTituloPatron(Patron actual, Patron actualizaciones) {
+        if (actualizaciones.getFechaExpedicionTitulo() != null) {
+            actual.setFechaExpedicionTitulo(actualizaciones.getFechaExpedicionTitulo());
+        }
     }
 }

@@ -50,16 +50,7 @@ public class ReservaRestController {
     @GetMapping("/futuras")
     public ResponseEntity<List<Reserva>> obtenerReservasFuturas(@RequestParam(required = false) String fecha) {
         try {
-            LocalDate fechaConsulta;
-
-            if (fecha != null && !fecha.isEmpty()) {
-                fechaConsulta = LocalDate.parse(fecha);
-            } else {
-                fechaConsulta = LocalDate.now();
-            }
-
-            List<Reserva> reservasFuturas = reservaRepository.obtenerReservasFuturas(fechaConsulta);
-            return new ResponseEntity<>(reservasFuturas, HttpStatus.OK);
+            return procesarObtenerReservasFuturas(fecha);
         } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -72,13 +63,7 @@ public class ReservaRestController {
     @GetMapping("/{id}")
     public ResponseEntity<Reserva> obtenerReservaPorId(@PathVariable Integer id) {
         try {
-            Reserva reservaEncontrada = reservaRepository.obtenerReservaPorId(id);
-
-            if (reservaEncontrada != null) {
-                return new ResponseEntity<>(reservaEncontrada, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-            }
+            return procesarObtenerReservaPorId(id);
         } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -90,74 +75,11 @@ public class ReservaRestController {
     @PostMapping
     public ResponseEntity<Reserva> crearReserva(@RequestBody Reserva nuevaReserva) {
         try {
-
-            if (nuevaReserva.getMatriculaEmbarcacion() == null || nuevaReserva.getMatriculaEmbarcacion().isEmpty()) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
-
-            if (nuevaReserva.getFechaActividad() == null) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
-
-            if (nuevaReserva.getIdSocioSolicitante() == null) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
-
-
-            boolean disponible = reservaRepository.estaDisponible(
-                    nuevaReserva.getMatriculaEmbarcacion(),
-                    nuevaReserva.getFechaActividad(),
-                    nuevaReserva.getFechaActividad());
-
-            if (!disponible) {
-                return new ResponseEntity<>(null, HttpStatus.CONFLICT);
-            }
-
-
-            boolean esMayorDeEdad = reservaRepository.esSocioMayorDeEdad(nuevaReserva.getIdSocioSolicitante());
-            if (!esMayorDeEdad) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
-
-
-            int capacidad = reservaRepository.obtenerCapacidadEmbarcacion(nuevaReserva.getMatriculaEmbarcacion());
-            if (nuevaReserva.getPlazasSolicitadas() > capacidad) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
-
-
-            boolean tienePatron = reservaRepository.tienePatronAsignado(nuevaReserva.getMatriculaEmbarcacion(),
-                    nuevaReserva.getFechaActividad());
-            if (!tienePatron) {
-
-                boolean socioEsPatron = reservaRepository.socioTieneTituloPatron(nuevaReserva.getIdSocioSolicitante());
-                if (!socioEsPatron) {
-                    return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-                }
-
-                nuevaReserva.setIdPatron(nuevaReserva.getIdSocioSolicitante());
-            } else {
-
-                Integer idPatron = reservaRepository.obtenerPatronAsignado(nuevaReserva.getMatriculaEmbarcacion(),
-                        nuevaReserva.getFechaActividad());
-                nuevaReserva.setIdPatron(idPatron);
-            }
-
-
-            boolean insertadoConExito = reservaRepository.insertarReserva(nuevaReserva);
-
-            if (insertadoConExito) {
-                return new ResponseEntity<>(nuevaReserva, HttpStatus.CREATED);
-            } else {
-                return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
+            return procesarCreacionReserva(nuevaReserva);
         } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-
 
     /**
      * D.1. Modificar la fecha de una reserva futura a otra posterior, solo si la
@@ -168,47 +90,8 @@ public class ReservaRestController {
     public ResponseEntity<Reserva> actualizarFechaReserva(
             @PathVariable Integer id,
             @RequestBody Map<String, String> cuerpoSolicitud) {
-
         try {
-
-            Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
-            if (reservaActual == null) {
-                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-            }
-
-
-            if (reservaActual.getFechaActividad().isBefore(LocalDate.now())) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
-
-
-            String nuevaFechaStr = cuerpoSolicitud.get("nuevaFecha");
-            if (nuevaFechaStr == null || nuevaFechaStr.isEmpty()) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
-
-            LocalDate nuevaFecha = LocalDate.parse(nuevaFechaStr);
-
-
-            if (!nuevaFecha.isAfter(reservaActual.getFechaActividad())) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
-
-
-            boolean disponible = reservaRepository.estaDisponible(
-                    reservaActual.getMatriculaEmbarcacion(),
-                    nuevaFecha,
-                    nuevaFecha);
-
-            if (!disponible) {
-                return new ResponseEntity<>(null, HttpStatus.CONFLICT);
-            }
-
-
-            reservaActual.setFechaActividad(nuevaFecha);
-
-            return new ResponseEntity<>(reservaActual, HttpStatus.OK);
-
+            return procesarActualizacionFechaReserva(id, cuerpoSolicitud);
         } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -223,51 +106,8 @@ public class ReservaRestController {
     public ResponseEntity<Reserva> actualizarReserva(
             @PathVariable Integer id,
             @RequestBody Reserva reservaActualizaciones) {
-
         try {
-
-            Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
-            if (reservaActual == null) {
-                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-            }
-
-
-            if (reservaActual.getFechaActividad().isBefore(LocalDate.now())) {
-                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-            }
-
-
-            boolean cambiosRealizados = false;
-
-
-            if (reservaActualizaciones.getPropositoActividad() != null
-                    && !reservaActualizaciones.getPropositoActividad().isEmpty()) {
-                reservaActual.setPropositoActividad(reservaActualizaciones.getPropositoActividad());
-                cambiosRealizados = true;
-            }
-
-
-            if (reservaActualizaciones.getPlazasSolicitadas() != null
-                    && reservaActualizaciones.getPlazasSolicitadas() > 0) {
-
-
-                int capacidad = reservaRepository
-                        .obtenerCapacidadEmbarcacion(reservaActual.getMatriculaEmbarcacion());
-                if (reservaActualizaciones.getPlazasSolicitadas() > capacidad) {
-                    return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-                }
-
-                reservaActual.setPlazasSolicitadas(reservaActualizaciones.getPlazasSolicitadas());
-                cambiosRealizados = true;
-            }
-
-
-            if (!cambiosRealizados) {
-                return new ResponseEntity<>(reservaActual, HttpStatus.OK);
-            }
-
-            return new ResponseEntity<>(reservaActual, HttpStatus.OK);
-
+            return procesarActualizacionReserva(id, reservaActualizaciones);
         } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -279,28 +119,8 @@ public class ReservaRestController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelarReserva(@PathVariable Integer id) {
-
         try {
-
-            Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
-            if (reservaActual == null) {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-
-
-            if (reservaActual.getFechaActividad().isBefore(LocalDate.now())) {
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-
-
-            boolean eliminadaConExito = reservaRepository.eliminarReserva(id);
-
-            if (eliminadaConExito) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            } else {
-                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
+            return procesarCancelacionReserva(id);
         } catch (Exception excepcion) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -344,5 +164,220 @@ public class ReservaRestController {
         } catch (Exception excepcion) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    // ==================== Métodos de procesamiento ====================
+
+    private ResponseEntity<List<Reserva>> procesarObtenerReservasFuturas(String fecha) {
+        LocalDate fechaConsulta = determinarFechaConsulta(fecha);
+        List<Reserva> reservasFuturas = reservaRepository.obtenerReservasFuturas(fechaConsulta);
+        return new ResponseEntity<>(reservasFuturas, HttpStatus.OK);
+    }
+
+    private LocalDate determinarFechaConsulta(String fecha) {
+        if (fecha != null && !fecha.isEmpty()) {
+            return LocalDate.parse(fecha);
+        }
+        return LocalDate.now();
+    }
+
+    private ResponseEntity<Reserva> procesarObtenerReservaPorId(Integer id) {
+        Reserva reservaEncontrada = reservaRepository.obtenerReservaPorId(id);
+
+        if (reservaEncontrada != null) {
+            return new ResponseEntity<>(reservaEncontrada, HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+    }
+
+    // ==================== Procesamiento de creación ====================
+
+    private ResponseEntity<Reserva> procesarCreacionReserva(Reserva nuevaReserva) {
+        ResponseEntity<Reserva> errorDatos = validarDatosObligatoriosReserva(nuevaReserva);
+        if (errorDatos != null) {
+            return errorDatos;
+        }
+
+        ResponseEntity<Reserva> errorDisponibilidad = validarDisponibilidadReserva(nuevaReserva);
+        if (errorDisponibilidad != null) {
+            return errorDisponibilidad;
+        }
+
+        ResponseEntity<Reserva> errorSocioYCapacidad = validarSocioYCapacidad(nuevaReserva);
+        if (errorSocioYCapacidad != null) {
+            return errorSocioYCapacidad;
+        }
+
+        ResponseEntity<Reserva> errorPatron = asignarPatronReserva(nuevaReserva);
+        if (errorPatron != null) {
+            return errorPatron;
+        }
+
+        return persistirReserva(nuevaReserva);
+    }
+
+    private ResponseEntity<Reserva> validarDatosObligatoriosReserva(Reserva reserva) {
+        if (reserva.getMatriculaEmbarcacion() == null || reserva.getMatriculaEmbarcacion().isEmpty()) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
+        if (reserva.getFechaActividad() == null) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
+        if (reserva.getIdSocioSolicitante() == null) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
+        return null;
+    }
+
+    private ResponseEntity<Reserva> validarDisponibilidadReserva(Reserva reserva) {
+        boolean disponible = reservaRepository.estaDisponible(
+                reserva.getMatriculaEmbarcacion(),
+                reserva.getFechaActividad(),
+                reserva.getFechaActividad());
+
+        if (!disponible) {
+            return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+        }
+
+        return null;
+    }
+
+    private ResponseEntity<Reserva> validarSocioYCapacidad(Reserva reserva) {
+        boolean esMayorDeEdad = reservaRepository.esSocioMayorDeEdad(reserva.getIdSocioSolicitante());
+        if (!esMayorDeEdad) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
+        int capacidad = reservaRepository.obtenerCapacidadEmbarcacion(reserva.getMatriculaEmbarcacion());
+        if (reserva.getPlazasSolicitadas() > capacidad) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
+        return null;
+    }
+
+    private ResponseEntity<Reserva> asignarPatronReserva(Reserva reserva) {
+        boolean tienePatron = reservaRepository.tienePatronAsignado(
+                reserva.getMatriculaEmbarcacion(), reserva.getFechaActividad());
+
+        if (tienePatron) {
+            Integer idPatron = reservaRepository.obtenerPatronAsignado(
+                    reserva.getMatriculaEmbarcacion(), reserva.getFechaActividad());
+            reserva.setIdPatron(idPatron);
+            return null;
+        }
+
+        boolean socioEsPatron = reservaRepository.socioTieneTituloPatron(reserva.getIdSocioSolicitante());
+        if (!socioEsPatron) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
+        reserva.setIdPatron(reserva.getIdSocioSolicitante());
+        return null;
+    }
+
+    private ResponseEntity<Reserva> persistirReserva(Reserva reserva) {
+        boolean insertadoConExito = reservaRepository.insertarReserva(reserva);
+
+        if (insertadoConExito) {
+            return new ResponseEntity<>(reserva, HttpStatus.CREATED);
+        }
+
+        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // ==================== Procesamiento de actualización ====================
+
+    private ResponseEntity<Reserva> procesarActualizacionFechaReserva(Integer id, Map<String, String> cuerpoSolicitud) {
+        Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
+        if (reservaActual == null) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+
+        if (reservaActual.getFechaActividad().isBefore(LocalDate.now())) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
+        String nuevaFechaStr = cuerpoSolicitud.get("nuevaFecha");
+        if (nuevaFechaStr == null || nuevaFechaStr.isEmpty()) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
+        LocalDate nuevaFecha = LocalDate.parse(nuevaFechaStr);
+
+        if (!nuevaFecha.isAfter(reservaActual.getFechaActividad())) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
+        boolean disponible = reservaRepository.estaDisponible(
+                reservaActual.getMatriculaEmbarcacion(), nuevaFecha, nuevaFecha);
+        if (!disponible) {
+            return new ResponseEntity<>(null, HttpStatus.CONFLICT);
+        }
+
+        reservaActual.setFechaActividad(nuevaFecha);
+        return new ResponseEntity<>(reservaActual, HttpStatus.OK);
+    }
+
+    private ResponseEntity<Reserva> procesarActualizacionReserva(Integer id, Reserva reservaActualizaciones) {
+        Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
+        if (reservaActual == null) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+
+        if (reservaActual.getFechaActividad().isBefore(LocalDate.now())) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
+        aplicarCambiosReserva(reservaActual, reservaActualizaciones);
+        return new ResponseEntity<>(reservaActual, HttpStatus.OK);
+    }
+
+    private void aplicarCambiosReserva(Reserva reservaActual, Reserva actualizaciones) {
+        aplicarCambioPropositoActividad(reservaActual, actualizaciones);
+        aplicarCambioPlazasSolicitadas(reservaActual, actualizaciones);
+    }
+
+    private void aplicarCambioPropositoActividad(Reserva reservaActual, Reserva actualizaciones) {
+        if (actualizaciones.getPropositoActividad() != null
+                && !actualizaciones.getPropositoActividad().isEmpty()) {
+            reservaActual.setPropositoActividad(actualizaciones.getPropositoActividad());
+        }
+    }
+
+    private void aplicarCambioPlazasSolicitadas(Reserva reservaActual, Reserva actualizaciones) {
+        if (actualizaciones.getPlazasSolicitadas() == null || actualizaciones.getPlazasSolicitadas() <= 0) {
+            return;
+        }
+
+        int capacidad = reservaRepository.obtenerCapacidadEmbarcacion(reservaActual.getMatriculaEmbarcacion());
+        if (actualizaciones.getPlazasSolicitadas() <= capacidad) {
+            reservaActual.setPlazasSolicitadas(actualizaciones.getPlazasSolicitadas());
+        }
+    }
+
+    // ==================== Procesamiento de cancelación ====================
+
+    private ResponseEntity<Void> procesarCancelacionReserva(Integer id) {
+        Reserva reservaActual = reservaRepository.obtenerReservaPorId(id);
+        if (reservaActual == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        if (reservaActual.getFechaActividad().isBefore(LocalDate.now())) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        boolean eliminadaConExito = reservaRepository.eliminarReserva(id);
+
+        if (eliminadaConExito) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

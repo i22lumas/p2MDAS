@@ -22,8 +22,6 @@ public class BoatRestController {
     @Autowired
     private PatronRepository patronRepository;
 
-
-
     /**
      * 1. Obtener la lista completa de embarcaciones (GET /api/boats) [cite: 55]
      */
@@ -43,9 +41,7 @@ public class BoatRestController {
     @GetMapping("/type/{tipo}")
     public ResponseEntity<List<Embarcacion>> obtenerEmbarcacionesPorTipo(@PathVariable String tipo) {
         try {
-            TipoEmbarcacion tipoEnum = TipoEmbarcacion.valueOf(tipo.toUpperCase());
-            List<Embarcacion> embarcaciones = embarcacionRepository.buscarPorTipo(tipoEnum);
-            return new ResponseEntity<>(embarcaciones, HttpStatus.OK);
+            return procesarObtenerPorTipo(tipo);
         } catch (IllegalArgumentException excepcion) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
@@ -57,26 +53,19 @@ public class BoatRestController {
      */
     @PostMapping
     public ResponseEntity<String> crearEmbarcacion(@RequestBody Embarcacion nuevaEmbarcacion) {
-
-        if (nuevaEmbarcacion.getNumeroPlazas() <= 0) {
-            return new ResponseEntity<>("El número de plazas debe ser un número positivo", HttpStatus.BAD_REQUEST);
-        }
-
-
-        if (nuevaEmbarcacion.getEsloraEnMetros() <= 0) {
-            return new ResponseEntity<>("La eslora en metros debe ser un número positivo", HttpStatus.BAD_REQUEST);
+        ResponseEntity<String> errorValidacion = validarDatosEmbarcacion(nuevaEmbarcacion);
+        if (errorValidacion != null) {
+            return errorValidacion;
         }
 
         boolean insertadoConExito = embarcacionRepository.insertarEmbarcacion(nuevaEmbarcacion);
 
         if (insertadoConExito) {
             return new ResponseEntity<>("Embarcación creada correctamente", HttpStatus.CREATED);
-        } else {
-            return new ResponseEntity<>("Error creando embarcación", HttpStatus.BAD_REQUEST);
         }
+
+        return new ResponseEntity<>("Error creando embarcación", HttpStatus.BAD_REQUEST);
     }
-
-
 
     /**
      * 1. Actualizar los campos de información de una embarcación, excepto la
@@ -92,32 +81,15 @@ public class BoatRestController {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
 
-        // La matrícula no se puede actualizar
-        if (embarcacionActualizaciones.getNombre() != null && !embarcacionActualizaciones.getNombre().isEmpty()) {
-            embarcacionActual.setNombre(embarcacionActualizaciones.getNombre());
-        }
-
-        if (embarcacionActualizaciones.getTipo() != null) {
-            embarcacionActual.setTipo(embarcacionActualizaciones.getTipo());
-        }
-
-        if (embarcacionActualizaciones.getNumeroPlazas() > 0) {
-            embarcacionActual.setNumeroPlazas(embarcacionActualizaciones.getNumeroPlazas());
-        }
-
-        if (embarcacionActualizaciones.getEsloraEnMetros() > 0) {
-            embarcacionActual.setEsloraEnMetros(embarcacionActualizaciones.getEsloraEnMetros());
-        }
-
-        // idPatronAsignado se gestiona con los endpoints assign/unassign-patron
+        aplicarCamposActualizacionEmbarcacion(embarcacionActual, embarcacionActualizaciones);
 
         boolean actualizadoConExito = embarcacionRepository.actualizarEmbarcacion(embarcacionActual);
 
         if (actualizadoConExito) {
             return new ResponseEntity<>(embarcacionActual, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -135,24 +107,18 @@ public class BoatRestController {
             return new ResponseEntity<>("El campo 'idPatron' es requerido", HttpStatus.BAD_REQUEST);
         }
 
-
-        Embarcacion embarcacionExistente = embarcacionRepository.buscarPorMatricula(matricula);
-        if (embarcacionExistente == null) {
-            return new ResponseEntity<>("Embarcación no encontrada", HttpStatus.NOT_FOUND);
-        }
-
-
-        if (!patronRepository.existePatron(idPatron)) {
-            return new ResponseEntity<>("Patrón no encontrado", HttpStatus.BAD_REQUEST);
+        ResponseEntity<String> errorValidacion = validarEmbarcacionYPatronExisten(matricula, idPatron);
+        if (errorValidacion != null) {
+            return errorValidacion;
         }
 
         boolean vinculadoConExito = embarcacionRepository.vincularPatron(matricula, idPatron);
 
         if (vinculadoConExito) {
             return new ResponseEntity<>("Patrón vinculado correctamente a la embarcación", HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Error vinculando patrón a la embarcación", HttpStatus.BAD_REQUEST);
         }
+
+        return new ResponseEntity<>("Error vinculando patrón a la embarcación", HttpStatus.BAD_REQUEST);
     }
 
     /**
@@ -161,7 +127,6 @@ public class BoatRestController {
      */
     @PatchMapping("/{matricula}/unassign-patron")
     public ResponseEntity<String> desasignarPatronDeEmbarcacion(@PathVariable String matricula) {
-
 
         Embarcacion embarcacionExistente = embarcacionRepository.buscarPorMatricula(matricula);
         if (embarcacionExistente == null) {
@@ -172,9 +137,9 @@ public class BoatRestController {
 
         if (desvinculadoConExito) {
             return new ResponseEntity<>("Patrón desvinculado correctamente de la embarcación", HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Error desvinculando patrón de la embarcación", HttpStatus.BAD_REQUEST);
         }
+
+        return new ResponseEntity<>("Error desvinculando patrón de la embarcación", HttpStatus.BAD_REQUEST);
     }
 
     /**
@@ -183,7 +148,6 @@ public class BoatRestController {
      */
     @DeleteMapping("/{matricula}")
     public ResponseEntity<Void> eliminarEmbarcacion(@PathVariable String matricula) {
-
 
         Embarcacion embarcacionExistente = embarcacionRepository.buscarPorMatricula(matricula);
         if (embarcacionExistente == null) {
@@ -194,9 +158,75 @@ public class BoatRestController {
 
         if (eliminadoConExito) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            // Error al eliminar (probablemente tiene alquileres/reservas)
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
+
+        // Error al eliminar (probablemente tiene alquileres/reservas)
+        return new ResponseEntity<>(HttpStatus.CONFLICT);
+    }
+
+    // ==================== Métodos auxiliares ====================
+
+    private ResponseEntity<List<Embarcacion>> procesarObtenerPorTipo(String tipo) {
+        TipoEmbarcacion tipoEnum = TipoEmbarcacion.valueOf(tipo.toUpperCase());
+        List<Embarcacion> embarcaciones = embarcacionRepository.buscarPorTipo(tipoEnum);
+        return new ResponseEntity<>(embarcaciones, HttpStatus.OK);
+    }
+
+    private ResponseEntity<String> validarDatosEmbarcacion(Embarcacion embarcacion) {
+        if (embarcacion.getNumeroPlazas() <= 0) {
+            return new ResponseEntity<>("El número de plazas debe ser un número positivo", HttpStatus.BAD_REQUEST);
+        }
+
+        if (embarcacion.getEsloraEnMetros() <= 0) {
+            return new ResponseEntity<>("La eslora en metros debe ser un número positivo", HttpStatus.BAD_REQUEST);
+        }
+
+        return null;
+    }
+
+    private void aplicarCamposActualizacionEmbarcacion(Embarcacion actual, Embarcacion actualizaciones) {
+        // La matrícula no se puede actualizar
+        aplicarNombreEmbarcacion(actual, actualizaciones);
+        aplicarTipoEmbarcacion(actual, actualizaciones);
+        aplicarNumeroPlazasEmbarcacion(actual, actualizaciones);
+        aplicarEsloraEmbarcacion(actual, actualizaciones);
+        // idPatronAsignado se gestiona con los endpoints assign/unassign-patron
+    }
+
+    private void aplicarNombreEmbarcacion(Embarcacion actual, Embarcacion actualizaciones) {
+        if (actualizaciones.getNombre() != null && !actualizaciones.getNombre().isEmpty()) {
+            actual.setNombre(actualizaciones.getNombre());
+        }
+    }
+
+    private void aplicarTipoEmbarcacion(Embarcacion actual, Embarcacion actualizaciones) {
+        if (actualizaciones.getTipo() != null) {
+            actual.setTipo(actualizaciones.getTipo());
+        }
+    }
+
+    private void aplicarNumeroPlazasEmbarcacion(Embarcacion actual, Embarcacion actualizaciones) {
+        if (actualizaciones.getNumeroPlazas() > 0) {
+            actual.setNumeroPlazas(actualizaciones.getNumeroPlazas());
+        }
+    }
+
+    private void aplicarEsloraEmbarcacion(Embarcacion actual, Embarcacion actualizaciones) {
+        if (actualizaciones.getEsloraEnMetros() > 0) {
+            actual.setEsloraEnMetros(actualizaciones.getEsloraEnMetros());
+        }
+    }
+
+    private ResponseEntity<String> validarEmbarcacionYPatronExisten(String matricula, Integer idPatron) {
+        Embarcacion embarcacionExistente = embarcacionRepository.buscarPorMatricula(matricula);
+        if (embarcacionExistente == null) {
+            return new ResponseEntity<>("Embarcación no encontrada", HttpStatus.NOT_FOUND);
+        }
+
+        if (!patronRepository.existePatron(idPatron)) {
+            return new ResponseEntity<>("Patrón no encontrado", HttpStatus.BAD_REQUEST);
+        }
+
+        return null;
     }
 }
