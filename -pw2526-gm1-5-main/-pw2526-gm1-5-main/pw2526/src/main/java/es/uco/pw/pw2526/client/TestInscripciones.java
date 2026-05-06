@@ -15,13 +15,12 @@ public class TestInscripciones {
     private static final String BASE_URL = "http://localhost:8080";
     private static final RestTemplate restTemplate;
 
-
     private static final String DNI_TITULAR_I = "99999999I";
     private static final String DNI_MIEMBRO_VINC = "88888888M";
     private static int ID_TITULAR_I = -1;
     private static int ID_MIEMBRO_VINC = -1;
     private static Integer ID_INSCRIPCION = -1;
-    
+
     static {
         HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
                 HttpClients.createDefault());
@@ -33,56 +32,49 @@ public class TestInscripciones {
     public static void main(String[] args) {
         System.out.println("=== INICIANDO PRUEBAS DE INSCRIPCIONES (/api/inscripciones) ===\n");
 
-
         setupSocios();
-
-
         testPostInscripcion();
-
-
         testGetInscripciones();
-
 
         if (ID_INSCRIPCION > 0) {
             testPutConvertirFamiliar();
             testPatchVincularDesvincular();
         }
 
-
         testDeleteInscripcion();
-
-
         limpiezaFinal();
-        
+
         System.out.println("\n=== FIN DE PRUEBAS DE INSCRIPCIONES ===\n");
     }
 
-
+    // ==================== Setup ====================
 
     private static void setupSocios() {
         System.out.println("--- 1. SETUP: Creando Socios Requeridos ---");
-        
+        crearSocioTitular();
+        crearSocioMiembro();
+    }
 
+    private static void crearSocioTitular() {
         try {
             String titularJson = String.format("""
                     { "dni": "%s", "nombre": "Inscripcion", "apellidos": "Titular", "fechaNacimiento": "1975-01-01", "direccion": "C/ I-Titular" }
                     """, DNI_TITULAR_I);
 
-            Map<String, Object> response = restTemplate.postForObject(BASE_URL + "/api/socios", new HttpEntity<>(titularJson, getJsonHeaders()), Map.class);
-            
+            restTemplate.postForObject(BASE_URL + "/api/socios", new HttpEntity<>(titularJson, getJsonHeaders()), Map.class);
             System.out.println("Socio Titular (" + DNI_TITULAR_I + ") creado.");
-            
 
             ID_TITULAR_I = (Integer) restTemplate.exchange(BASE_URL + "/api/socios/" + DNI_TITULAR_I, HttpMethod.GET, null, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody().get("id");
-            
+
         } catch (HttpClientErrorException.Conflict e) {
-             ID_TITULAR_I = buscarIdSocio(DNI_TITULAR_I);
-             System.out.println("Socio Titular ya existe (ID: " + ID_TITULAR_I + ").");
+            ID_TITULAR_I = buscarIdSocio(DNI_TITULAR_I);
+            System.out.println("Socio Titular ya existe (ID: " + ID_TITULAR_I + ").");
         } catch (Exception e) {
             System.out.println("ERROR SETUP Titular: " + e.getMessage());
         }
+    }
 
-
+    private static void crearSocioMiembro() {
         try {
             String miembroJson = String.format("""
                     { "dni": "%s", "nombre": "Inscripcion", "apellidos": "Miembro", "fechaNacimiento": "1990-01-01", "direccion": "C/ I-Miembro" }
@@ -92,28 +84,27 @@ public class TestInscripciones {
             ID_MIEMBRO_VINC = (Integer) restTemplate.exchange(BASE_URL + "/api/socios/" + DNI_MIEMBRO_VINC, HttpMethod.GET, null, new ParameterizedTypeReference<Map<String, Object>>() {}).getBody().get("id");
 
         } catch (HttpClientErrorException.Conflict e) {
-             ID_MIEMBRO_VINC = buscarIdSocio(DNI_MIEMBRO_VINC);
-             System.out.println("Socio Miembro ya existe (ID: " + ID_MIEMBRO_VINC + ").");
+            ID_MIEMBRO_VINC = buscarIdSocio(DNI_MIEMBRO_VINC);
+            System.out.println("Socio Miembro ya existe (ID: " + ID_MIEMBRO_VINC + ").");
         } catch (Exception e) {
             System.out.println("ERROR SETUP Miembro: " + e.getMessage());
         }
     }
 
-
+    // ==================== Tests ====================
 
     private static void testPostInscripcion() {
         if (ID_TITULAR_I < 0) return;
         System.out.println("\n--- 2. POST /api/inscripciones (Creación Inicial) ---");
-
 
         try {
             String inscripcionJson = String.format("""
                     { "idSocioTitular": %d, "tipoInscripcion": "INDIVIDUAL", "cuotaAnual": 300.0 }
                     """, ID_TITULAR_I);
 
-            ResponseEntity<Map> response = restTemplate.postForEntity(BASE_URL + "/api/inscripciones", 
+            ResponseEntity<Map> response = restTemplate.postForEntity(BASE_URL + "/api/inscripciones",
                 new HttpEntity<>(inscripcionJson, getJsonHeaders()), Map.class);
-            
+
             ID_INSCRIPCION = (Integer) response.getBody().get("id");
             System.out.println("Status: " + response.getStatusCode() + " (Inscripción ID: " + ID_INSCRIPCION + " creada).");
         } catch (Exception e) {
@@ -121,36 +112,39 @@ public class TestInscripciones {
         }
     }
 
-
-
     private static void testGetInscripciones() {
         System.out.println("\n--- 3. GET /api/inscripciones (Pruebas de Lectura) ---");
+        testGetInscripcionesPorTipo();
+        testGetTodasInscripciones();
+        testGetInscripcionPorDni();
+    }
 
-
+    private static void testGetInscripcionesPorTipo() {
         try {
             ResponseEntity<List<Map<String, Object>>> inscripciones = restTemplate.exchange(
-                    BASE_URL + "/api/inscripciones?tipo=individual", HttpMethod.GET, null, 
+                    BASE_URL + "/api/inscripciones?tipo=individual", HttpMethod.GET, null,
                     new ParameterizedTypeReference<List<Map<String, Object>>>() {});
             System.out.println("GET ?tipo=individual: Status " + inscripciones.getStatusCode() + ". Total: " + inscripciones.getBody().size());
         } catch (Exception e) {
             System.out.println("Error GET ?tipo=individual: " + e.getMessage());
         }
-        
+    }
 
+    private static void testGetTodasInscripciones() {
         try {
             ResponseEntity<List<Map<String, Object>>> inscripciones = restTemplate.exchange(
-                    BASE_URL + "/api/inscripciones", HttpMethod.GET, null, 
+                    BASE_URL + "/api/inscripciones", HttpMethod.GET, null,
                     new ParameterizedTypeReference<List<Map<String, Object>>>() {});
             System.out.println("GET /api/inscripciones: Status " + inscripciones.getStatusCode() + ". Total: " + inscripciones.getBody().size());
         } catch (Exception e) {
             System.out.println("Error GET /api/inscripciones: " + e.getMessage());
         }
+    }
 
-
-
+    private static void testGetInscripcionPorDni() {
         try {
             ResponseEntity<Map<String, Object>> inscripcion = restTemplate.exchange(
-                    BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I, HttpMethod.GET, null, 
+                    BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I, HttpMethod.GET, null,
                     new ParameterizedTypeReference<Map<String, Object>>() {});
             System.out.println("GET /api/inscripciones/{dniTitular}: Status " + inscripcion.getStatusCode() + " (Inscripción ID: " + inscripcion.getBody().get("id") + ").");
         } catch (Exception e) {
@@ -158,12 +152,9 @@ public class TestInscripciones {
         }
     }
 
-
-
     private static void testPutConvertirFamiliar() {
         if (ID_TITULAR_I < 0) return;
         System.out.println("\n--- 4. PUT /api/inscripciones/{dniTitular}/tipo (Convertir a Familiar) ---");
-        
 
         String putJson = """
                 { "tipoInscripcion": "FAMILIAR", "cuotaAnual": 550.0 }
@@ -171,9 +162,9 @@ public class TestInscripciones {
 
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I + "/tipo", HttpMethod.PUT, 
+                    BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I + "/tipo", HttpMethod.PUT,
                     new HttpEntity<>(putJson, getJsonHeaders()), String.class);
-            
+
             System.out.println("PUT /tipo: Status " + response.getStatusCode() + " (Convertido a Familiar).");
         } catch (Exception e) {
             System.out.println("Error PUT /tipo: " + e.getMessage());
@@ -182,42 +173,41 @@ public class TestInscripciones {
 
     private static void testPatchVincularDesvincular() {
         if (ID_TITULAR_I < 0 || ID_MIEMBRO_VINC < 0) return;
-
-
         System.out.println("\n--- 5. PATCH Vincular y Desvincular Miembros ---");
+        testPatchVincularMiembro();
+        testPatchDesvincularMiembro();
+    }
+
+    private static void testPatchVincularMiembro() {
         String patchVincularJson = String.format("""
                 { "dni": "%s", "tipoMiembro": "CONYUGE" }
                 """, DNI_MIEMBRO_VINC);
 
         try {
             ResponseEntity<String> response = restTemplate.exchange(
-                    BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I + "/miembros", HttpMethod.PATCH, 
+                    BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I + "/miembros", HttpMethod.PATCH,
                     new HttpEntity<>(patchVincularJson, getJsonHeaders()), String.class);
-            
+
             System.out.println("PATCH Vincular Miembro: Status " + response.getStatusCode() + " (Vínculo exitoso).");
         } catch (Exception e) {
             System.out.println("Error PATCH Vincular: " + e.getMessage());
-            return; // Si falla la vinculación, no podemos desvincular
         }
+    }
 
-
+    private static void testPatchDesvincularMiembro() {
         try {
-
             ResponseEntity<Void> response = restTemplate.exchange(
-                    BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I + "/miembros/" + DNI_MIEMBRO_VINC, HttpMethod.PATCH, 
+                    BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I + "/miembros/" + DNI_MIEMBRO_VINC, HttpMethod.PATCH,
                     null, Void.class);
-            
+
             System.out.println("PATCH Desvincular Miembro: Status " + response.getStatusCode() + " (Desvínculo exitoso).");
         } catch (Exception e) {
             System.out.println("Error PATCH Desvincular: " + e.getMessage());
         }
     }
 
-
-
     private static void testDeleteInscripcion() {
         System.out.println("\n--- 6. DELETE /api/inscripciones/{dniTitular} (Cancelar) ---");
-
 
         try {
             restTemplate.exchange(BASE_URL + "/api/inscripciones/" + DNI_TITULAR_I, HttpMethod.DELETE, null, Void.class);
@@ -226,29 +216,26 @@ public class TestInscripciones {
             System.out.println("Error DELETE Inscripción: " + e.getMessage());
         }
     }
-    
 
-    
+    // ==================== Limpieza ====================
+
     private static void limpiezaFinal() {
         System.out.println("\n--- 7. LIMPIEZA: Eliminando Socios de Prueba ---");
-        
+        eliminarSocioDePrueba(DNI_TITULAR_I, "Titular");
+        eliminarSocioDePrueba(DNI_MIEMBRO_VINC, "Miembro");
+    }
 
+    private static void eliminarSocioDePrueba(String dni, String tipo) {
         try {
-            restTemplate.exchange(BASE_URL + "/api/socios/" + DNI_TITULAR_I, HttpMethod.DELETE, null, Void.class);
-            System.out.println("Socio Titular (" + DNI_TITULAR_I + ") eliminado.");
+            restTemplate.exchange(BASE_URL + "/api/socios/" + dni, HttpMethod.DELETE, null, Void.class);
+            System.out.println("Socio " + tipo + " (" + dni + ") eliminado.");
         } catch (Exception e) {
-            System.out.println("Error al eliminar Socio Titular: " + e.getMessage());
-        }
-        
-
-        try {
-            restTemplate.exchange(BASE_URL + "/api/socios/" + DNI_MIEMBRO_VINC, HttpMethod.DELETE, null, Void.class);
-            System.out.println("Socio Miembro (" + DNI_MIEMBRO_VINC + ") eliminado.");
-        } catch (Exception e) {
-            System.out.println("Error al eliminar Socio Miembro: " + e.getMessage());
+            System.out.println("Error al eliminar Socio " + tipo + ": " + e.getMessage());
         }
     }
-    
+
+    // ==================== Utilidades ====================
+
     private static int buscarIdSocio(String dni) {
         try {
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(

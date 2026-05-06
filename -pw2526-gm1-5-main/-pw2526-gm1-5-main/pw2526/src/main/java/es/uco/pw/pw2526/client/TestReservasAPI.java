@@ -42,7 +42,15 @@ public class TestReservasAPI {
 
         verificarEstadoBD();
 
-        // ==================== PRUEBAS GET ====================
+        ejecutarPruebasGet();
+        ejecutarPruebasPost();
+        ejecutarPruebasDelete();
+        imprimirResultadosFinales();
+    }
+
+    // ==================== Orquestación de pruebas ====================
+
+    private static void ejecutarPruebasGet() {
         System.out.println("\n📋 ==================== PRUEBAS GET ====================\n");
         testGetAllReservas();
         testGetReservasFuturas();
@@ -54,16 +62,13 @@ public class TestReservasAPI {
         testGetReservasPorEmbarcacion();
         testGetReservasPorEmbarcacionInexistente();
         testGetReservasPorFecha();
+    }
 
-        // ==================== PRUEBAS POST ====================
+    private static void ejecutarPruebasPost() {
         System.out.println("\n📝 ==================== PRUEBAS POST ====================\n");
-
-        // Casos exitosos
         testPostReservaExitoso();
         testPostReservaConPatron();
         testPostReservaDiferenteEmbarcacion();
-
-        // Casos de error
         testPostReservaSinMatricula();
         testPostReservaSinSocio();
         testPostReservaFechaPasada();
@@ -71,14 +76,15 @@ public class TestReservasAPI {
         testPostReservaSocioNoMayorEdad();
         testPostReservaSinTituloPatron();
         testPostReservaJSONMalFormado();
+    }
 
-        // ==================== PRUEBAS DELETE ====================
+    private static void ejecutarPruebasDelete() {
         System.out.println("\n🗑️  ==================== PRUEBAS DELETE ====================\n");
-
         testDeleteReservaInexistente();
         testDeleteReservaPasada();
+    }
 
-        // ==================== RESULTADOS FINALES ====================
+    private static void imprimirResultadosFinales() {
         System.out.println("\n📊 ==================== RESULTADOS ====================\n");
         System.out.println("✅ Tests exitosos: " + testsExitosos);
         System.out.println("❌ Tests fallidos: " + testsFallidos);
@@ -91,7 +97,7 @@ public class TestReservasAPI {
         System.out.println("\n✅ TESTS COMPLETADOS");
     }
 
-
+    // ==================== Utilidades ====================
 
     private static void printTestHeader(String nombre) {
         System.out.println("\n" + (testCounter++) + ". " + nombre);
@@ -122,7 +128,13 @@ public class TestReservasAPI {
                 .format(DateTimeFormatter.ISO_DATE);
     }
 
+    private static HttpHeaders getJsonHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
 
+    // ==================== Pruebas GET ====================
 
     private static void testGetAllReservas() {
         printTestHeader("GET /api/reservas - Obtener todas las reservas");
@@ -194,11 +206,11 @@ public class TestReservasAPI {
             if (response.getStatusCode() == HttpStatus.OK) {
                 System.out.println("✅ Status: " + response.getStatusCode());
                 System.out.println("✅ Reserva encontrada");
-                registroExitoso();
             } else if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
                 System.out.println("ℹ️  Reserva con ID 1 no encontrada");
-                registroExitoso();
             }
+
+            registroExitoso();
         } catch (HttpClientErrorException.NotFound e) {
             System.out.println("ℹ️  Reserva no encontrada (caso válido)");
             registroExitoso();
@@ -329,7 +341,7 @@ public class TestReservasAPI {
         }
     }
 
-
+    // ==================== Pruebas POST ====================
 
     private static void testPostReservaExitoso() {
         printTestHeader("POST /api/reservas - Caso exitoso básico");
@@ -348,7 +360,7 @@ public class TestReservasAPI {
                 }
                 """, descripcion, fechaUnica);
 
-        if (ejecutarPostReserva(reservaJson, true)) {
+        if (ejecutarPostReservaEsperandoExito(reservaJson)) {
             registroExitoso();
         } else {
             registroFallido();
@@ -371,7 +383,7 @@ public class TestReservasAPI {
                 }
                 """, System.currentTimeMillis(), fechaUnica);
 
-        if (ejecutarPostReserva(reservaJson, true)) {
+        if (ejecutarPostReservaEsperandoExito(reservaJson)) {
             registroExitoso();
         } else {
             registroFallido();
@@ -394,7 +406,7 @@ public class TestReservasAPI {
                 }
                 """, System.currentTimeMillis(), fechaUnica);
 
-        if (ejecutarPostReserva(reservaJson, true)) {
+        if (ejecutarPostReservaEsperandoExito(reservaJson)) {
             registroExitoso();
         } else {
             registroFallido();
@@ -414,7 +426,7 @@ public class TestReservasAPI {
                 }
                 """;
 
-        if (ejecutarPostReserva(reservaJson, false)) {
+        if (ejecutarPostReservaEsperandoError(reservaJson)) {
             registroExitoso();
         } else {
             registroFallido();
@@ -434,7 +446,7 @@ public class TestReservasAPI {
                 }
                 """;
 
-        if (ejecutarPostReserva(reservaJson, false)) {
+        if (ejecutarPostReservaEsperandoError(reservaJson)) {
             registroExitoso();
         } else {
             registroFallido();
@@ -455,7 +467,7 @@ public class TestReservasAPI {
                 }
                 """;
 
-        if (ejecutarPostReserva(reservaJson, false)) {
+        if (ejecutarPostReservaEsperandoError(reservaJson)) {
             registroExitoso();
         } else {
             registroFallido();
@@ -478,7 +490,7 @@ public class TestReservasAPI {
                 }
                 """, fechaUnica);
 
-        if (ejecutarPostReserva(reservaJson, false)) {
+        if (ejecutarPostReservaEsperandoError(reservaJson)) {
             registroExitoso();
         } else {
             registroFallido();
@@ -501,7 +513,7 @@ public class TestReservasAPI {
                 }
                 """, fechaUnica);
 
-        if (ejecutarPostReserva(reservaJson, false)) {
+        if (ejecutarPostReservaEsperandoError(reservaJson)) {
             registroExitoso();
         } else {
             registroFallido();
@@ -524,7 +536,7 @@ public class TestReservasAPI {
                 }
                 """, fechaUnica);
 
-        if (ejecutarPostReserva(reservaJson, false)) {
+        if (ejecutarPostReservaEsperandoError(reservaJson)) {
             registroExitoso();
         } else {
             registroFallido();
@@ -544,14 +556,14 @@ public class TestReservasAPI {
                     "fechaActividad": "2024-12-15"
                 """;
 
-        if (ejecutarPostReserva(reservaJson, false)) {
+        if (ejecutarPostReservaEsperandoError(reservaJson)) {
             registroExitoso();
         } else {
             registroFallido();
         }
     }
 
-
+    // ==================== Pruebas DELETE ====================
 
     private static void testDeleteReservaInexistente() {
         printTestHeader("DELETE /api/reservas/99999 - Reserva inexistente");
@@ -589,17 +601,17 @@ public class TestReservasAPI {
 
             if (response.getStatusCode() == HttpStatus.BAD_REQUEST) {
                 System.out.println("✅ BAD_REQUEST correcto para reserva pasada");
-                registroExitoso();
             } else if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
                 System.out.println("ℹ️  Reserva no encontrada");
-                registroExitoso();
             } else if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
                 System.out.println("ℹ️  Reserva eliminada (era futura)");
-                registroExitoso();
             } else {
                 System.out.println("⚠️  Status inesperado: " + response.getStatusCode());
                 registroFallido();
+                return;
             }
+
+            registroExitoso();
         } catch (HttpClientErrorException.BadRequest e) {
             System.out.println("✅ Error BAD_REQUEST capturado correctamente");
             registroExitoso();
@@ -612,12 +624,10 @@ public class TestReservasAPI {
         }
     }
 
+    // ==================== Métodos auxiliares de POST ====================
 
-
-    private static boolean ejecutarPostReserva(String json, boolean esperaExito) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(json, headers);
+    private static boolean ejecutarPostReservaEsperandoExito(String json) {
+        HttpEntity<String> request = new HttpEntity<>(json, getJsonHeaders());
 
         try {
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
@@ -627,28 +637,48 @@ public class TestReservasAPI {
                     new ParameterizedTypeReference<Map<String, Object>>() {
                     });
 
-            if (esperaExito && response.getStatusCode() == HttpStatus.CREATED) {
+            if (response.getStatusCode() == HttpStatus.CREATED) {
                 System.out.println("✅ POST exitoso - Status: " + response.getStatusCode());
                 return true;
-            } else if (!esperaExito && response.getStatusCode().is4xxClientError()) {
+            }
+
+            System.out.println("⚠️  Status inesperado: " + response.getStatusCode() + " (esperaba: CREATED)");
+            return false;
+        } catch (HttpClientErrorException e) {
+            System.out.println("❌ Error inesperado: " + e.getStatusCode());
+            return false;
+        } catch (Exception e) {
+            System.out.println("❌ Excepción: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static boolean ejecutarPostReservaEsperandoError(String json) {
+        HttpEntity<String> request = new HttpEntity<>(json, getJsonHeaders());
+
+        try {
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    BASE_URL + "/api/reservas",
+                    HttpMethod.POST,
+                    request,
+                    new ParameterizedTypeReference<Map<String, Object>>() {
+                    });
+
+            if (response.getStatusCode().is4xxClientError()) {
                 System.out.println("✅ Error esperado - Status: " + response.getStatusCode());
                 return true;
-            } else {
-                System.out.println("⚠️  Status inesperado: " + response.getStatusCode() +
-                        " (esperaba: " + (esperaExito ? "CREATED" : "4xx") + ")");
-                return false;
             }
+
+            System.out.println("⚠️  Status inesperado: " + response.getStatusCode() + " (esperaba: 4xx)");
+            return false;
         } catch (HttpClientErrorException e) {
-            if (!esperaExito && e.getStatusCode().is4xxClientError()) {
+            if (e.getStatusCode().is4xxClientError()) {
                 System.out.println("✅ Error " + e.getStatusCode() + " capturado correctamente");
                 return true;
-            } else if (esperaExito) {
-                System.out.println("❌ Error inesperado: " + e.getStatusCode());
-                return false;
-            } else {
-                System.out.println("⚠️  Error diferente: " + e.getStatusCode());
-                return false;
             }
+
+            System.out.println("⚠️  Error diferente: " + e.getStatusCode());
+            return false;
         } catch (Exception e) {
             System.out.println("❌ Excepción: " + e.getMessage());
             return false;
@@ -666,19 +696,24 @@ public class TestReservasAPI {
                     });
 
             System.out.println("📊 Total reservas: " + response.getBody().size());
-
-            if (!response.getBody().isEmpty()) {
-                System.out.println("📋 Muestra de reservas:");
-                for (int i = 0; i < Math.min(response.getBody().size(), 3); i++) {
-                    Map<String, Object> reserva = response.getBody().get(i);
-                    System.out.println("   - ID: " + reserva.get("idReserva") +
-                            ", Fecha: " + reserva.get("fechaActividad") +
-                            ", Embarcación: " + reserva.get("matriculaEmbarcacion"));
-                }
-            }
+            imprimirMuestraReservas(response.getBody());
         } catch (Exception e) {
             System.out.println("⚠️  No se pudo verificar estado: " + e.getMessage());
         }
         System.out.println();
+    }
+
+    private static void imprimirMuestraReservas(List<Map<String, Object>> reservas) {
+        if (reservas.isEmpty()) {
+            return;
+        }
+
+        System.out.println("📋 Muestra de reservas:");
+        for (int i = 0; i < Math.min(reservas.size(), 3); i++) {
+            Map<String, Object> reserva = reservas.get(i);
+            System.out.println("   - ID: " + reserva.get("idReserva") +
+                    ", Fecha: " + reserva.get("fechaActividad") +
+                    ", Embarcación: " + reserva.get("matriculaEmbarcacion"));
+        }
     }
 }

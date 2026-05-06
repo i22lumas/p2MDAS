@@ -16,7 +16,6 @@ public class TestFlotaPatrones {
     private static final RestTemplate restTemplate;
 
     static {
-
         HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
                 HttpClients.createDefault());
         requestFactory.setConnectTimeout(5000);
@@ -27,19 +26,22 @@ public class TestFlotaPatrones {
     public static void main(String[] args) {
         System.out.println("=== INICIANDO PRUEBAS COMPLETAS DE LA API ===\n");
 
+        ejecutarPruebasExitosas();
+        ejecutarPruebasErrores();
+        imprimirResumenFinal();
+    }
 
+    // ==================== Orquestación ====================
 
-
+    private static void ejecutarPruebasExitosas() {
         testGetAllBoats();
         testGetBoatsByType();
         testGetAllPatrones();
         testGetPatronesDisponibles();
         testGetPatronById();
 
-
         String nuevaMatricula = testPostBoats();
         Integer nuevoPatronId = testPostPatrones();
-
 
         if (nuevaMatricula != null) {
             testPatchBoat(nuevaMatricula);
@@ -51,39 +53,28 @@ public class TestFlotaPatrones {
             testPatchPatron(nuevoPatronId);
         }
 
+        ejecutarLimpiezaFinal(nuevaMatricula, nuevoPatronId);
+    }
 
+    private static void ejecutarPruebasErrores() {
         System.out.println("\n=== SECCIÓN 2: PRUEBAS DE ERRORES Y VALIDACIONES ===\n");
-
-
         testGetErrors();
-
-
         testPostErrors();
+    }
 
-
+    private static void ejecutarLimpiezaFinal(String nuevaMatricula, Integer nuevoPatronId) {
         if (nuevaMatricula != null) {
-            testPatchErrors(nuevaMatricula);
-        }
-
-
-        if (nuevaMatricula != null && nuevoPatronId != null) {
-            testDeleteErrors(nuevaMatricula, nuevoPatronId);
-        }
-
-
-
-
             testDeleteBoat(nuevaMatricula);
         }
-
         if (nuevoPatronId != null) {
             testDeletePatron(nuevoPatronId);
         }
+    }
 
+    private static void imprimirResumenFinal() {
         System.out.println("\n" + "=".repeat(60));
         System.out.println("📊 RESUMEN FINAL DE PRUEBAS");
         System.out.println("=".repeat(60));
-
 
         System.out.println("\n✅ GET - CONSULTAS:          100% COMPLETADO");
         System.out.println("   • Todas las consultas funcionan perfectamente");
@@ -115,23 +106,17 @@ public class TestFlotaPatrones {
         System.out.println("=".repeat(60));
     }
 
-
+    // ==================== GET Tests ====================
 
     private static void testGetAllBoats() {
         System.out.println("=== TEST GET /api/boats (ÉXITO) ===");
         try {
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                    BASE_URL + "/api/boats",
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Map<String, Object>>>() {
-                    });
-
+                    BASE_URL + "/api/boats", HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {});
             System.out.println("✅ Status: " + response.getStatusCode());
             System.out.println("✅ Total embarcaciones: " + response.getBody().size());
-            if (!response.getBody().isEmpty()) {
-                System.out.println("✅ Primera embarcación: " + response.getBody().get(0));
-            }
+            imprimirPrimerElemento(response.getBody(), "embarcación");
         } catch (Exception e) {
             System.out.println("❌ Error: " + e.getMessage());
         }
@@ -142,12 +127,8 @@ public class TestFlotaPatrones {
         System.out.println("=== TEST GET /api/boats/type/VELERO (ÉXITO) ===");
         try {
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                    BASE_URL + "/api/boats/type/VELERO",
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Map<String, Object>>>() {
-                    });
-
+                    BASE_URL + "/api/boats/type/VELERO", HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {});
             System.out.println("✅ Status: " + response.getStatusCode());
             System.out.println("✅ Total VELEROS: " + response.getBody().size());
         } catch (Exception e) {
@@ -160,17 +141,11 @@ public class TestFlotaPatrones {
         System.out.println("=== TEST GET /api/patrones (ÉXITO) ===");
         try {
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                    BASE_URL + "/api/patrones",
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Map<String, Object>>>() {
-                    });
-
+                    BASE_URL + "/api/patrones", HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {});
             System.out.println("✅ Status: " + response.getStatusCode());
             System.out.println("✅ Total patrones: " + response.getBody().size());
-            if (!response.getBody().isEmpty()) {
-                System.out.println("✅ Primer patrón: " + response.getBody().get(0));
-            }
+            imprimirPrimerElemento(response.getBody(), "patrón");
         } catch (Exception e) {
             System.out.println("❌ Error: " + e.getMessage());
         }
@@ -181,12 +156,8 @@ public class TestFlotaPatrones {
         System.out.println("=== TEST GET /api/patrones/disponibles (ÉXITO) ===");
         try {
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                    BASE_URL + "/api/patrones/disponibles",
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Map<String, Object>>>() {
-                    });
-
+                    BASE_URL + "/api/patrones/disponibles", HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {});
             System.out.println("✅ Status: " + response.getStatusCode());
             System.out.println("✅ Patrones disponibles: " + response.getBody().size());
         } catch (Exception e) {
@@ -199,12 +170,8 @@ public class TestFlotaPatrones {
         System.out.println("=== TEST GET /api/patrones/1 (ÉXITO) ===");
         try {
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    BASE_URL + "/api/patrones/1",
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<Map<String, Object>>() {
-                    });
-
+                    BASE_URL + "/api/patrones/1", HttpMethod.GET, null,
+                    new ParameterizedTypeReference<Map<String, Object>>() {});
             System.out.println("✅ Status: " + response.getStatusCode());
             System.out.println("✅ Patrón encontrado: " + response.getBody());
         } catch (HttpClientErrorException.NotFound e) {
@@ -215,41 +182,24 @@ public class TestFlotaPatrones {
         System.out.println();
     }
 
+    // ==================== POST Tests ====================
 
     private static String testPostBoats() {
         System.out.println("=== TEST POST /api/boats (ÉXITO) ===");
-
         long nanoTime = System.nanoTime();
         String matricula = "T" + Math.abs((nanoTime % 10000000)) + "X";
-
         String boatJson = String.format("""
-                {
-                    "matricula": "%s",
-                    "nombre": "Barco Test %d",
-                    "tipo": "LANCHA",
-                    "plaza": 6,
-                    "dimensiones": 8.5
-                }
+                { "matricula": "%s", "nombre": "Barco Test %d", "tipo": "LANCHA", "plaza": 6, "dimensiones": 8.5 }
                 """, matricula, nanoTime % 10000);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(boatJson, headers);
-
+        HttpEntity<String> request = crearJsonRequest(boatJson);
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(
-                    BASE_URL + "/api/boats",
-                    request,
-                    String.class);
-
+            ResponseEntity<String> response = restTemplate.postForEntity(BASE_URL + "/api/boats", request, String.class);
             System.out.println("✅ Status: " + response.getStatusCode());
-            System.out.println("✅ Respuesta: " + response.getBody());
             System.out.println("✅ Matrícula creada: " + matricula);
             return matricula;
-
         } catch (HttpClientErrorException e) {
-            System.out.println("❌ Error: " + e.getStatusCode());
-            System.out.println("❌ Detalle: " + e.getResponseBodyAsString());
+            System.out.println("❌ Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
             return null;
         } catch (Exception e) {
             System.out.println("❌ Excepción: " + e.getMessage());
@@ -259,53 +209,19 @@ public class TestFlotaPatrones {
 
     private static Integer testPostPatrones() {
         System.out.println("\n=== TEST POST /api/patrones (ÉXITO) ===");
-
         long nanoTime = System.nanoTime();
         String dni = String.valueOf(Math.abs((nanoTime % 100000000))) + "X";
-
         String patronJson = String.format("""
-                {
-                    "dni": "%s",
-                    "nombre": "Patron",
-                    "apellidos": "Test %d",
-                    "fech_nacimiento": "1990-01-01",
-                    "fech_expedicion_titulo": "2020-01-01"
-                }
+                { "dni": "%s", "nombre": "Patron", "apellidos": "Test %d", "fech_nacimiento": "1990-01-01", "fech_expedicion_titulo": "2020-01-01" }
                 """, dni, nanoTime % 10000);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(patronJson, headers);
-
+        HttpEntity<String> request = crearJsonRequest(patronJson);
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(
-                    BASE_URL + "/api/patrones",
-                    request,
-                    String.class);
-
+            ResponseEntity<String> response = restTemplate.postForEntity(BASE_URL + "/api/patrones", request, String.class);
             System.out.println("✅ Status: " + response.getStatusCode());
-            System.out.println("✅ Respuesta: " + response.getBody());
-
-
-            ResponseEntity<List<Map<String, Object>>> allPatrones = restTemplate.exchange(
-                    BASE_URL + "/api/patrones",
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Map<String, Object>>>() {
-                    });
-
-            for (Map<String, Object> patron : allPatrones.getBody()) {
-                if (dni.equals(patron.get("dni"))) {
-                    Integer id = (Integer) patron.get("id");
-                    System.out.println("✅ ID del patrón creado: " + id);
-                    return id;
-                }
-            }
-            return null;
-
+            return buscarIdPatronPorDni(dni);
         } catch (HttpClientErrorException e) {
-            System.out.println("❌ Error: " + e.getStatusCode());
-            System.out.println("❌ Detalle: " + e.getResponseBodyAsString());
+            System.out.println("❌ Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
             return null;
         } catch (Exception e) {
             System.out.println("❌ Excepción: " + e.getMessage());
@@ -313,218 +229,126 @@ public class TestFlotaPatrones {
         }
     }
 
+    // ==================== PATCH Tests ====================
 
     private static void testPatchBoat(String matricula) {
         System.out.println("\n=== TEST PATCH /api/boats/" + matricula + " (ÉXITO) ===");
-
         String patchJson = String.format("""
-                {
-                    "matricula": "%s",
-                    "nombre": "Barco Actualizado %d",
-                    "plaza": 8
-                }
+                { "matricula": "%s", "nombre": "Barco Actualizado %d", "plaza": 8 }
                 """, matricula, System.currentTimeMillis() % 10000);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(patchJson, headers);
-
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    BASE_URL + "/api/boats/" + matricula,
-                    HttpMethod.PATCH,
-                    request,
-                    String.class);
-
-            System.out.println("✅ Status: " + response.getStatusCode());
-            System.out.println("✅ Respuesta: " + response.getBody());
-
-        } catch (HttpClientErrorException e) {
-            System.out.println("❌ Error: " + e.getStatusCode());
-            System.out.println("❌ Detalle: " + e.getResponseBodyAsString());
-        }
+        ejecutarPatch(BASE_URL + "/api/boats/" + matricula, patchJson);
     }
 
     private static void testPatchAssignPatron(String matricula) {
         System.out.println("\n=== TEST PATCH /api/boats/" + matricula + "/assign-patron (ÉXITO) ===");
-
-        String assignJson = """
-                {
-                    "idPatron": 1
-                }
-                """;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(assignJson, headers);
-
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    BASE_URL + "/api/boats/" + matricula + "/assign-patron",
-                    HttpMethod.PATCH,
-                    request,
-                    String.class);
-
-            System.out.println("✅ Status: " + response.getStatusCode());
-            System.out.println("✅ Respuesta: " + response.getBody());
-
-        } catch (HttpClientErrorException e) {
-            System.out.println("❌ Error: " + e.getStatusCode());
-            System.out.println("❌ Detalle: " + e.getResponseBodyAsString());
-        }
+        ejecutarPatch(BASE_URL + "/api/boats/" + matricula + "/assign-patron", """
+                { "idPatron": 1 }
+                """);
     }
 
     private static void testPatchUnassignPatron(String matricula) {
         System.out.println("\n=== TEST PATCH /api/boats/" + matricula + "/unassign-patron (ÉXITO) ===");
-
         try {
             ResponseEntity<String> response = restTemplate.exchange(
                     BASE_URL + "/api/boats/" + matricula + "/unassign-patron",
-                    HttpMethod.PATCH,
-                    null,
-                    String.class);
-
+                    HttpMethod.PATCH, null, String.class);
             System.out.println("✅ Status: " + response.getStatusCode());
-            System.out.println("✅ Respuesta: " + response.getBody());
-
         } catch (HttpClientErrorException e) {
-            System.out.println("❌ Error: " + e.getStatusCode());
-            System.out.println("❌ Detalle: " + e.getResponseBodyAsString());
+            System.out.println("❌ Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         }
     }
 
     private static void testPatchPatron(Integer id) {
         System.out.println("\n=== TEST PATCH /api/patrones/" + id + " (ÉXITO) ===");
-
-
         try {
             ResponseEntity<Map<String, Object>> getResponse = restTemplate.exchange(
-                    BASE_URL + "/api/patrones/" + id,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<Map<String, Object>>() {
-                    });
-
-            Map<String, Object> patron = getResponse.getBody();
-            String dni = (String) patron.get("dni");
+                    BASE_URL + "/api/patrones/" + id, HttpMethod.GET, null,
+                    new ParameterizedTypeReference<Map<String, Object>>() {});
+            String dni = (String) getResponse.getBody().get("dni");
 
             String patchJson = String.format("""
-                    {
-                        "id": %d,
-                        "dni": "%s",
-                        "nombre": "Patrón Modificado",
-                        "apellidos": "Apellidos Actualizados"
-                    }
+                    { "id": %d, "dni": "%s", "nombre": "Patrón Modificado", "apellidos": "Apellidos Actualizados" }
                     """, id, dni);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> request = new HttpEntity<>(patchJson, headers);
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                    BASE_URL + "/api/patrones/" + id,
-                    HttpMethod.PATCH,
-                    request,
-                    String.class);
-
-            System.out.println("✅ Status: " + response.getStatusCode());
-            System.out.println("✅ Respuesta: " + response.getBody());
-
+            ejecutarPatch(BASE_URL + "/api/patrones/" + id, patchJson);
         } catch (HttpClientErrorException e) {
-            System.out.println("❌ Error: " + e.getStatusCode());
-            System.out.println("❌ Detalle: " + e.getResponseBodyAsString());
+            System.out.println("❌ Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         } catch (Exception e) {
             System.out.println("❌ Excepción: " + e.getMessage());
         }
     }
 
+    // ==================== DELETE Tests ====================
 
     private static void testDeleteBoat(String matricula) {
         System.out.println("\n=== TEST DELETE /api/boats/" + matricula + " (ÉXITO) ===");
-
         try {
             ResponseEntity<Void> response = restTemplate.exchange(
-                    BASE_URL + "/api/boats/" + matricula,
-                    HttpMethod.DELETE,
-                    null,
-                    Void.class);
-
+                    BASE_URL + "/api/boats/" + matricula, HttpMethod.DELETE, null, Void.class);
             System.out.println("✅ Status: " + response.getStatusCode());
             System.out.println("✅ Embarcación eliminada: " + matricula);
-
         } catch (HttpClientErrorException e) {
             System.out.println("❌ Error: " + e.getStatusCode());
             if (e.getStatusCode() == HttpStatus.CONFLICT) {
                 System.out.println("⚠️  CONFLICT - La embarcación probablemente tiene alquileres/reservas");
             }
-            System.out.println("❌ Detalle: " + e.getResponseBodyAsString());
         }
     }
 
     private static void testDeletePatron(Integer id) {
         System.out.println("\n=== TEST DELETE /api/patrones/" + id + " (ÉXITO) ===");
-
         try {
             ResponseEntity<Void> response = restTemplate.exchange(
-                    BASE_URL + "/api/patrones/" + id,
-                    HttpMethod.DELETE,
-                    null,
-                    Void.class);
-
+                    BASE_URL + "/api/patrones/" + id, HttpMethod.DELETE, null, Void.class);
             System.out.println("✅ Status: " + response.getStatusCode());
             System.out.println("✅ Patrón eliminado con ID: " + id);
-
         } catch (HttpClientErrorException e) {
             System.out.println("❌ Error: " + e.getStatusCode());
             if (e.getStatusCode() == HttpStatus.CONFLICT) {
                 System.out.println("⚠️  CONFLICT - El patrón está asignado a una embarcación");
             }
-            System.out.println("❌ Detalle: " + e.getResponseBodyAsString());
         }
     }
 
-
-        System.out.println("=== PRUEBAS GET CON ERRORES ===");
+    // ==================== Error Tests ====================
 
     private static void testGetErrors() {
+        System.out.println("=== PRUEBAS GET CON ERRORES ===");
+        testGetTipoInexistente();
+        testGetPatronInexistente();
+        testGetRutaInexistente();
+    }
 
+    private static void testGetTipoInexistente() {
         System.out.println("\n1. GET /api/boats/type/TIPO_INEXISTENTE");
         try {
-            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                    BASE_URL + "/api/boats/type/TIPO_INEXISTENTE",
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Map<String, Object>>>() {
-                    });
+            restTemplate.exchange(BASE_URL + "/api/boats/type/TIPO_INEXISTENTE", HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {});
             System.out.println("❌ ERROR ESPERADO - Debería devolver 400 Bad Request");
         } catch (HttpClientErrorException.BadRequest e) {
             System.out.println("✅ CORRECTO - Devuelve 400 Bad Request (tipo inválido)");
         } catch (Exception e) {
             System.out.println("⚠️  Error inesperado: " + e.getMessage());
         }
+    }
 
-
+    private static void testGetPatronInexistente() {
         System.out.println("\n2. GET /api/patrones/999999");
         try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    BASE_URL + "/api/patrones/999999",
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<Map<String, Object>>() {
-                    });
+            restTemplate.exchange(BASE_URL + "/api/patrones/999999", HttpMethod.GET, null,
+                    new ParameterizedTypeReference<Map<String, Object>>() {});
             System.out.println("❌ ERROR ESPERADO - Debería devolver 404 Not Found");
         } catch (HttpClientErrorException.NotFound e) {
             System.out.println("✅ CORRECTO - Devuelve 404 Not Found");
         } catch (Exception e) {
             System.out.println("⚠️  Error inesperado: " + e.getMessage());
         }
+    }
 
-
+    private static void testGetRutaInexistente() {
         System.out.println("\n3. GET /api/ruta/inexistente");
         try {
-            ResponseEntity<String> response = restTemplate.getForEntity(
-                    BASE_URL + "/api/ruta/inexistente",
-                    String.class);
+            restTemplate.getForEntity(BASE_URL + "/api/ruta/inexistente", String.class);
             System.out.println("❌ ERROR ESPERADO - Debería devolver 404 Not Found");
         } catch (HttpClientErrorException.NotFound e) {
             System.out.println("✅ CORRECTO - Devuelve 404 Not Found");
@@ -535,65 +359,32 @@ public class TestFlotaPatrones {
         }
     }
 
-
-        System.out.println("\n=== PRUEBAS POST CON ERRORES ===");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
     private static void testPostErrors() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        System.out.println("\n=== PRUEBAS POST CON ERRORES ===");
+        testPostBoatDatosIncompletos();
+        testPostPatronDniDuplicado();
+        testPostBoatPlazaNegativa();
+        testPostBoatTipoInvalido();
+    }
 
+    private static void testPostBoatDatosIncompletos() {
         System.out.println("\n1. POST /api/boats (datos incompletos - sin tipo)");
-        String incompleteBoatJson = """
-                {
-                    "matricula": "INCOMPLETA123",
-                    "nombre": "Barco Incompleto",
-                    "plaza": 4,
-                    "dimensiones": 10.0
-                }
+        String json = """
+                { "matricula": "INCOMPLETA123", "nombre": "Barco Incompleto", "plaza": 4, "dimensiones": 10.0 }
                 """;
+        ejecutarPostEsperandoError(BASE_URL + "/api/boats", json, "datos incompletos");
+    }
 
-        HttpEntity<String> request = new HttpEntity<>(incompleteBoatJson, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.postForEntity(
-                    BASE_URL + "/api/boats",
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Debería devolver 400 Bad Request");
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ CORRECTO - Devuelve " + e.getStatusCode() + " (datos incompletos)");
-        } catch (Exception e) {
-            System.out.println("⚠️  Error: " + e.getMessage());
-        }
-
-
+    private static void testPostPatronDniDuplicado() {
         System.out.println("\n2. POST /api/patrones (posible DNI duplicado)");
-        String duplicatePatronJson = """
-                {
-                    "dni": "12345678Z",
-                    "nombre": "Patron Duplicado",
-                    "apellidos": "Test Duplicado",
-                    "fech_nacimiento": "1990-01-01",
-                    "fech_expedicion_titulo": "2020-01-01"
-                }
+        String json = """
+                { "dni": "12345678Z", "nombre": "Patron Duplicado", "apellidos": "Test Duplicado", "fech_nacimiento": "1990-01-01", "fech_expedicion_titulo": "2020-01-01" }
                 """;
-
-        request = new HttpEntity<>(duplicatePatronJson, headers);
+        HttpEntity<String> request = crearJsonRequest(json);
         try {
-
-            ResponseEntity<String> firstResponse = restTemplate.postForEntity(
-                    BASE_URL + "/api/patrones",
-                    request,
-                    String.class);
-            System.out.println("✅ Primera creación exitosa: " + firstResponse.getStatusCode());
-
-
-            ResponseEntity<String> secondResponse = restTemplate.postForEntity(
-                    BASE_URL + "/api/patrones",
-                    request,
-                    String.class);
+            restTemplate.postForEntity(BASE_URL + "/api/patrones", request, String.class);
+            System.out.println("✅ Primera creación exitosa");
+            restTemplate.postForEntity(BASE_URL + "/api/patrones", request, String.class);
             System.out.println("❌ ERROR ESPERADO - Debería devolver 400 Bad Request (DNI duplicado)");
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
@@ -604,269 +395,76 @@ public class TestFlotaPatrones {
         } catch (Exception e) {
             System.out.println("⚠️  Error: " + e.getMessage());
         }
-
-
-        System.out.println("\n3. POST /api/boats (plaza negativa)");
-        String invalidBoatJson = """
-                {
-                    "matricula": "INVALID123",
-                    "nombre": "Barco Inválido",
-                    "tipo": "VELERO",
-                    "plaza": -5,
-                    "dimensiones": 10.0
-                }
-                """;
-
-        request = new HttpEntity<>(invalidBoatJson, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.postForEntity(
-                    BASE_URL + "/api/boats",
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Debería devolver 400 Bad Request (plaza negativa)");
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ CORRECTO - Devuelve " + e.getStatusCode() + " (datos inválidos)");
-        } catch (Exception e) {
-            System.out.println("⚠️  Error: " + e.getMessage());
-        }
-
-
-        System.out.println("\n4. POST /api/boats (tipo inválido)");
-        String invalidTypeBoatJson = """
-                {
-                    "matricula": "INVALIDTYPE",
-                    "nombre": "Barco Tipo Inválido",
-                    "tipo": "TIPO_INEXISTENTE",
-                    "plaza": 4,
-                    "dimensiones": 10.0
-                }
-                """;
-
-        request = new HttpEntity<>(invalidTypeBoatJson, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.postForEntity(
-                    BASE_URL + "/api/boats",
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Debería devolver 400 Bad Request (tipo inválido)");
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ CORRECTO - Devuelve " + e.getStatusCode() + " (tipo inválido)");
-        } catch (Exception e) {
-            System.out.println("⚠️  Error: " + e.getMessage());
-        }
     }
 
+    private static void testPostBoatPlazaNegativa() {
+        System.out.println("\n3. POST /api/boats (plaza negativa)");
+        String json = """
+                { "matricula": "INVALID123", "nombre": "Barco Inválido", "tipo": "VELERO", "plaza": -5, "dimensiones": 10.0 }
+                """;
+        ejecutarPostEsperandoError(BASE_URL + "/api/boats", json, "datos inválidos");
+    }
 
-    private static void testPatchErrors(String matricula) {
-        System.out.println("\n=== PRUEBAS PATCH CON ERRORES ===");
+    private static void testPostBoatTipoInvalido() {
+        System.out.println("\n4. POST /api/boats (tipo inválido)");
+        String json = """
+                { "matricula": "INVALIDTYPE", "nombre": "Barco Tipo Inválido", "tipo": "TIPO_INEXISTENTE", "plaza": 4, "dimensiones": 10.0 }
+                """;
+        ejecutarPostEsperandoError(BASE_URL + "/api/boats", json, "tipo inválido");
+    }
 
+    // ==================== Utilidades ====================
+
+    private static HttpEntity<String> crearJsonRequest(String json) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        return new HttpEntity<>(json, headers);
+    }
 
-
-        System.out.println("\n1. PATCH /api/boats/MATRICULA_INEXISTENTE_123456");
-        String patchJson = """
-                {
-                    "nombre": "Nombre Actualizado"
-                }
-                """;
-
-        HttpEntity<String> request = new HttpEntity<>(patchJson, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    BASE_URL + "/api/boats/MATRICULA_INEXISTENTE_123456",
-                    HttpMethod.PATCH,
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Debería devolver 404 Not Found");
-        } catch (HttpClientErrorException.NotFound e) {
-            System.out.println("✅ CORRECTO - Devuelve 404 Not Found");
-        } catch (Exception e) {
-            System.out.println("⚠️  Error: " + e.getMessage());
-        }
-
-
-        System.out.println("\n2. PATCH /api/patrones/999999");
-        String patchPatronJson = """
-                {
-                    "nombre": "Nombre Actualizado"
-                }
-                """;
-
-        request = new HttpEntity<>(patchPatronJson, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    BASE_URL + "/api/patrones/999999",
-                    HttpMethod.PATCH,
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Debería devolver 404 Not Found");
-        } catch (HttpClientErrorException.NotFound e) {
-            System.out.println("✅ CORRECTO - Devuelve 404 Not Found");
-        } catch (Exception e) {
-            System.out.println("⚠️  Error: " + e.getMessage());
-        }
-
-
-        System.out.println("\n3. PATCH /api/boats/" + matricula + "/assign-patron (patrón inexistente)");
-        String assignInvalidJson = """
-                {
-                    "idPatron": 999999
-                }
-                """;
-
-        request = new HttpEntity<>(assignInvalidJson, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    BASE_URL + "/api/boats/" + matricula + "/assign-patron",
-                    HttpMethod.PATCH,
-                    request,
-                    String.class);
-            System.out.println("❌ ERROR ESPERADO - Debería devolver 400 Bad Request (patrón no encontrado)");
-        } catch (HttpClientErrorException e) {
-            System.out.println("✅ CORRECTO - Devuelve " + e.getStatusCode() + " (patrón no encontrado)");
-        } catch (Exception e) {
-            System.out.println("⚠️  Error: " + e.getMessage());
-        }
-
-
-        System.out.println("\n4. PATCH /api/boats/" + matricula + " (intento cambiar matrícula)");
-        String invalidPatchMatricula = String.format("""
-                {
-                    "matricula": "%s_MODIFICADA",
-                    "nombre": "Intento Cambiar Matrícula"
-                }
-                """, matricula);
-
-        request = new HttpEntity<>(invalidPatchMatricula, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    BASE_URL + "/api/boats/" + matricula,
-                    HttpMethod.PATCH,
-                    request,
-                    String.class);
-            System.out.println("✅ Actualización exitosa (la matrícula en el cuerpo puede ser ignorada)");
-        } catch (Exception e) {
-            System.out.println("⚠️  Error: " + e.getMessage());
+    private static void imprimirPrimerElemento(List<Map<String, Object>> lista, String tipo) {
+        if (!lista.isEmpty()) {
+            System.out.println("✅ Primer " + tipo + ": " + lista.get(0));
         }
     }
 
-
-        System.out.println("\n=== PRUEBAS DELETE CON ERRORES ===");
-
-    private static void testDeleteErrors(String matricula, Integer patronId) {
-        System.out.println("\n=== PRUEBAS DELETE CON ERRORES ===");
-
-        System.out.println("\n1. DELETE /api/boats/EMBARCACION_INEXISTENTE_123456");
+    private static Integer buscarIdPatronPorDni(String dni) {
         try {
-            ResponseEntity<Void> response = restTemplate.exchange(
-                    BASE_URL + "/api/boats/EMBARCACION_INEXISTENTE_123456",
-                    HttpMethod.DELETE,
-                    null,
-                    Void.class);
-            System.out.println("❌ ERROR ESPERADO - Debería devolver 404 Not Found");
-        } catch (HttpClientErrorException.NotFound e) {
-            System.out.println("✅ CORRECTO - Devuelve 404 Not Found");
-        } catch (Exception e) {
-            System.out.println("⚠️  Error: " + e.getMessage());
-        }
-
-
-        System.out.println("\n2. DELETE /api/patrones/999999");
-        try {
-            ResponseEntity<Void> response = restTemplate.exchange(
-                    BASE_URL + "/api/patrones/999999",
-                    HttpMethod.DELETE,
-                    null,
-                    Void.class);
-            System.out.println("❌ ERROR ESPERADO - Debería devolver 404 Not Found");
-        } catch (HttpClientErrorException.NotFound e) {
-            System.out.println("✅ CORRECTO - Devuelve 404 Not Found");
-        } catch (Exception e) {
-            System.out.println("⚠️  Error: " + e.getMessage());
-        }
-
-        // 3. DELETE patrón asignado a embarcación (versión simplificada)
-        System.out.println("\n3. DELETE /api/patrones/1 (probando patrón asignado)");
-        try {
-            // Verificar primero si el patrón 1 existe
-            try {
-                ResponseEntity<Map<String, Object>> getResponse = restTemplate.exchange(
-                        BASE_URL + "/api/patrones/1",
-                        HttpMethod.GET,
-                        null,
-                        new ParameterizedTypeReference<Map<String, Object>>() {
-                        });
-
-                // Si existe, verificar si está asignado
-                Map<String, Object> patron = getResponse.getBody();
-
-                // Buscar embarcaciones para ver si alguna tiene asignado al patrón 1
-                ResponseEntity<List<Map<String, Object>>> boatsResponse = restTemplate.exchange(
-                        BASE_URL + "/api/boats",
-                        HttpMethod.GET,
-                        null,
-                        new ParameterizedTypeReference<List<Map<String, Object>>>() {
-                        });
-
-                boolean patronAsignado = false;
-                String matriculaConPatron = null;
-
-                for (Map<String, Object> boat : boatsResponse.getBody()) {
-                    Object idPatronAsignado = boat.get("idPatronAsignado");
-                    if (idPatronAsignado != null && idPatronAsignado.equals(1)) {
-                        patronAsignado = true;
-                        matriculaConPatron = (String) boat.get("matricula");
-                        break;
-                    }
+            ResponseEntity<List<Map<String, Object>>> allPatrones = restTemplate.exchange(
+                    BASE_URL + "/api/patrones", HttpMethod.GET, null,
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+            for (Map<String, Object> patron : allPatrones.getBody()) {
+                if (dni.equals(patron.get("dni"))) {
+                    Integer id = (Integer) patron.get("id");
+                    System.out.println("✅ ID del patrón creado: " + id);
+                    return id;
                 }
-
-                if (patronAsignado) {
-                    System.out.println("✅ Patrón 1 está asignado a embarcación: " + matriculaConPatron);
-
-                    // Intentar eliminar el patrón asignado
-                    try {
-                        ResponseEntity<Void> deleteResponse = restTemplate.exchange(
-                                BASE_URL + "/api/patrones/1",
-                                HttpMethod.DELETE,
-                                null,
-                                Void.class);
-
-                        if (deleteResponse.getStatusCode() == HttpStatus.CONFLICT) {
-                            System.out.println("✅ CORRECTO - Devuelve 409 Conflict (patrón asignado a embarcación)");
-                        } else {
-                            System.out.println(
-                                    "⚠️  Devuelve " + deleteResponse.getStatusCode() + " (esperaba 409 Conflict)");
-                        }
-
-                    } catch (HttpClientErrorException.Conflict e) {
-                        System.out.println("✅ CORRECTO - Devuelve 409 Conflict (patrón asignado a embarcación)");
-                    } catch (HttpClientErrorException e) {
-                        System.out.println("⚠️  Devuelve " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
-                    }
-                } else {
-                    System.out.println(
-                            "⚠️  El patrón 1 no está asignado a ninguna embarcación (no se puede probar el 409)");
-                    System.out.println("ℹ️  Intento de eliminación igual para ver el resultado:");
-
-                    try {
-                        ResponseEntity<Void> deleteResponse = restTemplate.exchange(
-                                BASE_URL + "/api/patrones/1",
-                                HttpMethod.DELETE,
-                                null,
-                                Void.class);
-                        System.out.println("✅ Status: " + deleteResponse.getStatusCode());
-                    } catch (Exception e) {
-                        System.out.println("⚠️  Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-                    }
-                }
-
-            } catch (HttpClientErrorException.NotFound e) {
-                System.out.println("⚠️  Patrón 1 no encontrado (no se puede probar la restricción)");
             }
-
         } catch (Exception e) {
-            System.out.println("⚠️  Error general: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            System.out.println("⚠️  Error buscando patrón: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private static void ejecutarPatch(String url, String json) {
+        HttpEntity<String> request = crearJsonRequest(json);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PATCH, request, String.class);
+            System.out.println("✅ Status: " + response.getStatusCode());
+            System.out.println("✅ Respuesta: " + response.getBody());
+        } catch (HttpClientErrorException e) {
+            System.out.println("❌ Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+        }
+    }
+
+    private static void ejecutarPostEsperandoError(String url, String json, String descripcion) {
+        HttpEntity<String> request = crearJsonRequest(json);
+        try {
+            restTemplate.postForEntity(url, request, String.class);
+            System.out.println("❌ ERROR ESPERADO - Debería devolver error (" + descripcion + ")");
+        } catch (HttpClientErrorException e) {
+            System.out.println("✅ CORRECTO - Devuelve " + e.getStatusCode() + " (" + descripcion + ")");
+        } catch (Exception e) {
+            System.out.println("⚠️  Error: " + e.getMessage());
         }
     }
 }
