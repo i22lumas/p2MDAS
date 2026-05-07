@@ -93,7 +93,7 @@ public class AsignarPatronController {
         return "AsignarPatronSuccess";
     }
 
-    // ========== Métodos privados ==========
+
 
     private String mostrarConfirmacionReemplazo(String matricula, int idPatronActual,
             int idEmpleadoNuevo, Model model) {

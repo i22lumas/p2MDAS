@@ -21,6 +21,17 @@ import es.uco.pw.pw2526.model.domain.Socio.Socio;
 @Controller
 public class AlquilerController {
 
+    /**
+     * Refactorización: Extract Constant (Fowler). Se extraen los números mágicos
+     * a constantes con nombre para mejorar legibilidad y facilitar mantenimiento.
+     */
+    private static final double PRECIO_POR_PLAZA_POR_DIA = 20.0;
+    private static final int MAX_DIAS_TEMPORADA_BAJA = 3;
+    private static final int DIAS_UNA_SEMANA = 7;
+    private static final int DIAS_DOS_SEMANAS = 14;
+    private static final int MES_INICIO_TEMPORADA_ALTA = 5;
+    private static final int MES_FIN_TEMPORADA_ALTA = 9;
+
     private AlquilerRepository alquilerRepository;
     private EmbarcacionRepository embarcacionRepository;
     private SocioRepository socioRepository;
@@ -36,7 +47,6 @@ public class AlquilerController {
         this.reservaRepository = reservaRepository;
     }
 
-    // ========== Endpoints públicos ==========
 
     @GetMapping("/buscarEmbarcacionesDisponibles")
     public ModelAndView mostrarBusquedaDisponibilidad() {
@@ -161,7 +171,6 @@ public class AlquilerController {
         return model;
     }
 
-    // ========== Métodos privados: Validación ==========
 
     private ModelAndView validarSocioTitular(Alquiler nuevoAlquiler) {
         Socio titular = socioRepository.obtenerSocioPorDni(nuevoAlquiler.getDniSocioTitular());
@@ -195,12 +204,12 @@ public class AlquilerController {
         long dias = ChronoUnit.DAYS.between(inicio, fin) + 1;
         int mes = inicio.getMonthValue();
 
-        if (esTemporadaBaja(mes) && dias > 3) {
+        if (esTemporadaBaja(mes) && dias > MAX_DIAS_TEMPORADA_BAJA) {
             return construirVistaFallo(
-                    "En temporada baja (octubre-abril) el máximo es 3 días. Seleccionaste: " + dias + " días.");
+                    "En temporada baja (octubre-abril) el máximo es " + MAX_DIAS_TEMPORADA_BAJA + " días. Seleccionaste: " + dias + " días.");
         }
 
-        if (esTemporadaAlta(mes) && dias != 7 && dias != 14) {
+        if (esTemporadaAlta(mes) && dias != DIAS_UNA_SEMANA && dias != DIAS_DOS_SEMANAS) {
             return construirVistaFallo(
                     "En temporada alta (mayo-septiembre) solo se permiten 7 días (1 semana) o 14 días (2 semanas). Seleccionaste: "
                             + dias + " días.");
@@ -243,7 +252,6 @@ public class AlquilerController {
         return null;
     }
 
-    // ========== Métodos privados: Lógica de negocio ==========
 
     private void asignarTripulantes(Alquiler nuevoAlquiler, List<String> dnisTripulantes) {
         if (dnisTripulantes == null) {
@@ -273,7 +281,7 @@ public class AlquilerController {
     }
 
     private double calcularPrecioAlquiler(int plazas, long dias) {
-        return 20.0 * plazas * dias;
+        return PRECIO_POR_PLAZA_POR_DIA * plazas * dias;
     }
 
     private int calcularTotalTripulantes(Alquiler alquiler) {
@@ -281,7 +289,6 @@ public class AlquilerController {
         return 1 + tripulantesExtra;
     }
 
-    // ========== Métodos privados: Búsqueda y carga de datos ==========
 
     private Embarcacion buscarEmbarcacionPorMatricula(String matricula) {
         List<Embarcacion> embarcaciones = embarcacionRepository.obtenerEmbarcaciones();
@@ -337,7 +344,6 @@ public class AlquilerController {
                 && reservaRepository.estaDisponible(matricula, fechaInicio, fechaFin);
     }
 
-    // ========== Métodos privados: Consultas genéricas de alquileres ==========
 
     private ModelAndView ejecutarConsultaAlquileres(String vista, List<Alquiler> alquileres,
             String mensajeVacio, String mensajeError) {
@@ -354,7 +360,6 @@ public class AlquilerController {
         return model;
     }
 
-    // ========== Métodos privados: Construcción de vistas ==========
 
     private ModelAndView construirVistaFallo(String mensaje) {
         ModelAndView model = new ModelAndView("addAlquilerViewFail.html");
@@ -367,7 +372,7 @@ public class AlquilerController {
         model.addObject("mensaje", "Alquiler realizado con éxito para " + embarcacion.getNombre() + ".");
         model.addObject("alquiler", alquiler);
         model.addObject("dias", dias);
-        model.addObject("precioPorPersonaPorDia", 20.0);
+        model.addObject("precioPorPersonaPorDia", PRECIO_POR_PLAZA_POR_DIA);
         return model;
     }
 
@@ -383,13 +388,12 @@ public class AlquilerController {
         return "Se encontraron " + disponibles.size() + " embarcaciones disponibles.";
     }
 
-    // ========== Métodos privados: Utilidades de temporada ==========
 
     private boolean esTemporadaBaja(int mes) {
-        return mes >= 10 || mes <= 4;
+        return mes >= (MES_FIN_TEMPORADA_ALTA + 1) || mes <= (MES_INICIO_TEMPORADA_ALTA - 1);
     }
 
     private boolean esTemporadaAlta(int mes) {
-        return mes >= 5 && mes <= 9;
+        return mes >= MES_INICIO_TEMPORADA_ALTA && mes <= MES_FIN_TEMPORADA_ALTA;
     }
 }

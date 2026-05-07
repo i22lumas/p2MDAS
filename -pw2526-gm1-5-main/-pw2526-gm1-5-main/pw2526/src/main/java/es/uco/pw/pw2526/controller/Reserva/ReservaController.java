@@ -24,6 +24,12 @@ public class ReservaController {
     private SocioRepository socioRepository;
 
     /**
+     * Refactorización: Extract Constant (Fowler). Precio por persona extraído
+     * como constante para evitar Magic Number y facilitar mantenimiento.
+     */
+    private static final double PRECIO_POR_PERSONA = 40.0;
+
+    /**
      * Constructor del controlador de reservas
      * 
      * @param reservaRepository     Repositorio de reservas
@@ -92,7 +98,6 @@ public class ReservaController {
         return model;
     }
 
-    // ========== Métodos privados: Validación de datos de entrada ==========
 
     private ModelAndView validarDatosReserva(Reserva nuevaReserva) {
         if (nuevaReserva.getPlazasSolicitadas() == null || nuevaReserva.getPlazasSolicitadas() <= 0) {
@@ -114,7 +119,6 @@ public class ReservaController {
         return null;
     }
 
-    // ========== Métodos privados: Verificación de requisitos ==========
 
     private ModelAndView verificarRequisitosPreviosReserva(Reserva nuevaReserva) {
         ModelAndView errorPatron = verificarPatronAsignado(nuevaReserva);
@@ -168,7 +172,6 @@ public class ReservaController {
         return null;
     }
 
-    // ========== Métodos privados: Ejecución de la reserva ==========
 
     private ModelAndView ejecutarReserva(Reserva nuevaReserva) {
         Integer idPatron = obtenerPatronParaReserva(nuevaReserva);
@@ -196,11 +199,10 @@ public class ReservaController {
 
     private void calcularPrecioReserva(Reserva nuevaReserva) {
         int totalPersonas = nuevaReserva.getPlazasSolicitadas() + 1;
-        double precioTotal = totalPersonas * 40.0;
+        double precioTotal = totalPersonas * PRECIO_POR_PERSONA;
         nuevaReserva.setPrecioTotal(precioTotal);
     }
 
-    // ========== Métodos privados: Construcción de vistas ==========
 
     private ModelAndView construirVistaFallo(String mensaje) {
         ModelAndView model = new ModelAndView("reservaViewFail.html");
@@ -213,7 +215,7 @@ public class ReservaController {
         ModelAndView model = new ModelAndView("reservaViewSuccess.html");
         model.addObject("mensaje", "Reserva realizada con éxito.");
         model.addObject("reserva", nuevaReserva);
-        model.addObject("precioPorPersona", 40.0);
+        model.addObject("precioPorPersona", PRECIO_POR_PERSONA);
         model.addObject("totalPersonas", totalPersonas);
         return model;
     }

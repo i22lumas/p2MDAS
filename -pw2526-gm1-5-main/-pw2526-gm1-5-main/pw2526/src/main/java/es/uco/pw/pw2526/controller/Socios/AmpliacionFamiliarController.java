@@ -86,7 +86,12 @@ public class AmpliacionFamiliarController {
 
         if (existenDatosConyuge(dniNuevoAdulto)) {
             adultosAnadidos = 1;
-            if (inscripcion.getTipoInscripcion() == TipoInscripcion.INDIVIDUAL) {
+            /*
+             * Refactorización: Use existing domain method (Feature Envy).
+             * Inscripcion ya tiene esIndividual(), no hace falta comparar
+             * directamente con el enum desde el controlador.
+             */
+            if (inscripcion.esIndividual()) {
                 nuevaCuota += CUOTA_SEGUNDO_ADULTO;
             }
         }
@@ -111,7 +116,6 @@ public class AmpliacionFamiliarController {
                 adultosAnadidos, totalHijosAnadidos);
     }
 
-    // ========== Métodos privados: Validación y registro de cónyuge ==========
 
     private ModelAndView validarYRegistrarConyuge(String dniNuevoAdulto, Socio nuevoAdulto,
             Socio titular, Inscripcion inscripcion) {
@@ -147,7 +151,6 @@ public class AmpliacionFamiliarController {
         nuevoAdulto.setDireccion(titular.getDireccion());
     }
 
-    // ========== Métodos privados: Validación y registro de hijo ==========
 
     private ModelAndView validarYRegistrarHijo(List<String> hijosDniList, List<String> hijosNombreList,
             List<String> hijosApellidosList, List<String> hijosFechaNacimientoList,
@@ -202,7 +205,6 @@ public class AmpliacionFamiliarController {
         return hijo;
     }
 
-    // ========== Métodos privados: Finalización de ampliación ==========
 
     private ModelAndView finalizarAmpliacion(Inscripcion inscripcion, Socio titular,
             double cuotaAnterior, double nuevaCuota, int adultosAnadidos, int hijosAnadidos) {
@@ -218,12 +220,11 @@ public class AmpliacionFamiliarController {
     }
 
     private void actualizarTipoInscripcion(Inscripcion inscripcion) {
-        if (inscripcion.getTipoInscripcion() == TipoInscripcion.INDIVIDUAL) {
+        if (inscripcion.esIndividual()) {
             inscripcion.setTipoInscripcion(TipoInscripcion.FAMILIAR);
         }
     }
 
-    // ========== Métodos privados: Utilidades ==========
 
     private boolean existenDatosConyuge(String dniNuevoAdulto) {
         return dniNuevoAdulto != null && !dniNuevoAdulto.trim().isEmpty();
@@ -248,7 +249,6 @@ public class AmpliacionFamiliarController {
         return lista != null && !lista.isEmpty() && !lista.get(0).trim().isEmpty();
     }
 
-    // ========== Métodos privados: Construcción de vistas ==========
 
     private ModelAndView construirVistaFallo(String mensajeError) {
         ModelAndView modelAndView = new ModelAndView("ampliacionFamiliarViewFail.html");

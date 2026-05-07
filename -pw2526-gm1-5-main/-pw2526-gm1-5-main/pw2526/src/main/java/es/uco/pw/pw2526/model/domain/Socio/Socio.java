@@ -52,6 +52,17 @@ public class Socio {
     public boolean esPatron() {
         return tieneTituloPatron;
     }
+
+    /**
+     * Refactorización: Move Method desde RegistrarTituloPatronController.
+     * Decisión de diseño: La elegibilidad para título de patrón es una regla de negocio
+     * del dominio Socio, no del controlador. Se usa comparación directa del enum
+     * en lugar de conversión a String para garantizar seguridad de tipos en compilación.
+     */
+    public boolean esElegibleParaTituloPatron() {
+        return this.tipoMiembro == TipoMiembro.TITULAR
+            || this.tipoMiembro == TipoMiembro.CONYUGE;
+    }
     
     public boolean estaVinculadoAInscripcion() {
         return this.inscripcionId != -1;

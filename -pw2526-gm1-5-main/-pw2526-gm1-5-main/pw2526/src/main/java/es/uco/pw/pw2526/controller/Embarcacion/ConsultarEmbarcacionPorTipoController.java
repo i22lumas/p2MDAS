@@ -69,7 +69,7 @@ public class ConsultarEmbarcacionPorTipoController {
         return "ConsultarEmbarcacionPorTipoView";
     }
 
-    // ========== Métodos privados ==========
+
 
     private void cargarInformacionPatron(Embarcacion embarcacion,
             Map<String, String> patronesAsignados, Map<String, List<String>> detallesPatron,

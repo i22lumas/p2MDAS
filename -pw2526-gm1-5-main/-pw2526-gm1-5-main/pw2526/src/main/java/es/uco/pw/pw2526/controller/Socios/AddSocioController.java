@@ -64,7 +64,7 @@ public class AddSocioController {
         return resultado;
     }
 
-    // ========== Métodos privados ==========
+
 
     private void configurarSocioTitular(Socio nuevoSocio) {
         nuevoSocio.setFechaInscripcion(LocalDate.now());

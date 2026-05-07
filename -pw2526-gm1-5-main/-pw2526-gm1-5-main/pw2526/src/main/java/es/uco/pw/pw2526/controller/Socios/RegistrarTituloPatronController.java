@@ -36,7 +36,12 @@ public class RegistrarTituloPatronController {
             return construirVistaFallo("Error: DNI no encontrado en la base de datos de socios.");
         }
 
-        if (!esMiembroElegibleParaTitulo(miembro)) {
+        /*
+         * Refactorización aplicada: Move Method + Replace String Comparison with Enum.
+         * La responsabilidad de determinar elegibilidad se delega al modelo Socio,
+         * que ya encapsula métodos de dominio como esTitular() y esPatron().
+         */
+        if (!miembro.esElegibleParaTituloPatron()) {
             return construirVistaFallo(
                     "Error: Solo los socios titulares y cónyuges son elegibles para obtener el título de patrón.");
         }
@@ -44,15 +49,8 @@ public class RegistrarTituloPatronController {
         return ejecutarOtorgamiento(miembro, dni);
     }
 
-    // ========== Métodos privados ==========
-
-    private boolean esMiembroElegibleParaTitulo(Socio miembro) {
-        String tipoMiembro = miembro.getTipoMiembro().toString();
-        return tipoMiembro.equals("TITULAR") || tipoMiembro.equals("CONYUGE");
-    }
-
     private ModelAndView ejecutarOtorgamiento(Socio miembro, String dni) {
-        boolean otorgadoConExito = socioRepository.actualizarTituloPatron(dni, true);
+        boolean otorgadoConExito = socioRepository.otorgarTituloPatron(dni);
 
         if (!otorgadoConExito) {
             return construirVistaFallo(
